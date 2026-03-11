@@ -3,10 +3,67 @@
    (Tailwind CDN cubre los utilitarios generales)
    ===================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+:root {
+    --site-nav-h: 72px;
+    --site-anchor-gap: 12px;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+html,
+body {
+    scroll-padding-top: calc(var(--site-nav-h) + var(--site-anchor-gap));
+}
+
+.reveal {
+    opacity: 0;
+    transform: translateY(28px) scale(0.985);
+    filter: blur(8px);
+    transition:
+        opacity 800ms cubic-bezier(.2,.9,.2,1),
+        transform 900ms cubic-bezier(.2,.9,.2,1),
+        filter 900ms cubic-bezier(.2,.9,.2,1);
+    will-change: opacity, transform, filter;
+}
+
+.reveal-left {
+    transform: translateX(-36px) translateY(10px) scale(0.985);
+}
+
+.reveal-right {
+    transform: translateX(36px) translateY(10px) scale(0.985);
+}
+
+.reveal.is-visible {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1);
+    filter: blur(0);
+}
+
+.reveal--delay-1 { transition-delay: 120ms; }
+.reveal--delay-2 { transition-delay: 240ms; }
+.reveal--delay-3 { transition-delay: 360ms; }
+.reveal--delay-4 { transition-delay: 480ms; }
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .reveal,
+    .reveal-left,
+    .reveal-right {
+        opacity: 1;
+        transform: none;
+        filter: none;
+        transition: none;
+    }
 }
 
 /* Fondo degradado suave para secciones que lo requieran */
