@@ -1,0 +1,15 @@
+/* =====================================================
+   Estilos custom de Verificador.com.ar
+   (Tailwind CDN cubre los utilitarios generales)
+   ===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Fondo degradado suave para secciones que lo requieran */
+.gradient-bg {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
