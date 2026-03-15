@@ -162,10 +162,18 @@ class ProductController extends Controller
         $store = auth()->user()->store;
         $sub   = $store->subscription;
 
+        // Trial = acceso total sin límites
+        if ($sub?->hasFullAccess()) {
+            return;
+        }
+
         if ($sub && $sub->plan && $sub->plan->max_products !== null) {
             $count = $store->products()->where('active', true)->count();
             if ($count >= $sub->plan->max_products) {
-                abort(403, "Alcanzaste el límite de {$sub->plan->max_products} productos de tu plan.");
+                throw new \Illuminate\Http\Exceptions\HttpResponseException(
+                    redirect()->route('dashboard.products.index')
+                        ->with('limit_reached', "Alcanzaste el límite de {$sub->plan->max_products} productos de tu plan. Actualizá tu plan para agregar más.")
+                );
             }
         }
     }

@@ -25,11 +25,14 @@ class BranchController extends Controller
 
     public function create(): View
     {
+        $this->checkBranchLimit();
         return view('dashboard.branches.create');
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $this->checkBranchLimit();
+
         $data = $request->validate([
             'name'    => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:500'],
@@ -120,5 +123,26 @@ class BranchController extends Controller
     private function authorizeBranch(Branch $branch): void
     {
         abort_if($branch->store_id !== auth()->user()->store_id, 403);
+    }
+
+    private function checkBranchLimit(): void
+    {
+        $store = auth()->user()->store;
+        $sub   = $store->subscription;
+
+        // Trial = acceso total sin límites
+        if ($sub?->hasFullAccess()) {
+            return;
+        }
+
+        if ($sub && $sub->plan && $sub->plan->max_branches !== null) {
+            $count = $store->branches()->where('active', true)->count();
+            if ($count >= $sub->plan->max_branches) {
+                throw new \Illuminate\Http\Exceptions\HttpResponseException(
+                    redirect()->route('dashboard.branches.index')
+                        ->with('limit_reached', "Alcanzaste el límite de {$sub->plan->max_branches} sucursal(es) de tu plan. Actualizá tu plan para agregar más.")
+                );
+            }
+        }
     }
 }

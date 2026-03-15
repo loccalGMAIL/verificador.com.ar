@@ -13,7 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'role' => \App\Http\Middleware\EnsureRole::class,
+            'role'         => \App\Http\Middleware\EnsureRole::class,
+            'subscription' => \App\Http\Middleware\CheckSubscription::class,
         ]);
 
         // Registrar visitas a las páginas públicas (landing, login, register, QR scanner)

@@ -8,6 +8,7 @@ use App\Http\Controllers\Dashboard\ProductController;
 use App\Http\Controllers\Dashboard\ProductImportController;
 use App\Http\Controllers\Dashboard\BranchController;
 use App\Http\Controllers\Dashboard\SettingsController;
+use App\Http\Controllers\Dashboard\SubscriptionController as DashboardSubscription;
 use App\Http\Controllers\Admin\HomeController as AdminHome;
 use App\Http\Controllers\Admin\StoreController as AdminStoreController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -48,7 +49,7 @@ Route::post('/logout', [LoginController::class, 'destroy'])
 // ============================================================
 // DASHBOARD — Comercio (owner / employee)
 // ============================================================
-Route::middleware(['auth', 'role:owner,employee'])
+Route::middleware(['auth', 'role:owner,employee', 'subscription'])
     ->prefix('dashboard')
     ->name('dashboard.')
     ->group(function () {
@@ -70,8 +71,8 @@ Route::middleware(['auth', 'role:owner,employee'])
         Route::get('/branches/{branch}/qr',           [BranchController::class, 'qr'])->name('branches.qr');
         Route::get('/branches/{branch}/qr/configure', [BranchController::class, 'qrConfigure'])->name('branches.qr.configure');
 
-        // --- Subscripción (Fase 6) ---
-        Route::get('/subscription', fn () => view('dashboard.coming-soon', ['section' => 'Subscripción']))->name('subscription');
+        // --- Subscripción ---
+        Route::get('/subscription', [DashboardSubscription::class, 'index'])->name('subscription');
 
         // --- Configuración ---
         Route::get('/settings',  [SettingsController::class, 'show'])->name('settings');

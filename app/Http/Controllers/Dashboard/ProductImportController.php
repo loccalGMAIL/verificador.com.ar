@@ -31,7 +31,17 @@ class ProductImportController extends Controller
             'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
         ]);
 
-        $store  = auth()->user()->store;
+        $store = auth()->user()->store;
+        $sub   = $store->subscription;
+
+        // Verificar que el plan permita más productos antes de importar
+        if (! $sub?->hasFullAccess() && $sub?->plan?->max_products !== null) {
+            $count = $store->products()->where('active', true)->count();
+            if ($count >= $sub->plan->max_products) {
+                return redirect()->route('dashboard.products.import.index')
+                    ->with('limit_reached', "Alcanzaste el límite de {$sub->plan->max_products} productos. Actualizá tu plan para importar más.");
+            }
+        }
         $file   = $request->file('file');
         $stored = $file->store("imports/{$store->id}", 'local');
 

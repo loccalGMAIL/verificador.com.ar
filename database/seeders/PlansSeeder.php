@@ -14,6 +14,7 @@ class PlansSeeder extends Seeder
                 'name'         => 'Basic',
                 'price_usd'    => 5.00,
                 'max_products' => 2000,
+                'max_branches' => 1,
                 'description'  => 'Ideal para comercios pequeños.',
                 'featured'     => false,
                 'sort_order'   => 1,
@@ -22,6 +23,7 @@ class PlansSeeder extends Seeder
                 'name'         => 'Standard',
                 'price_usd'    => 10.00,
                 'max_products' => 5000,
+                'max_branches' => 3,
                 'description'  => 'El más elegido por comercios en crecimiento.',
                 'featured'     => true,
                 'sort_order'   => 2,
@@ -30,6 +32,7 @@ class PlansSeeder extends Seeder
                 'name'         => 'Pro',
                 'price_usd'    => 20.00,
                 'max_products' => 15000,
+                'max_branches' => 5,
                 'description'  => 'Para comercios con catálogo amplio.',
                 'featured'     => false,
                 'sort_order'   => 3,
@@ -37,8 +40,9 @@ class PlansSeeder extends Seeder
             [
                 'name'         => 'Business',
                 'price_usd'    => 30.00,
-                'max_products' => null,
-                'description'  => 'Sin límite de productos.',
+                'max_products' => null,  // ilimitado
+                'max_branches' => null,  // ilimitado
+                'description'  => 'Sin límites. Para cadenas y grandes comercios.',
                 'featured'     => false,
                 'sort_order'   => 4,
             ],
