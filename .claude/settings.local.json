@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"D:\\\\DESARROLLO\\\\CoDiGo\\\\verificador.com.ar\" && gh pr create --title \"Landing page inicial verificador.com.ar\" --body \"$\\(cat <<'EOF'\n## Summary\n\n- Landing page completa con hero, sección problema, cómo funciona, beneficios, comparación de costos y planes\n- Imágenes locales integradas \\(supermercado, problema, pasos\\)\n- Navbar sticky con links a todas las secciones\n- Tabla comparativa de planes \\(Basic / Standard / Pro / Business\\)\n\n## Test plan\n\n- [ ] Verificar que la página carga correctamente en `php artisan serve`\n- [ ] Confirmar que todas las imágenes se muestran\n- [ ] Verificar que los links del navbar hacen scroll a la sección correcta\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\nEOF\n\\)\")"
+    ]
+  }
+}

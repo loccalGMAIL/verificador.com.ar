@@ -24,9 +24,10 @@
                 Permite que tus clientes escaneen un QR y verifiquen el precio del producto en segundos.
             </p>
             <div class="flex flex-col sm:flex-row gap-4">
-                <button class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-base md:text-lg transition">
+                <a href="{{ route('register') }}"
+                   class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-base md:text-lg transition">
                     Probar gratis 7 días
-                </button>
+                </a>
                 {{-- <button class="bg-white/10 border border-white/40 hover:bg-white/20 text-white px-8 py-4 rounded-xl font-bold text-lg backdrop-blur-sm transition">
                     Ver demo
                 </button> --}}
@@ -208,9 +209,10 @@
                         <li><i class="fas fa-check text-emerald-500 mr-2"></i>Precios siempre actualizados</li>
                         <li><i class="fas fa-check text-emerald-500 mr-2"></i>Sin costo de instalación</li>
                     </ul>
-                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition">
+                    <a href="{{ route('register') }}"
+                       class="w-full block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition text-center">
                         Probar gratis 7 días
-                    </button>
+                    </a>
                 </div>
 
             </div>
@@ -236,9 +238,10 @@
                         <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> QR del comercio</li>
                         <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Soporte básico</li>
                     </ul>
-                    <button class="w-full py-2.5 border border-blue-600 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition">
+                    <a href="{{ route('register') }}"
+                       class="w-full block py-2.5 border border-blue-600 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition text-center">
                         Elegir Basic
-                    </button>
+                    </a>
                 </div>
 
                 {{-- Standard (destacado) --}}
@@ -256,9 +259,10 @@
                         <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-300 w-4"></i> Estadísticas básicas</li>
                         <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-300 w-4"></i> Soporte estándar</li>
                     </ul>
-                    <button class="w-full py-2.5 bg-white text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition">
+                    <a href="{{ route('register') }}"
+                       class="w-full block py-2.5 bg-white text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition text-center">
                         Elegir Standard
-                    </button>
+                    </a>
                 </div>
 
                 {{-- Pro --}}
@@ -276,9 +280,10 @@
                         <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Listas de precios</li>
                         <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Soporte prioritario</li>
                     </ul>
-                    <button class="w-full py-2.5 border border-blue-600 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition">
+                    <a href="{{ route('register') }}"
+                       class="w-full block py-2.5 border border-blue-600 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition text-center">
                         Elegir Pro
-                    </button>
+                    </a>
                 </div>
 
                 {{-- Business --}}
@@ -298,9 +303,10 @@
                         <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> API de integración</li>
                         <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Soporte prioritario</li>
                     </ul>
-                    <button class="w-full py-2.5 border border-blue-600 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition">
+                    <a href="{{ route('register') }}"
+                       class="w-full block py-2.5 border border-blue-600 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition text-center">
                         Elegir Business
-                    </button>
+                    </a>
                 </div>
 
             </div>
@@ -353,9 +359,10 @@
     <section class="py-16 px-6 text-center max-w-3xl mx-auto reveal">
         <h2 class="text-3xl md:text-4xl font-extrabold mb-3">Empieza a modernizar tu comercio hoy.</h2>
         <p class="text-slate-500 text-base md:text-lg mb-8">Únete a cientos de comercios que ya optimizaron sus ventas.</p>
-        <button class="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl transition">
+        <a href="{{ route('register') }}"
+           class="inline-block bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl transition">
             Probar gratis 7 días
-        </button>
+        </a>
     </section>
 
 @endsection
