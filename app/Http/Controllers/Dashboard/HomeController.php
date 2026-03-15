@@ -9,6 +9,9 @@ class HomeController extends Controller
 {
     public function __invoke(): View
     {
-        return view('dashboard.home');
+        $store    = auth()->user()->store;
+        $branches = $store?->branches()->where('active', true)->orderBy('name')->get() ?? collect();
+
+        return view('dashboard.home', compact('branches'));
     }
 }

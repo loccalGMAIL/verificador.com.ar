@@ -300,7 +300,6 @@
                         <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Estadísticas avanzadas</li>
                         <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Listas de precios</li>
                         <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Sucursales</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> API de integración</li>
                         <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Soporte prioritario</li>
                     </ul>
                     <a href="{{ route('register') }}"
