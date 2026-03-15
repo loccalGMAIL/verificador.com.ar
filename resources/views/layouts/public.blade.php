@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', config('app.name'))</title>
 
+    {{-- Favicon --}}
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+
     {{-- Tailwind CSS CDN --}}
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -32,14 +36,30 @@
             <span>verificador<span class="text-slate-400">.com.ar</span></span>
         </a>
         <div class="hidden md:flex space-x-6 font-medium text-sm">
-            <a href="#problema" class="hover:text-blue-600 transition">Problema</a>
-            <a href="#como-funciona" class="hover:text-blue-600 transition">Cómo funciona</a>
-            <a href="#costos" class="hover:text-blue-600 transition">Costos</a>
-            <a href="#precios" class="hover:text-blue-600 transition">Precios</a>
+            <a href="{{ url('/') }}#problema" class="hover:text-blue-600 transition">Problema</a>
+            <a href="{{ url('/') }}#como-funciona" class="hover:text-blue-600 transition">Cómo funciona</a>
+            <a href="{{ url('/') }}#costos" class="hover:text-blue-600 transition">Costos</a>
+            <a href="{{ url('/') }}#precios" class="hover:text-blue-600 transition">Precios</a>
         </div>
-        <a href="#precios" class="bg-emerald-500 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-emerald-600 transition">
-            Probar gratis 7 días
-        </a>
+
+        <div class="flex items-center gap-3">
+            @auth
+                <a href="{{ auth()->user()->isAdmin() ? route('admin.home') : route('dashboard.home') }}"
+                   class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-blue-700 transition flex items-center gap-2">
+                    <i class="fa-solid fa-gauge-high text-xs"></i>
+                    Ir al panel
+                </a>
+            @else
+                <a href="{{ route('login') }}"
+                   class="hidden sm:inline text-slate-600 hover:text-blue-600 font-medium text-sm transition">
+                    Iniciar sesión
+                </a>
+                <a href="{{ route('register') }}"
+                   class="bg-emerald-500 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-emerald-600 transition">
+                    Probar gratis 7 días
+                </a>
+            @endauth
+        </div>
     </nav>
 
     {{-- Contenido principal --}}
