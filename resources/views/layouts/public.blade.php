@@ -38,7 +38,7 @@
         <div class="hidden md:flex space-x-6 font-medium text-sm">
             <a href="{{ url('/') }}#problema" class="hover:text-blue-600 transition">Problema</a>
             <a href="{{ url('/') }}#como-funciona" class="hover:text-blue-600 transition">Cómo funciona</a>
-            <a href="{{ url('/') }}#costos" class="hover:text-blue-600 transition">Costos</a>
+            <a href="{{ url('/') }}#costos" class="hover:text-blue-600 transition">Comparación de Costos</a>
             <a href="{{ url('/') }}#precios" class="hover:text-blue-600 transition">Precios</a>
         </div>
 

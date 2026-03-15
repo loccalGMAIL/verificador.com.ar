@@ -77,6 +77,15 @@ class BranchController extends Controller
             ->with('success', 'Sucursal eliminada.');
     }
 
+    /** Página de configuración antes de imprimir */
+    public function qrConfigure(Branch $branch): View
+    {
+        $this->authorizeBranch($branch);
+        $branch->load('store');
+
+        return view('dashboard.branches.qr-configure', compact('branch'));
+    }
+
     /** Página de impresión del QR — se abre en pestaña nueva */
     public function qr(Branch $branch): View
     {

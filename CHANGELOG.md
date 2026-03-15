@@ -11,6 +11,29 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.1.0] — 2026-03-15
+
+### Agregado
+- **Impresión QR configurable**
+  - Nueva página de configuración antes de imprimir (`/dashboard/branches/{id}/qr/configure`)
+  - Vista previa en tiempo real via iframe (misma página de impresión escalada al 60%)
+  - Personalización: 5 esquemas de color (azul, verde, oscuro, violeta, naranja)
+  - Personalización: título principal e instrucción editables
+  - Personalización: toggles para mostrar/ocultar logo y nombre de sucursal
+  - Hoja de impresión rediseñada: A5 apaisado con 2 tarjetas idénticas por hoja y línea de corte
+
+### Modificado
+- **Dashboard home** reorganizado: stats + acciones rápidas en la misma fila; sucursales y QR debajo
+- Acciones rápidas actualizadas: Importar CSV y Nueva sucursal
+- Botón "Imprimir QR" en sucursales ahora abre la página de configuración
+- Botón "Imprimir QR" agregado directamente en el home para cada sucursal activa
+
+### Corregido
+- `print-color-adjust: exact` para forzar impresión de fondos y gradientes en todos los navegadores
+- Cache-busting en iframe del preview para reflejar cambios de esquema de color en tiempo real
+
+---
+
 ## [0.2.0] — 2026-03-11
 
 ### Agregado
@@ -80,6 +103,7 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
-[Unreleased]: https://github.com/tu-usuario/verificador.com.ar/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/tu-usuario/verificador.com.ar/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/tu-usuario/verificador.com.ar/releases/tag/v0.1.0
+[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v0.2.0...v1.1.0
+[0.2.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/loccalGMAIL/verificador.com.ar/releases/tag/v0.1.0

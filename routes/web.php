@@ -67,7 +67,8 @@ Route::middleware(['auth', 'role:owner,employee'])
         // --- Sucursales ---
         Route::resource('branches', BranchController::class)
             ->except(['show']);
-        Route::get('/branches/{branch}/qr', [BranchController::class, 'qr'])->name('branches.qr');
+        Route::get('/branches/{branch}/qr',           [BranchController::class, 'qr'])->name('branches.qr');
+        Route::get('/branches/{branch}/qr/configure', [BranchController::class, 'qrConfigure'])->name('branches.qr.configure');
 
         // --- Subscripción (Fase 6) ---
         Route::get('/subscription', fn () => view('dashboard.coming-soon', ['section' => 'Subscripción']))->name('subscription');
