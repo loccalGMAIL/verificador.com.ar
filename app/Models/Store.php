@@ -58,6 +58,12 @@ class Store extends Model
         return $this->hasMany(ProductImport::class);
     }
 
+    /** Perfiles de importación del comercio */
+    public function importProfiles(): HasMany
+    {
+        return $this->hasMany(ImportProfile::class);
+    }
+
     // --- Helpers ---
 
     public function isActive(): bool

@@ -21,6 +21,12 @@
     @endif
 </div>
 
+@if(session('limit_reached'))
+    <div class="mb-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700">
+        <i class="fa-solid fa-triangle-exclamation mr-2"></i>{{ session('limit_reached') }}
+    </div>
+@endif
+
 <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
     <table class="w-full text-sm">
         <thead class="bg-slate-50 border-b border-slate-200">
@@ -36,11 +42,18 @@
             @forelse($priceLists as $list)
             <tr class="hover:bg-slate-50 transition">
                 <td class="px-4 py-4">
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-1.5">
                         <p class="font-medium text-slate-800">{{ $list->name }}</p>
                         @if($list->is_default)
                             <span class="text-xs bg-blue-50 text-blue-600 font-medium px-2 py-0.5 rounded-full">
                                 Principal
+                            </span>
+                        @endif
+                        @if($list->isCalculated())
+                            <span class="inline-flex items-center gap-1 text-xs bg-violet-50 text-violet-600 font-medium px-2 py-0.5 rounded-full"
+                                  title="Calculada desde: {{ $list->baseList?->name }}">
+                                <i class="fa-solid fa-calculator text-[10px]"></i>
+                                Calculada {{ $list->adjustmentLabel() }}
                             </span>
                         @endif
                     </div>
@@ -62,7 +75,7 @@
                     <div class="flex items-center justify-end gap-1">
                         <a href="{{ route('dashboard.price-lists.edit', $list) }}"
                            class="text-blue-600 hover:text-blue-800 px-2 py-1 text-xs font-medium">
-                            Editar precios
+                            {{ $list->isCalculated() ? 'Ver precios' : 'Editar precios' }}
                         </a>
                         @if(!$list->is_default)
                         <form method="POST" action="{{ route('dashboard.price-lists.destroy', $list) }}"

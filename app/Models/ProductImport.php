@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\PriceList;
 
 class ProductImport extends Model
 {
@@ -17,6 +16,7 @@ class ProductImport extends Model
         'file_name',
         'mapping',
         'price_list_id',
+        'import_profile_id',
         'status',
         'rows_total',
         'rows_ok',
@@ -32,14 +32,18 @@ class ProductImport extends Model
         ];
     }
 
-    // --- Relaciones adicionales ---
+    // --- Relaciones ---
 
     public function priceList(): BelongsTo
     {
         return $this->belongsTo(PriceList::class);
     }
 
-    // --- Relaciones ---
+    public function importProfile(): BelongsTo
+    {
+        return $this->belongsTo(ImportProfile::class);
+    }
+
 
     public function store(): BelongsTo
     {
