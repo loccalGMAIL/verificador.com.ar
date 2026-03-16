@@ -7,6 +7,7 @@ use App\Http\Controllers\Dashboard\HomeController as DashboardHome;
 use App\Http\Controllers\Dashboard\ProductController;
 use App\Http\Controllers\Dashboard\ProductImportController;
 use App\Http\Controllers\Dashboard\BranchController;
+use App\Http\Controllers\Dashboard\PriceListController;
 use App\Http\Controllers\Dashboard\SettingsController;
 use App\Http\Controllers\Dashboard\SubscriptionController as DashboardSubscription;
 use App\Http\Controllers\Admin\HomeController as AdminHome;
@@ -57,13 +58,22 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         Route::get('/', DashboardHome::class)->name('home');
 
         // --- Productos: import primero para evitar conflicto con {product} ---
-        Route::get('/products/import',          [ProductImportController::class, 'index'])->name('products.import.index');
-        Route::post('/products/import',         [ProductImportController::class, 'store'])->name('products.import.store');
-        Route::get('/products/import/template', [ProductImportController::class, 'template'])->name('products.import.template');
+        Route::get('/products/import',                          [ProductImportController::class, 'index'])->name('products.import.index');
+        Route::post('/products/import',                         [ProductImportController::class, 'store'])->name('products.import.store');
+        Route::get('/products/import/template',                 [ProductImportController::class, 'template'])->name('products.import.template');
+        Route::get('/products/import/{import}/mapping',         [ProductImportController::class, 'showMapping'])->name('products.import.mapping');
+        Route::post('/products/import/{import}/mapping',        [ProductImportController::class, 'storeMapping'])->name('products.import.mapping.store');
 
         Route::resource('products', ProductController::class)
             ->except(['show'])
             ->parameters(['products' => 'product']);
+
+        // --- Listas de precios ---
+        Route::resource('price-lists', PriceListController::class)
+            ->except(['show'])
+            ->parameters(['price-lists' => 'priceList']);
+        Route::post('/price-lists/{priceList}/prices', [PriceListController::class, 'savePrices'])
+            ->name('price-lists.prices');
 
         // --- Sucursales ---
         Route::resource('branches', BranchController::class)

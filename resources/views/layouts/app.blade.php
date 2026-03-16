@@ -72,6 +72,13 @@
                     <span>Productos</span>
                 </a>
 
+                <a href="{{ route('dashboard.price-lists.index') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
+                          {{ $seg === 'price-lists' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
+                    <i class="fa-solid fa-tags w-4 text-center"></i>
+                    <span>Listas de precios</span>
+                </a>
+
                 <a href="{{ route('dashboard.branches.index') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
                           {{ $seg === 'branches' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">

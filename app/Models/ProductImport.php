@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\PriceList;
 
 class ProductImport extends Model
 {
@@ -14,6 +15,8 @@ class ProductImport extends Model
         'store_id',
         'user_id',
         'file_name',
+        'mapping',
+        'price_list_id',
         'status',
         'rows_total',
         'rows_ok',
@@ -24,8 +27,16 @@ class ProductImport extends Model
     protected function casts(): array
     {
         return [
+            'mapping'   => 'array',
             'error_log' => 'array',
         ];
+    }
+
+    // --- Relaciones adicionales ---
+
+    public function priceList(): BelongsTo
+    {
+        return $this->belongsTo(PriceList::class);
     }
 
     // --- Relaciones ---

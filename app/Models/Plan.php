@@ -15,6 +15,7 @@ class Plan extends Model
         'price_usd',
         'max_products',
         'max_branches',
+        'max_price_lists',
         'description',
         'featured',
         'active',
@@ -60,6 +61,18 @@ class Plan extends Model
     {
         return $this->max_branches
             ? number_format($this->max_branches)
+            : 'Ilimitadas';
+    }
+
+    public function hasPriceListLimit(): bool
+    {
+        return ! is_null($this->max_price_lists);
+    }
+
+    public function maxPriceListsLabel(): string
+    {
+        return $this->max_price_lists
+            ? number_format($this->max_price_lists)
             : 'Ilimitadas';
     }
 }

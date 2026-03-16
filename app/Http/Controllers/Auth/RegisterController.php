@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Plan;
+use App\Models\PriceList;
 use App\Models\Store;
 use App\Models\Subscription;
 use App\Models\User;
@@ -48,7 +49,17 @@ class RegisterController extends Controller
                 'store_id' => $store->id,
             ]);
 
-            // 3. Crear suscripción en trial por 7 días
+            // 3. Crear lista de precios General por defecto
+            PriceList::create([
+                'store_id'   => $store->id,
+                'name'       => 'General',
+                'description' => 'Lista de precios principal',
+                'is_default' => true,
+                'active'     => true,
+                'sort_order' => 0,
+            ]);
+
+            // 4. Crear suscripción en trial por 7 días
             $basicPlan = Plan::where('name', 'Basic')->first();
             Subscription::create([
                 'store_id'      => $store->id,
