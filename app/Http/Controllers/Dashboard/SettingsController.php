@@ -13,8 +13,10 @@ class SettingsController extends Controller
 {
     public function show(): View
     {
-        $store = auth()->user()->store;
-        return view('dashboard.settings', compact('store'));
+        $store          = auth()->user()->store;
+        $importProfiles = $store->importProfiles()->latest()->get();
+
+        return view('dashboard.settings', compact('store', 'importProfiles'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -34,7 +36,6 @@ class SettingsController extends Controller
         }
 
         if ($request->hasFile('logo')) {
-            // Eliminar logo anterior
             if ($store->logo_path) {
                 Storage::disk('public')->delete($store->logo_path);
             }

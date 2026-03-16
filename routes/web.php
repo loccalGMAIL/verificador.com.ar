@@ -8,6 +8,7 @@ use App\Http\Controllers\Dashboard\ProductController;
 use App\Http\Controllers\Dashboard\ProductImportController;
 use App\Http\Controllers\Dashboard\BranchController;
 use App\Http\Controllers\Dashboard\PriceListController;
+use App\Http\Controllers\Dashboard\ImportProfileController;
 use App\Http\Controllers\Dashboard\SettingsController;
 use App\Http\Controllers\Dashboard\SubscriptionController as DashboardSubscription;
 use App\Http\Controllers\Admin\HomeController as AdminHome;
@@ -58,11 +59,11 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         Route::get('/', DashboardHome::class)->name('home');
 
         // --- Productos: import primero para evitar conflicto con {product} ---
-        Route::get('/products/import',                          [ProductImportController::class, 'index'])->name('products.import.index');
-        Route::post('/products/import',                         [ProductImportController::class, 'store'])->name('products.import.store');
-        Route::get('/products/import/template',                 [ProductImportController::class, 'template'])->name('products.import.template');
-        Route::get('/products/import/{import}/mapping',         [ProductImportController::class, 'showMapping'])->name('products.import.mapping');
-        Route::post('/products/import/{import}/mapping',        [ProductImportController::class, 'storeMapping'])->name('products.import.mapping.store');
+        Route::get('/products/import',                   [ProductImportController::class, 'index'])->name('products.import.index');
+        Route::post('/products/import',                  [ProductImportController::class, 'store'])->name('products.import.store');
+        Route::get('/products/import/template',          [ProductImportController::class, 'template'])->name('products.import.template');
+        Route::get('/products/import/{import}/mapping',  [ProductImportController::class, 'showMapping'])->name('products.import.mapping');
+        Route::post('/products/import/{import}/mapping', [ProductImportController::class, 'storeMapping'])->name('products.import.mapping.store');
 
         Route::resource('products', ProductController::class)
             ->except(['show'])
@@ -72,8 +73,8 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         Route::resource('price-lists', PriceListController::class)
             ->except(['show'])
             ->parameters(['price-lists' => 'priceList']);
-        Route::post('/price-lists/{priceList}/prices', [PriceListController::class, 'savePrices'])
-            ->name('price-lists.prices');
+        Route::post('/price-lists/{priceList}/prices',       [PriceListController::class, 'savePrices'])->name('price-lists.prices');
+        Route::post('/price-lists/{priceList}/recalculate',  [PriceListController::class, 'recalculate'])->name('price-lists.recalculate');
 
         // --- Sucursales ---
         Route::resource('branches', BranchController::class)
@@ -87,6 +88,11 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         // --- Configuración ---
         Route::get('/settings',  [SettingsController::class, 'show'])->name('settings');
         Route::put('/settings',  [SettingsController::class, 'update'])->name('settings.update');
+
+        // --- Perfiles de importación (gestionados desde Settings) ---
+        Route::post('/settings/import-profiles',                       [ImportProfileController::class, 'store'])->name('settings.import-profiles.store');
+        Route::put('/settings/import-profiles/{importProfile}',        [ImportProfileController::class, 'update'])->name('settings.import-profiles.update');
+        Route::delete('/settings/import-profiles/{importProfile}',     [ImportProfileController::class, 'destroy'])->name('settings.import-profiles.destroy');
     });
 
 // ============================================================

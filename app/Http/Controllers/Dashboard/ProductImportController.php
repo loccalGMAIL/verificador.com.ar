@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessProductImport;
+use App\Models\ImportProfile;
 use App\Models\ProductImport;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,14 +15,15 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class ProductImportController extends Controller
 {
-    /** Campos disponibles a los que se puede mapear una columna del CSV */
-    private const FIELDS = [
-        'barcode'   => 'Código de barras *',
-        'name'      => 'Nombre *',
-        'desc'      => 'Descripción',
-        'price_ars' => 'Precio ARS',
-        'price_usd' => 'Precio USD',
-        'currency'  => 'Moneda por defecto',
+    /**
+     * Campos base a los que se puede mapear una columna del CSV.
+     * Los campos de precio por lista se generan dinámicamente en buildFields().
+     */
+    private const BASE_FIELDS = [
+        'barcode'  => 'Código de barras *',
+        'name'     => 'Nombre *',
+        'desc'     => 'Descripción',
+        'currency' => 'Moneda por defecto',
     ];
 
     /** Historial de imports + formulario de carga (Paso 1) */
@@ -29,26 +31,31 @@ class ProductImportController extends Controller
     {
         $store   = auth()->user()->store;
         $imports = $store->productImports()
-            ->with(['user', 'priceList'])
+            ->with(['user', 'importProfile'])
             ->latest()
             ->paginate(15);
 
-        $priceLists = $store->priceLists()->where('active', true)->get();
+        $importProfiles = $store->importProfiles()->latest()->get();
 
-        return view('dashboard.products.import', compact('imports', 'priceLists'));
+        return view('dashboard.products.import', compact('imports', 'importProfiles'));
     }
 
-    /** Paso 1: recibir el archivo y redirigir al paso de mapeo */
+    /**
+     * Paso 1: recibir el archivo.
+     * Si se elige un perfil guardado, aplica el mapeo y despacha el job directamente.
+     * Si no, redirige al paso de mapeo manual.
+     */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
+            'file'              => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
+            'import_profile_id' => ['nullable', 'integer', 'exists:import_profiles,id'],
         ]);
 
-        $store  = auth()->user()->store;
-        $sub    = $store->subscription;
+        $store = auth()->user()->store;
+        $sub   = $store->subscription;
 
-        // Verificar límite de productos antes de importar
+        // Verificar límite de productos
         if (! $sub?->hasFullAccess() && $sub?->plan?->max_products !== null) {
             $count = $store->products()->where('active', true)->count();
             if ($count >= $sub->plan->max_products) {
@@ -60,12 +67,43 @@ class ProductImportController extends Controller
         $file   = $request->file('file');
         $stored = $file->store("imports/{$store->id}", 'local');
 
-        // Crear registro con estado 'pending_mapping' — el job se dispara después del mapeo
+        $profileId = $request->input('import_profile_id') ?: null;
+
+        // Si se eligió un perfil, aplicar su mapeo y despachar directamente
+        if ($profileId) {
+            $profile = ImportProfile::find($profileId);
+
+            if ($profile && $profile->store_id === $store->id) {
+                $headers  = $this->readHeaders($stored);
+                $fieldMap = $profile->resolveMapping($headers);
+
+                if (isset($fieldMap['barcode']) && $fieldMap['barcode'] !== null
+                    && isset($fieldMap['name']) && $fieldMap['name'] !== null) {
+
+                    $import = ProductImport::create([
+                        'store_id'          => $store->id,
+                        'user_id'           => auth()->id(),
+                        'file_name'         => $stored,
+                        'mapping'           => $fieldMap,
+                        'import_profile_id' => $profileId,
+                        'status'            => 'pending',
+                    ]);
+
+                    ProcessProductImport::dispatch($import);
+
+                    return redirect()->route('dashboard.products.import.index')
+                        ->with('success', "Importación iniciada con el perfil \"{$profile->name}\".");
+                }
+            }
+        }
+
+        // Sin perfil (o perfil inválido) → paso de mapeo manual
         $import = ProductImport::create([
-            'store_id'  => $store->id,
-            'user_id'   => auth()->id(),
-            'file_name' => $stored,
-            'status'    => 'pending_mapping',
+            'store_id'          => $store->id,
+            'user_id'           => auth()->id(),
+            'file_name'         => $stored,
+            'import_profile_id' => $profileId,
+            'status'            => 'pending_mapping',
         ]);
 
         return redirect()->route('dashboard.products.import.mapping', $import);
@@ -76,11 +114,12 @@ class ProductImportController extends Controller
     {
         $this->authorizeImport($import);
 
-        // Leer solo los headers del archivo
-        $headers   = $this->readHeaders($import->file_name);
-        $autoMap   = $this->autoDetectMapping($headers);
-        $fields    = self::FIELDS;
-        $priceLists = auth()->user()->store->priceLists()->where('active', true)->get();
+        $store      = auth()->user()->store;
+        $priceLists = $store->priceLists()->where('active', true)->get();
+
+        $headers = $this->readHeaders($import->file_name);
+        $fields  = $this->buildFields($priceLists);
+        $autoMap = $this->autoDetectMapping($headers, $priceLists);
 
         return view('dashboard.products.import-mapping',
             compact('import', 'headers', 'autoMap', 'fields', 'priceLists'));
@@ -92,19 +131,19 @@ class ProductImportController extends Controller
         $this->authorizeImport($import);
 
         $request->validate([
-            'mapping'       => ['required', 'array'],
-            'price_list_id' => ['nullable', 'integer', 'exists:price_lists,id'],
+            'mapping'          => ['required', 'array'],
+            'save_as_profile'  => ['sometimes', 'boolean'],
+            'profile_name'     => ['nullable', 'string', 'max:100'],
         ]);
 
-        // Validar que al menos barcode y name estén mapeados
         $mapping = $request->input('mapping', []);
         $mapped  = array_values(array_filter($mapping, fn ($v) => $v !== ''));
 
         if (! in_array('barcode', $mapped)) {
-            return back()->withErrors(['mapping' => 'Debés mapear al menos la columna "Código de barras".*']);
+            return back()->withErrors(['mapping' => 'Debés mapear al menos la columna "Código de barras".']);
         }
         if (! in_array('name', $mapped)) {
-            return back()->withErrors(['mapping' => 'Debés mapear al menos la columna "Nombre".*']);
+            return back()->withErrors(['mapping' => 'Debés mapear al menos la columna "Nombre".']);
         }
 
         // Invertir: { campo => índice_columna }
@@ -115,10 +154,27 @@ class ProductImportController extends Controller
             }
         }
 
+        // Guardar como perfil si se solicitó
+        if ($request->boolean('save_as_profile') && $request->filled('profile_name')) {
+            $headers        = $this->readHeaders($import->file_name);
+            $headerMapping  = [];
+
+            foreach ($fieldMap as $field => $colIndex) {
+                if (isset($headers[$colIndex])) {
+                    $headerMapping[$field] = $headers[$colIndex];
+                }
+            }
+
+            ImportProfile::create([
+                'store_id'       => auth()->user()->store_id,
+                'name'           => $request->input('profile_name'),
+                'header_mapping' => $headerMapping,
+            ]);
+        }
+
         $import->update([
-            'mapping'       => $fieldMap,
-            'price_list_id' => $request->input('price_list_id') ?: null,
-            'status'        => 'pending',
+            'mapping' => $fieldMap,
+            'status'  => 'pending',
         ]);
 
         ProcessProductImport::dispatch($import);
@@ -160,29 +216,77 @@ class ProductImportController extends Controller
         return array_values(array_map('trim', $firstRow));
     }
 
-    /** Intenta mapear automáticamente los encabezados detectados a los campos del sistema */
-    private function autoDetectMapping(array $headers): array
+    /**
+     * Genera los campos disponibles para el mapeo, incluyendo campos de precio
+     * dinámicos para cada lista de precios activa del comercio.
+     *
+     * Campos generados: price_list_{id}_ars, price_list_{id}_usd
+     */
+    private function buildFields(\Illuminate\Support\Collection $priceLists): array
     {
+        $fields = self::BASE_FIELDS;
+
+        foreach ($priceLists as $list) {
+            $fields["price_list_{$list->id}_ars"] = "Precio ARS — {$list->name}";
+            $fields["price_list_{$list->id}_usd"] = "Precio USD — {$list->name}";
+        }
+
+        return $fields;
+    }
+
+    /**
+     * Auto-detecta el mapeo de columnas por nombre de encabezado.
+     * Incluye auto-detección de columnas de precio por lista.
+     */
+    private function autoDetectMapping(array $headers, \Illuminate\Support\Collection $priceLists): array
+    {
+        // Patrones base
         $patterns = [
-            'barcode'   => ['codigo_barras', 'barcode', 'codigo', 'ean', 'gtin'],
-            'name'      => ['nombre', 'name', 'producto', 'descripcion_corta'],
-            'desc'      => ['descripcion', 'description', 'desc', 'detalle'],
-            'price_ars' => ['precio_ars', 'price_ars', 'ars', 'precio_pesos', 'precio'],
-            'price_usd' => ['precio_usd', 'price_usd', 'usd', 'precio_dolar'],
-            'currency'  => ['moneda_default', 'moneda', 'currency', 'divisa'],
+            'barcode'  => ['codigo_barras', 'barcode', 'codigo', 'ean', 'gtin'],
+            'name'     => ['nombre', 'name', 'producto', 'descripcion_corta'],
+            'desc'     => ['descripcion', 'description', 'desc', 'detalle'],
+            'currency' => ['moneda_default', 'moneda', 'currency', 'divisa'],
         ];
 
-        $map = [];
+        // Añadir patrones para cada lista de precios
+        foreach ($priceLists as $list) {
+            $listSlug = strtolower(preg_replace('/[^a-z0-9]/i', '_', $list->name));
+
+            $patterns["price_list_{$list->id}_ars"] = [
+                "precio_ars_{$listSlug}",
+                "precio_{$listSlug}_ars",
+                "precio_{$listSlug}",
+                "price_{$listSlug}_ars",
+                'precio_ars',
+                'price_ars',
+                'ars',
+                'precio_pesos',
+                'precio',
+            ];
+            $patterns["price_list_{$list->id}_usd"] = [
+                "precio_usd_{$listSlug}",
+                "precio_{$listSlug}_usd",
+                "price_{$listSlug}_usd",
+                'precio_usd',
+                'price_usd',
+                'usd',
+                'precio_dolar',
+            ];
+        }
+
+        $map  = [];
+        $used = []; // evitar asignar el mismo campo a dos columnas
+
         foreach ($headers as $index => $header) {
-            $normalized = strtolower(trim($header));
+            $normalized = strtolower(trim((string) $header));
+            $map[$index] = '';
+
             foreach ($patterns as $field => $aliases) {
-                if (in_array($normalized, $aliases, true)) {
+                if (in_array($normalized, $aliases, true) && ! in_array($field, $used, true)) {
                     $map[$index] = $field;
+                    $used[]      = $field;
                     break;
                 }
-            }
-            if (! isset($map[$index])) {
-                $map[$index] = ''; // ignorar por defecto
             }
         }
 
