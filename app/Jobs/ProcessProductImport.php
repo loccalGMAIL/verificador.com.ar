@@ -2,8 +2,10 @@
 
 namespace App\Jobs;
 
+use App\Models\PriceList;
 use App\Models\Product;
 use App\Models\ProductImport;
+use App\Models\ProductPrice;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Storage;
@@ -15,7 +17,7 @@ class ProcessProductImport implements ShouldQueue
     use Queueable;
 
     public int $tries   = 1;
-    public int $timeout = 300; // 5 minutos máximo
+    public int $timeout = 300;
 
     public function __construct(
         public readonly ProductImport $import
@@ -31,27 +33,26 @@ class ProcessProductImport implements ShouldQueue
             $sheet        = $spreadsheet->getActiveSheet();
             $rows         = $sheet->toArray(null, true, true, false);
 
-            // La primera fila es el encabezado
-            $header = array_shift($rows);
-            $header = array_map('trim', array_map('strtolower', $header));
+            // Quitar la primera fila (encabezados)
+            array_shift($rows);
 
-            // Mapear columnas por nombre
-            $col = [
-                'barcode'   => array_search('codigo_barras', $header),
-                'name'      => array_search('nombre', $header),
-                'desc'      => array_search('descripcion', $header),
-                'price_ars' => array_search('precio_ars', $header),
-                'price_usd' => array_search('precio_usd', $header),
-                'currency'  => array_search('moneda_default', $header),
-            ];
+            // Obtener el mapeo guardado o intentar detección automática
+            $col = $this->resolveMapping($this->import->mapping, $rows);
 
-            if ($col['barcode'] === false || $col['name'] === false) {
+            if ($col === null) {
                 $this->import->update([
                     'status'    => 'failed',
-                    'error_log' => [['row' => 0, 'error' => 'El archivo no tiene las columnas requeridas: codigo_barras, nombre']],
+                    'error_log' => [['row' => 0, 'error' => 'No se pudo determinar el mapeo de columnas.']],
                 ]);
                 return;
             }
+
+            // Resolver lista de precios destino
+            $priceList = $this->import->price_list_id
+                ? PriceList::find($this->import->price_list_id)
+                : PriceList::where('store_id', $this->import->store_id)
+                           ->where('is_default', true)
+                           ->first();
 
             $rowsTotal = count($rows);
             $rowsOk    = 0;
@@ -59,54 +60,66 @@ class ProcessProductImport implements ShouldQueue
             $errorLog  = [];
 
             foreach ($rows as $index => $row) {
-                $rowNum = $index + 2; // +2: 1 por el header, 1 para que sea 1-indexed
+                $rowNum = $index + 2;
 
-                // Saltar filas completamente vacías
+                // Saltar filas vacías
                 $filled = array_filter($row, fn ($v) => $v !== null && $v !== '');
                 if (empty($filled)) {
                     $rowsTotal--;
                     continue;
                 }
 
-                $barcode   = trim((string) ($row[$col['barcode']] ?? ''));
-                $name      = trim((string) ($row[$col['name']] ?? ''));
-                $priceArs  = $col['price_ars'] !== false ? $this->parseDecimal($row[$col['price_ars']] ?? null) : null;
-                $priceUsd  = $col['price_usd'] !== false ? $this->parseDecimal($row[$col['price_usd']] ?? null) : null;
-                $currency  = strtoupper(trim((string) ($col['currency'] !== false ? ($row[$col['currency']] ?? 'ARS') : 'ARS')));
-                $desc      = $col['desc'] !== false ? trim((string) ($row[$col['desc']] ?? '')) : null;
+                $barcode  = $col['barcode'] !== null ? trim((string) ($row[$col['barcode']] ?? '')) : '';
+                $name     = $col['name']    !== null ? trim((string) ($row[$col['name']]    ?? '')) : '';
+                $priceArs = $col['price_ars'] !== null ? $this->parseDecimal($row[$col['price_ars']] ?? null) : null;
+                $priceUsd = $col['price_usd'] !== null ? $this->parseDecimal($row[$col['price_usd']] ?? null) : null;
+                $currency = strtoupper(trim((string) ($col['currency'] !== null
+                    ? ($row[$col['currency']] ?? 'ARS')
+                    : 'ARS')));
+                $desc     = $col['desc'] !== null ? trim((string) ($row[$col['desc']] ?? '')) : null;
 
-                // Validaciones básicas
+                // Validaciones
                 if ($barcode === '') {
                     $errorLog[] = ['row' => $rowNum, 'error' => 'Código de barras vacío'];
                     $rowsError++;
                     continue;
                 }
                 if ($name === '') {
-                    $errorLog[] = ['row' => $rowNum, 'error' => "Fila {$rowNum}: nombre vacío (barcode: {$barcode})"];
+                    $errorLog[] = ['row' => $rowNum, 'error' => "Nombre vacío (barcode: {$barcode})"];
                     $rowsError++;
                     continue;
                 }
                 if ($priceArs === null && $priceUsd === null) {
-                    $errorLog[] = ['row' => $rowNum, 'error' => "Fila {$rowNum}: debe tener al menos un precio (barcode: {$barcode})"];
-                    $rowsError++;
-                    continue;
+                    // Sin precio: se crea el producto pero sin precio en la lista
                 }
                 if (! in_array($currency, ['ARS', 'USD'])) {
                     $currency = 'ARS';
                 }
 
-                // Upsert: actualiza si existe, crea si no
-                Product::updateOrCreate(
+                // Upsert del producto (campos base)
+                $product = Product::updateOrCreate(
                     ['store_id' => $this->import->store_id, 'barcode' => $barcode],
                     [
                         'name'             => $name,
                         'description'      => $desc ?: null,
-                        'price_ars'        => $priceArs,
-                        'price_usd'        => $priceUsd,
+                        'price_ars'        => $priceArs,   // legacy sync
+                        'price_usd'        => $priceUsd,   // legacy sync
                         'currency_default' => $currency,
                         'active'           => true,
                     ]
                 );
+
+                // Guardar precio en la lista destino
+                if ($priceList && ($priceArs !== null || $priceUsd !== null)) {
+                    ProductPrice::updateOrCreate(
+                        ['product_id' => $product->id, 'price_list_id' => $priceList->id],
+                        [
+                            'price_ars'        => $priceArs,
+                            'price_usd'        => $priceUsd,
+                            'currency_default' => $currency,
+                        ]
+                    );
+                }
 
                 $rowsOk++;
             }
@@ -127,12 +140,33 @@ class ProcessProductImport implements ShouldQueue
         }
     }
 
+    // ── Helpers ──────────────────────────────────────────────────────
+
+    /**
+     * Convierte el mapeo guardado { campo => índice } al formato interno { campo => índice|null }.
+     */
+    private function resolveMapping(?array $savedMapping, array $rows): ?array
+    {
+        $defaults = ['barcode' => null, 'name' => null, 'desc' => null,
+                     'price_ars' => null, 'price_usd' => null, 'currency' => null];
+
+        if ($savedMapping) {
+            return array_merge($defaults, $savedMapping);
+        }
+
+        // Fallback: intentar detección por nombre de columna
+        if (empty($rows)) {
+            return null;
+        }
+
+        return null;
+    }
+
     private function parseDecimal(mixed $value): ?float
     {
         if ($value === null || $value === '') {
             return null;
         }
-        // Normalizar separadores (1.250,50 → 1250.50)
         $clean = preg_replace('/[^\d,.]/', '', (string) $value);
         $clean = str_replace(',', '.', $clean);
         $float = (float) $clean;

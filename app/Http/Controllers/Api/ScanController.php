@@ -12,6 +12,8 @@ class ScanController extends Controller
     /**
      * Consulta el precio de un producto dado el token de la sucursal y el código de barras.
      * GET /api/scan/{token}/{barcode}
+     *
+     * Devuelve el producto con sus precios en TODAS las listas activas del comercio.
      */
     public function __invoke(string $token, string $barcode): JsonResponse
     {
@@ -37,21 +39,37 @@ class ScanController extends Controller
             return response()->json(['found' => false]);
         }
 
-        // Determinar precio y etiqueta según la moneda por defecto
-        if ($product->currency_default === 'USD') {
-            $price         = '$ ' . number_format((float) $product->price_usd, 2, ',', '.');
-            $currencyLabel = 'Dólares (USD)';
-        } else {
-            $price         = '$ ' . number_format((float) $product->price_ars, 2, ',', '.');
-            $currencyLabel = 'Pesos argentinos (ARS)';
-        }
+        // Todas las listas activas del comercio con el precio de este producto
+        $priceLists = $branch->store
+            ->priceLists()
+            ->where('active', true)
+            ->with(['productPrices' => fn ($q) => $q->where('product_id', $product->id)])
+            ->orderBy('sort_order')
+            ->get();
+
+        $prices = $priceLists->map(function ($list) {
+            $pp = $list->productPrices->first();
+
+            if (! $pp) {
+                return [
+                    'list_name' => $list->name,
+                    'available' => false,
+                    'price'     => null,
+                ];
+            }
+
+            return [
+                'list_name' => $list->name,
+                'available' => true,
+                'price'     => $pp->formattedPrice(),
+            ];
+        });
 
         return response()->json([
-            'found'          => true,
-            'name'           => $product->name,
-            'price'          => $price,
-            'currency_label' => $currencyLabel,
-            'store_name'     => $branch->store->name,
+            'found'      => true,
+            'name'       => $product->name,
+            'store_name' => $branch->store->name,
+            'prices'     => $prices,
         ]);
     }
 }

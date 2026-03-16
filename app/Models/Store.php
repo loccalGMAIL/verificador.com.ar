@@ -46,6 +46,12 @@ class Store extends Model
         return $this->hasOne(Subscription::class)->latestOfMany();
     }
 
+    /** Listas de precios del comercio */
+    public function priceLists(): HasMany
+    {
+        return $this->hasMany(PriceList::class)->orderBy('sort_order');
+    }
+
     /** Historial de importaciones */
     public function productImports(): HasMany
     {

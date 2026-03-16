@@ -11,6 +11,55 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.2.0] — 2026-03-16
+
+### Agregado
+
+- **Listas de precios**
+  - Nuevo modelo `PriceList`: cada comercio puede tener múltiples listas (General, Mayorista, VIP, etc.)
+  - Nuevo modelo `ProductPrice`: precio de un producto en una lista específica
+  - CRUD completo en `/dashboard/price-lists` (crear, editar, activar/desactivar, eliminar)
+  - Al registrar un comercio se crea automáticamente la lista "General" como lista por defecto
+  - Enlace "Listas de precios" en el sidebar del dashboard
+  - Límite de listas por plan (`max_price_lists`): Basic/Standard = 1, Pro = 2, Business = ilimitado
+  - Control de acceso: la lista por defecto no puede eliminarse ni desactivarse
+
+- **Importación de productos — flujo de mapeo de columnas**
+  - Paso 1: subida del archivo (xlsx/csv)
+  - Paso 2: pantalla de mapeo (`/products/import/{id}/mapping`) con auto-detección de encabezados
+  - Selección de lista de precios destino al importar
+  - El job `ProcessProductImport` usa el mapeo guardado en lugar de nombres fijos de columna
+  - Productos importados sin precio ya no se descartan (se crean sin precio en la lista)
+
+- **Planes — campo `max_price_lists`**
+  - Nueva migración `add_max_price_lists_to_plans_table`
+  - Seeder actualizado con límites por plan
+  - Helpers `hasPriceListLimit()` y `maxPriceListsLabel()` en el modelo `Plan`
+
+- **Base de datos**
+  - Migración `create_price_lists_table`
+  - Migración `create_product_prices_table`
+  - Migración `migrate_existing_product_prices` — migra precios legacy a la lista por defecto
+  - Migración `add_mapping_to_product_imports_table` — columnas `mapping` (JSON) y `price_list_id`
+
+### Modificado
+
+- **Escáner QR** (`/v/{token}`)
+  - La API `/api/scan/{token}/{barcode}` ahora devuelve los precios del producto en **todas las listas activas** del comercio
+  - La vista del escáner muestra cada lista con su precio o indica "No disponible"
+  - UI renovada: nombre del comercio, tabla de precios por lista, botón "Escanear otro" destacado
+
+- **Productos — formularios crear/editar**
+  - Los campos de precio se agrupan por lista de precios activa
+  - Se elimina la validación que exigía al menos un precio (ahora es opcional)
+  - Sincronización de campos legacy (`price_ars`, `price_usd`) con el primer precio guardado
+
+- **`Store`** — nueva relación `priceLists()` ordenada por `sort_order`
+- **`Product`** — nueva relación `prices()` y helper `priceForList(PriceList $list)`
+- **`ProductImport`** — nuevos campos `mapping` y `price_list_id`; relación `priceList()`
+
+---
+
 ## [1.1.0] — 2026-03-15
 
 ### Agregado
@@ -103,7 +152,8 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
-[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v0.2.0...v1.1.0
 [0.2.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/loccalGMAIL/verificador.com.ar/releases/tag/v0.1.0

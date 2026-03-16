@@ -9,76 +9,30 @@
     $sub   = $store?->subscription;
 @endphp
 
-{{-- Banner trial --}}
-@if($sub && $sub->isOnTrial())
-<div class="mb-6 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex items-start gap-3">
-    <i class="fa-solid fa-clock-rotate-left text-amber-500 mt-0.5"></i>
-    <div>
-        <p class="font-semibold text-amber-800 text-sm">Estás en el período de prueba gratis</p>
-        <p class="text-amber-700 text-sm mt-0.5">
-            Te quedan <strong>{{ $sub->trialDaysRemaining() }} día(s)</strong>.
-            <a href="{{ route('dashboard.subscription') }}" class="underline font-medium">
-                Activá tu subscripción
-            </a>
-            para continuar usando el servicio.
-        </p>
-    </div>
-</div>
-@endif
-
-{{-- ══ FILA 1: Stats + Acciones rápidas ══ --}}
+{{-- ══ FILA 1: Plan + Acciones rápidas ══ --}}
 <div class="flex flex-col lg:flex-row gap-4 mb-6">
 
-    {{-- Stats: 3 cards --}}
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
-
-        {{-- Productos --}}
-        <div class="bg-white rounded-xl border border-slate-200 p-5">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-sm font-medium text-slate-500">Productos</span>
-                <span class="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center">
-                    <i class="fa-solid fa-box text-blue-600 text-sm"></i>
-                </span>
-            </div>
-            <p class="text-3xl font-bold text-slate-900">
-                {{ $store?->products()->where('active', true)->count() ?? 0 }}
-            </p>
-            <p class="text-xs text-slate-400 mt-1">
-                @if($sub && $sub->plan) Límite: {{ $sub->plan->maxProductsLabel() }} @endif
-            </p>
+    {{-- Card Plan --}}
+    <div class="bg-white rounded-xl border border-slate-200 p-5 flex-1">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-medium text-slate-500">Plan</span>
+            <span class="w-9 h-9 bg-violet-50 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-credit-card text-violet-600 text-sm"></i>
+            </span>
         </div>
-
-        {{-- Sucursales --}}
-        <div class="bg-white rounded-xl border border-slate-200 p-5">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-sm font-medium text-slate-500">Sucursales</span>
-                <span class="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center">
-                    <i class="fa-solid fa-store text-emerald-600 text-sm"></i>
-                </span>
-            </div>
-            <p class="text-3xl font-bold text-slate-900">
-                {{ $store?->branches()->where('active', true)->count() ?? 0 }}
-            </p>
-            <p class="text-xs text-slate-400 mt-1">sucursales activas</p>
-        </div>
-
-        {{-- Plan --}}
-        <div class="bg-white rounded-xl border border-slate-200 p-5">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-sm font-medium text-slate-500">Plan</span>
-                <span class="w-9 h-9 bg-violet-50 rounded-lg flex items-center justify-center">
-                    <i class="fa-solid fa-credit-card text-violet-600 text-sm"></i>
-                </span>
-            </div>
-            <p class="text-3xl font-bold text-slate-900">{{ $sub?->plan?->name ?? 'Sin plan' }}</p>
-            <p class="text-xs mt-1 {{ $sub?->isOnTrial() ? 'text-amber-500' : 'text-slate-400' }}">
-                @if($sub?->isOnTrial())     Trial activo
-                @elseif($sub?->isActive())  Activa
-                @else                       {{ ucfirst($sub?->status ?? 'sin subscripción') }}
+        <p class="text-3xl font-bold text-slate-900">{{ $sub?->plan?->name ?? 'Sin plan' }}</p>
+        <div class="flex items-center justify-between mt-1">
+            <p class="text-xs {{ $sub?->isOnTrial() ? 'text-amber-500' : 'text-slate-400' }}">
+                @if($sub?->isOnTrial())    Trial · {{ $sub->trialDaysRemaining() }} día(s) restantes
+                @elseif($sub?->isActive()) Suscripción activa
+                @else                     {{ ucfirst($sub?->status ?? 'sin suscripción') }}
                 @endif
             </p>
+            <a href="{{ route('dashboard.subscription') }}"
+               class="text-xs text-violet-600 hover:text-violet-800 font-medium transition">
+                Ver planes <i class="fa-solid fa-arrow-right ml-0.5"></i>
+            </a>
         </div>
-
     </div>
 
     {{-- Acciones rápidas --}}
@@ -109,6 +63,83 @@
     </div>
 
 </div>
+
+{{-- ══ FILA 1.5: Uso del plan ══ --}}
+@if($sub && !$sub->isExpired())
+<div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-semibold text-slate-700">Uso del plan</h3>
+        @if($sub->isOnTrial())
+            <span class="text-xs bg-amber-100 text-amber-700 font-medium px-2.5 py-0.5 rounded-full">
+                Trial · acceso total
+            </span>
+        @else
+            <a href="{{ route('dashboard.subscription') }}" class="text-xs text-slate-400 hover:text-blue-600 transition">
+                {{ $sub->plan?->name }} <i class="fa-solid fa-arrow-right ml-1"></i>
+            </a>
+        @endif
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        {{-- Productos --}}
+        @php
+            $productCount = $store?->products()->where('active', true)->count() ?? 0;
+            $productLimit = $sub->hasFullAccess() ? null : $sub->plan?->max_products;
+            $productPct   = $productLimit ? min(100, ($productCount / $productLimit) * 100) : 0;
+            $productBar   = $productLimit
+                ? ($productPct >= 90 ? 'bg-red-500' : ($productPct >= 70 ? 'bg-amber-400' : 'bg-blue-500'))
+                : 'bg-blue-400';
+        @endphp
+        <div>
+            <div class="flex justify-between text-xs text-slate-500 mb-1.5">
+                <span class="font-medium text-slate-700">
+                    <i class="fa-solid fa-box mr-1 text-blue-500"></i>Productos
+                </span>
+                <span>
+                    {{ number_format($productCount) }}
+                    @if($productLimit) / {{ number_format($productLimit) }}
+                    @else &nbsp;·&nbsp; <span class="text-emerald-600 font-medium">Ilimitados</span>
+                    @endif
+                </span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2">
+                <div class="{{ $productBar }} h-2 rounded-full transition-all"
+                     style="width: {{ $productLimit ? $productPct : 30 }}%; {{ !$productLimit ? 'opacity:.4' : '' }}">
+                </div>
+            </div>
+        </div>
+
+        {{-- Sucursales --}}
+        @php
+            $branchCount = $store?->branches()->where('active', true)->count() ?? 0;
+            $branchLimit = $sub->hasFullAccess() ? null : $sub->plan?->max_branches;
+            $branchPct   = $branchLimit ? min(100, ($branchCount / $branchLimit) * 100) : 0;
+            $branchBar   = $branchLimit
+                ? ($branchPct >= 90 ? 'bg-red-500' : ($branchPct >= 70 ? 'bg-amber-400' : 'bg-emerald-500'))
+                : 'bg-emerald-400';
+        @endphp
+        <div>
+            <div class="flex justify-between text-xs text-slate-500 mb-1.5">
+                <span class="font-medium text-slate-700">
+                    <i class="fa-solid fa-store mr-1 text-emerald-500"></i>Sucursales
+                </span>
+                <span>
+                    {{ number_format($branchCount) }}
+                    @if($branchLimit) / {{ number_format($branchLimit) }}
+                    @else &nbsp;·&nbsp; <span class="text-emerald-600 font-medium">Ilimitadas</span>
+                    @endif
+                </span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2">
+                <div class="{{ $branchBar }} h-2 rounded-full transition-all"
+                     style="width: {{ $branchLimit ? $branchPct : 30 }}%; {{ !$branchLimit ? 'opacity:.4' : '' }}">
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+@endif
 
 {{-- ══ FILA 2: Sucursales y QR ══ --}}
 <div class="bg-white rounded-xl border border-slate-200 p-5">

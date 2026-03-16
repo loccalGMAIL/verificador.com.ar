@@ -72,6 +72,13 @@
                     <span>Productos</span>
                 </a>
 
+                <a href="{{ route('dashboard.price-lists.index') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
+                          {{ $seg === 'price-lists' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
+                    <i class="fa-solid fa-tags w-4 text-center"></i>
+                    <span>Listas de precios</span>
+                </a>
+
                 <a href="{{ route('dashboard.branches.index') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
                           {{ $seg === 'branches' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
@@ -159,6 +166,49 @@
                         <i class="fa-solid fa-circle-exclamation text-red-500"></i>
                         {{ session('error') }}
                     </div>
+                @endif
+
+                {{-- Alerta global de suscripción expirada --}}
+                @auth
+                @php $layoutSub = auth()->user()->store?->subscription; @endphp
+                @if($layoutSub?->isExpired())
+                <div class="mb-4 bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-circle-exclamation text-red-500"></i>
+                        <span class="text-red-800 font-medium">Tu suscripción expiró.</span>
+                        <span class="text-red-700 hidden sm:inline">Elegí un plan para seguir usando el sistema.</span>
+                    </div>
+                    <a href="{{ route('dashboard.subscription') }}"
+                       class="flex-shrink-0 bg-red-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-red-700 transition">
+                        Ver planes
+                    </a>
+                </div>
+                @elseif($layoutSub?->isOnTrial() && $layoutSub->trialDaysRemaining() <= 3)
+                <div class="mb-4 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 text-sm">
+                        <i class="fa-solid fa-clock text-amber-500"></i>
+                        <span class="text-amber-800 font-medium">
+                            Te quedan <strong>{{ $layoutSub->trialDaysRemaining() }} día(s)</strong> de trial.
+                        </span>
+                        <span class="text-amber-700 hidden sm:inline">Elegí tu plan para no perder el acceso.</span>
+                    </div>
+                    <a href="{{ route('dashboard.subscription') }}"
+                       class="flex-shrink-0 bg-amber-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-amber-600 transition">
+                        Elegir plan
+                    </a>
+                </div>
+                @endif
+                @endauth
+
+                {{-- Mensaje de límite alcanzado --}}
+                @if(session('limit_reached'))
+                <div class="mb-4 bg-violet-50 border border-violet-200 rounded-xl px-4 py-3 flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-arrow-up text-violet-500"></i>
+                    <span class="text-violet-800">{{ session('limit_reached') }}</span>
+                    <a href="{{ route('dashboard.subscription') }}" class="ml-auto flex-shrink-0 text-violet-700 font-semibold underline text-xs">
+                        Ver planes
+                    </a>
+                </div>
                 @endif
 
                 @yield('content')
