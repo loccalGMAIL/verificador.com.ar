@@ -220,15 +220,22 @@
     @csrf
 
     <div class="bg-white rounded-xl border border-slate-200 overflow-hidden mb-4">
-        <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+        <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between gap-3">
             <div>
                 <h3 class="font-semibold text-slate-800 text-sm">Precios de productos</h3>
                 <p class="text-xs text-slate-400 mt-0.5">Dejá vacío para marcar el producto como "No disponible" en esta lista.</p>
             </div>
-            <button type="submit"
-                    class="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition">
-                <i class="fa-solid fa-floppy-disk mr-1"></i>Guardar precios
-            </button>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <a href="{{ route('dashboard.products.import.index') }}"
+                   class="flex items-center gap-1.5 bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-50 transition">
+                    <i class="fa-solid fa-file-import"></i>
+                    Importar
+                </a>
+                <button type="submit"
+                        class="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition">
+                    <i class="fa-solid fa-floppy-disk mr-1"></i>Guardar precios
+                </button>
+            </div>
         </div>
 
         <div class="overflow-x-auto">

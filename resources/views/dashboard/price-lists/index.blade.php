@@ -5,7 +5,16 @@
 
 @section('content')
 
-<div class="flex items-center justify-between mb-5">
+<div class="flex items-center justify-between gap-3 mb-5">
+
+    {{-- Botón importar --}}
+    <a href="{{ route('dashboard.products.import.index') }}"
+       class="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 transition">
+        <i class="fa-solid fa-file-import text-slate-500"></i>
+        Importar
+    </a>
+
+    {{-- Botón nueva lista --}}
     @if($limit === null || $priceLists->count() < $limit)
         <a href="{{ route('dashboard.price-lists.create') }}"
            class="ml-auto flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
