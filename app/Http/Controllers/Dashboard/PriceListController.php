@@ -85,31 +85,22 @@ class PriceListController extends Controller
     {
         $this->authorizePriceList($priceList);
 
-        if ($priceList->isCalculated()) {
-            // Lista derivada: solo mostrar precios calculados, sin edición manual
-            $products = auth()->user()->store
-                ->products()
-                ->where('active', true)
-                ->orderBy('name')
-                ->with([
-                    'prices' => fn ($q) => $q->where('price_list_id', $priceList->id),
-                ])
-                ->paginate(30);
+        $store       = auth()->user()->store;
+        $priceList->load('baseList');
 
-            $priceList->load('baseList');
+        // Listas manuales disponibles como base (excluyendo esta misma lista)
+        $manualLists = $store->priceLists()
+            ->whereNull('base_price_list_id')
+            ->where('id', '!=', $priceList->id)
+            ->get();
 
-            return view('dashboard.price-lists.edit', compact('priceList', 'products'));
-        }
-
-        // Lista manual: edición completa de precios
-        $store    = auth()->user()->store;
         $products = $store->products()
             ->where('active', true)
             ->orderBy('name')
             ->with(['prices' => fn ($q) => $q->where('price_list_id', $priceList->id)])
             ->paginate(30);
 
-        return view('dashboard.price-lists.edit', compact('priceList', 'products'));
+        return view('dashboard.price-lists.edit', compact('priceList', 'products', 'manualLists'));
     }
 
     public function update(Request $request, PriceList $priceList): RedirectResponse
