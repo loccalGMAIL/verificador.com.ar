@@ -12,7 +12,7 @@
             <div class="text-center mb-8">
                 <h2 class="text-2xl font-bold text-slate-900">Crear cuenta</h2>
                 <p class="text-slate-500 text-sm mt-1">
-                    <span class="text-emerald-600 font-semibold">7 días gratis</span>,
+                    <span class="text-emerald-600 font-semibold">{{ config('app.trial_days') }} días gratis</span>,
                     sin tarjeta de crédito
                 </p>
             </div>

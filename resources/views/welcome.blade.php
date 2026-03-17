@@ -26,7 +26,7 @@
             <div class="flex flex-col sm:flex-row gap-4">
                 <a href="{{ route('register') }}"
                    class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-base md:text-lg transition">
-                    Probar gratis 7 días
+                    Probar gratis {{ config('app.trial_days') }} días
                 </a>
                 {{-- <button class="bg-white/10 border border-white/40 hover:bg-white/20 text-white px-8 py-4 rounded-xl font-bold text-lg backdrop-blur-sm transition">
                     Ver demo
@@ -211,7 +211,7 @@
                     </ul>
                     <a href="{{ route('register') }}"
                        class="w-full block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition text-center">
-                        Probar gratis 7 días
+                        Probar gratis {{ config('app.trial_days') }} días
                     </a>
                 </div>
 
@@ -360,7 +360,7 @@
         <p class="text-slate-500 text-base md:text-lg mb-8">Únete a cientos de comercios que ya optimizaron sus ventas.</p>
         <a href="{{ route('register') }}"
            class="inline-block bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl transition">
-            Probar gratis 7 días
+            Probar gratis {{ config('app.trial_days') }} días
         </a>
     </section>
 

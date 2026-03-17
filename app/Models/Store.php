@@ -18,6 +18,13 @@ class Store extends Model
         'address',
         'phone',
         'status',
+        'excel_col_barcode',
+        'excel_col_name',
+        'excel_col_price',
+        'retail_label',
+        'show_wholesale',
+        'wholesale_label',
+        'wholesale_discount',
     ];
 
     // --- Relaciones ---

@@ -52,9 +52,10 @@ class SubscriptionController extends Controller
     {
         $subscription->update([
             'status'        => 'trial',
-            'trial_ends_at' => now()->addDays(7),
+            'trial_ends_at' => now()->addDays(config('app.trial_days')),
         ]);
 
-        return back()->with('success', 'Período trial reiniciado por 7 días.');
+        $days = config('app.trial_days');
+        return back()->with('success', "Período trial reiniciado por {$days} días.");
     }
 }

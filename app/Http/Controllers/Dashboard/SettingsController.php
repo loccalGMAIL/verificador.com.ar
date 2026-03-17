@@ -22,7 +22,28 @@ class SettingsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $store = auth()->user()->store;
+        $tab   = $request->input('_tab', 'general');
 
+        if ($tab === 'excel-import') {
+            $data = $request->validate([
+                'excel_col_barcode'  => ['required', 'string', 'max:100'],
+                'excel_col_name'     => ['required', 'string', 'max:100'],
+                'excel_col_price'    => ['required', 'string', 'max:100'],
+                'retail_label'       => ['required', 'string', 'max:100'],
+                'show_wholesale'     => ['boolean'],
+                'wholesale_label'    => ['nullable', 'string', 'max:100'],
+                'wholesale_discount' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            ]);
+
+            $data['show_wholesale'] = $request->boolean('show_wholesale');
+
+            $store->update($data);
+
+            return redirect()->route('dashboard.settings', ['tab' => 'excel-import'])
+                ->with('success', 'Configuración de importación guardada.');
+        }
+
+        // Tab: general (default)
         $data = $request->validate([
             'name'    => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:500'],
@@ -30,7 +51,6 @@ class SettingsController extends Controller
             'logo'    => ['nullable', 'image', 'max:2048'],
         ]);
 
-        // Actualizar slug si el nombre cambió
         if ($data['name'] !== $store->name) {
             $data['slug'] = Str::slug($data['name']) . '-' . Str::random(6);
         }

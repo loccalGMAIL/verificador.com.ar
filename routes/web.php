@@ -59,11 +59,9 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         Route::get('/', DashboardHome::class)->name('home');
 
         // --- Productos: import primero para evitar conflicto con {product} ---
-        Route::get('/products/import',                   [ProductImportController::class, 'index'])->name('products.import.index');
-        Route::post('/products/import',                  [ProductImportController::class, 'store'])->name('products.import.store');
-        Route::get('/products/import/template',          [ProductImportController::class, 'template'])->name('products.import.template');
-        Route::get('/products/import/{import}/mapping',  [ProductImportController::class, 'showMapping'])->name('products.import.mapping');
-        Route::post('/products/import/{import}/mapping', [ProductImportController::class, 'storeMapping'])->name('products.import.mapping.store');
+        Route::get('/products/import',          [ProductImportController::class, 'index'])->name('products.import.index');
+        Route::post('/products/import',         [ProductImportController::class, 'store'])->name('products.import.store');
+        Route::get('/products/import/template', [ProductImportController::class, 'template'])->name('products.import.template');
 
         Route::resource('products', ProductController::class)
             ->except(['show'])

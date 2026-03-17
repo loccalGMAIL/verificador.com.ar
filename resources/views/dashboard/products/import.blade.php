@@ -4,7 +4,7 @@
 @section('page-title', 'Importar productos')
 
 @section('content')
-<div class="max-w-2xl space-y-6">
+<div class="max-w-4xl space-y-6">
 
     @if(session('limit_reached'))
     <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700">
@@ -12,12 +12,14 @@
     </div>
     @endif
 
-    {{-- ── Formulario de carga ─────────────────────────────── --}}
-    <div class="bg-white rounded-xl border border-slate-200 p-6">
+    {{-- ── Fila: formulario + config ────────────────────────── --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+    {{-- Formulario de carga (2/3) --}}
+    <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-6">
         <h3 class="font-semibold text-slate-800 mb-1">Subir archivo</h3>
         <p class="text-sm text-slate-500 mb-5">
             Aceptamos archivos <strong>.xlsx</strong>, <strong>.xls</strong> y <strong>.csv</strong>.
-            Podés mapear las columnas en el siguiente paso, o elegir un perfil guardado para hacerlo automáticamente.
             <a href="{{ route('dashboard.products.import.template') }}"
                class="text-blue-600 hover:underline font-medium">
                 Descargar plantilla CSV
@@ -40,35 +42,46 @@
                 @error('file')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
 
-            {{-- Perfil de importación (opcional) --}}
-            @if($importProfiles->count() > 0)
-            <div class="mb-4">
-                <label class="block text-xs font-medium text-slate-600 mb-1">
-                    Perfil de importación
-                    <span class="text-slate-400 font-normal">(opcional)</span>
-                </label>
-                <select name="import_profile_id"
-                        class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">— Sin perfil (mapear manualmente) —</option>
-                    @foreach($importProfiles as $profile)
-                        <option value="{{ $profile->id }}">{{ $profile->name }}</option>
-                    @endforeach
-                </select>
-                <p class="text-xs text-slate-400 mt-1">
-                    Si elegís un perfil, se salta el paso de mapeo y la importación comienza directamente.
-                </p>
-            </div>
-            @endif
-
             <button type="submit"
                     class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold
                            hover:bg-blue-700 transition flex items-center gap-2">
                 <i class="fa-solid fa-upload"></i>
-                Continuar
+                Importar
             </button>
         </form>
     </div>
+
+    {{-- Configuración activa (1/3) --}}
+    <div class="bg-slate-50 rounded-xl border border-slate-200 p-5 flex flex-col gap-4">
+        <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+                <i class="fa-solid fa-file-excel text-emerald-600 mr-1.5"></i>Columnas configuradas
+            </p>
+            <dl class="space-y-2 text-sm">
+                <div class="flex justify-between gap-2">
+                    <dt class="text-slate-500">Código de barras</dt>
+                    <dd class="font-mono font-semibold text-slate-700">{{ $store->excel_col_barcode ?? 'codigo' }}</dd>
+                </div>
+                <div class="flex justify-between gap-2">
+                    <dt class="text-slate-500">Nombre</dt>
+                    <dd class="font-mono font-semibold text-slate-700">{{ $store->excel_col_name ?? 'nombre' }}</dd>
+                </div>
+                <div class="flex justify-between gap-2">
+                    <dt class="text-slate-500">Precio</dt>
+                    <dd class="font-mono font-semibold text-slate-700">{{ $store->excel_col_price ?? 'precio' }}</dd>
+                </div>
+            </dl>
+        </div>
+        <a href="{{ route('dashboard.settings', ['tab' => 'excel-import']) }}"
+           class="flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600
+                  hover:text-blue-800 border border-blue-200 bg-white hover:bg-blue-50
+                  px-3 py-2 rounded-lg transition">
+            <i class="fa-solid fa-gear"></i>
+            Cambiar configuración
+        </a>
+    </div>
+
+    </div>{{-- /grid --}}
 
     {{-- ── Historial de importaciones ─────────────────────── --}}
     <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">

@@ -66,7 +66,7 @@ class GoogleController extends Controller
                     'store_id'      => $store->id,
                     'plan_id'       => $basicPlan->id,
                     'status'        => 'trial',
-                    'trial_ends_at' => now()->addDays(7),
+                    'trial_ends_at' => now()->addDays(config('app.trial_days')),
                 ]);
             });
         }

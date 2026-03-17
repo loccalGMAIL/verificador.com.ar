@@ -12,12 +12,6 @@
         <input type="text" name="q" value="{{ $search }}" placeholder="Buscar por nombre o código..."
                class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm
                       focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <select name="currency"
-                class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">Moneda</option>
-            <option value="ARS" @selected($currency === 'ARS')>ARS</option>
-            <option value="USD" @selected($currency === 'USD')>USD</option>
-        </select>
         <select name="status"
                 class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">Estado</option>
