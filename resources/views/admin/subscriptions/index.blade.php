@@ -81,7 +81,7 @@
 
                             {{-- Reset trial --}}
                             <form method="POST" action="{{ route('admin.subscriptions.reset-trial', $sub) }}"
-                                  onsubmit="return confirm('¿Reiniciar trial por 7 días?')">
+                                  onsubmit="return confirm('¿Reiniciar trial por {{ config('app.trial_days') }} días?')">
                                 @csrf
                                 <button type="submit" class="text-xs text-amber-600 hover:underline font-medium">
                                     <i class="fa-solid fa-rotate-left"></i> Trial

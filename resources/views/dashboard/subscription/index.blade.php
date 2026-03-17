@@ -77,7 +77,7 @@
     {{-- Barra trial --}}
     @if($sub->isOnTrial())
     @php
-        $daysTotal     = 7;
+        $daysTotal     = config('app.trial_days');
         $daysRemaining = $sub->trialDaysRemaining();
         $pct           = max(0, min(100, ($daysRemaining / $daysTotal) * 100));
         $barColor      = $daysRemaining <= 2 ? 'bg-red-500' : ($daysRemaining <= 4 ? 'bg-amber-400' : 'bg-emerald-500');

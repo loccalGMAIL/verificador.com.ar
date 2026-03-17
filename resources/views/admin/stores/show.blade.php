@@ -133,7 +133,7 @@
             <div class="mt-2 flex flex-wrap gap-3">
                 {{-- Reset trial --}}
                 <form method="POST" action="{{ route('admin.subscriptions.reset-trial', $sub) }}"
-                      onsubmit="return confirm('¿Reiniciar el período trial por 7 días?')">
+                      onsubmit="return confirm('¿Reiniciar el período trial por {{ config('app.trial_days') }} días?')">
                     @csrf
                     <button type="submit"
                             class="text-xs text-amber-600 hover:underline font-medium">

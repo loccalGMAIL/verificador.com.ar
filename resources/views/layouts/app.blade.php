@@ -72,12 +72,12 @@
                     <span>Productos</span>
                 </a>
 
-                <a href="{{ route('dashboard.price-lists.index') }}"
+                {{-- <a href="{{ route('dashboard.price-lists.index') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
                           {{ $seg === 'price-lists' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
                     <i class="fa-solid fa-tags w-4 text-center"></i>
                     <span>Listas de precios</span>
-                </a>
+                </a> --}}
 
                 <a href="{{ route('dashboard.branches.index') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
@@ -86,12 +86,12 @@
                     <span>Sucursales</span>
                 </a>
 
-                <a href="{{ route('dashboard.subscription') }}"
+                {{-- <a href="{{ route('dashboard.subscription') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
                           {{ $seg === 'subscription' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
                     <i class="fa-solid fa-credit-card w-4 text-center"></i>
                     <span>Subscripción</span>
-                </a>
+                </a> --}}
 
                 <a href="{{ route('dashboard.settings') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition

@@ -12,10 +12,9 @@
 {{-- ── Pestañas ─────────────────────────────────────────── --}}
 <div class="flex gap-1 mb-6 border-b border-slate-200 overflow-x-auto">
     @foreach([
-        'general'         => ['icon' => 'fa-store',          'label' => 'General'],
-        'import-profiles' => ['icon' => 'fa-file-import',    'label' => 'Perfil de Importación'],
-        'print'           => ['icon' => 'fa-print',          'label' => 'Configuración de Impresión'],
-        'mobile'          => ['icon' => 'fa-mobile-screen',  'label' => 'Visual en Celular'],
+        'general'      => ['icon' => 'fa-store',         'label' => 'General'],
+        'excel-import' => ['icon' => 'fa-file-excel',    'label' => 'Importación Excel'],
+        'print'        => ['icon' => 'fa-print',         'label' => 'Impresión QR'],
     ] as $tab => $meta)
     <a href="{{ route('dashboard.settings', ['tab' => $tab]) }}"
        class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition
@@ -43,6 +42,7 @@
         <form method="POST" action="{{ route('dashboard.settings.update') }}"
               enctype="multipart/form-data" class="space-y-5">
             @csrf @method('PUT')
+            <input type="hidden" name="_tab" value="general">
 
             {{-- Logo --}}
             <div>
@@ -101,7 +101,7 @@
                 </p>
             </div>
 
-            <div class="flex items-center gap-3 pt-2">
+            <div class="pt-2">
                 <button type="submit"
                         class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold
                                hover:bg-blue-700 transition">
@@ -114,128 +114,121 @@
 @endif
 
 {{-- ════════════════════════════════════════════════════════ --}}
-{{-- TAB: Perfil de Importación                             --}}
+{{-- TAB: Importación Excel                                  --}}
 {{-- ════════════════════════════════════════════════════════ --}}
-@if($activeTab === 'import-profiles')
-<div class="max-w-3xl space-y-6">
+@if($activeTab === 'excel-import')
+<div class="max-w-2xl space-y-6"
+     x-data="{ showWholesale: {{ (old('show_wholesale') !== null ? old('show_wholesale') : ($store->show_wholesale ?? false)) ? 'true' : 'false' }} }">
 
-    <div class="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm text-blue-700">
-        <i class="fa-solid fa-circle-info mr-2"></i>
-        Los perfiles de importación guardan el mapeo de columnas de tu archivo para que no tengas que configurarlo cada vez.
-        Al importar, elegís el perfil y el sistema lo aplica automáticamente.
-    </div>
+    <form method="POST" action="{{ route('dashboard.settings.update') }}" class="space-y-6">
+        @csrf @method('PUT')
+        <input type="hidden" name="_tab" value="excel-import">
 
-    {{-- Formulario nuevo perfil --}}
-    <div class="bg-white rounded-xl border border-slate-200 p-6">
-        <h3 class="font-semibold text-slate-800 text-sm mb-4">Nuevo perfil</h3>
-        <form method="POST" action="{{ route('dashboard.settings.import-profiles.store') }}" class="space-y-4">
-            @csrf
+        {{-- Card: columnas del Excel --}}
+        <div class="bg-white rounded-xl border border-slate-200 p-6">
+            <h3 class="font-semibold text-slate-800 mb-1">Columnas del archivo Excel / CSV</h3>
+            <p class="text-xs text-slate-400 mb-5">
+                Indicá exactamente los nombres de las columnas tal como aparecen en tu archivo (sin importar mayúsculas).
+            </p>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Nombre del perfil *</label>
-                    <input type="text" name="name" value="{{ old('name') }}" required maxlength="100"
-                           placeholder="Ej: Proveedor Samsung, Planilla propia"
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Código de barras <span class="text-red-500">*</span></label>
+                    <input type="text" name="excel_col_barcode"
+                           value="{{ old('excel_col_barcode', $store->excel_col_barcode ?? 'codigo') }}"
+                           required maxlength="100"
                            class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
                                   focus:outline-none focus:ring-2 focus:ring-blue-500
-                                  @error('name') border-red-400 @enderror">
-                    @error('name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                                  @error('excel_col_barcode') border-red-400 @enderror">
+                    @error('excel_col_barcode')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Descripción</label>
-                    <input type="text" name="description" value="{{ old('description') }}" maxlength="255"
-                           placeholder="Descripción opcional"
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Nombre <span class="text-red-500">*</span></label>
+                    <input type="text" name="excel_col_name"
+                           value="{{ old('excel_col_name', $store->excel_col_name ?? 'nombre') }}"
+                           required maxlength="100"
                            class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
-                                  focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500
+                                  @error('excel_col_name') border-red-400 @enderror">
+                    @error('excel_col_name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
-            </div>
-
-            {{-- Mapeo de encabezados --}}
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-2">
-                    Mapeo de columnas
-                    <span class="text-slate-400 font-normal">(nombre del encabezado en tu archivo → campo del sistema)</span>
-                </label>
-                <div class="space-y-2" id="profile-mapping-rows">
-                    @php
-                        $profileFields = [
-                            'barcode'  => 'Código de barras *',
-                            'name'     => 'Nombre *',
-                            'desc'     => 'Descripción',
-                            'currency' => 'Moneda por defecto',
-                        ];
-                        foreach(auth()->user()->store->priceLists()->where('active', true)->whereNull('base_price_list_id')->get() as $pl) {
-                            $profileFields["price_list_{$pl->id}_ars"] = "Precio ARS — {$pl->name}";
-                            $profileFields["price_list_{$pl->id}_usd"] = "Precio USD — {$pl->name}";
-                        }
-                    @endphp
-                    @foreach($profileFields as $fieldKey => $fieldLabel)
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs text-slate-500 w-44 shrink-0">{{ $fieldLabel }}</span>
-                        <span class="text-slate-300 text-xs">→</span>
-                        <input type="text" name="header_mapping[{{ $fieldKey }}]"
-                               value="{{ old("header_mapping.{$fieldKey}") }}"
-                               placeholder="Nombre de columna en el archivo (ej: codigo_barras)"
-                               class="flex-1 border border-slate-200 rounded px-3 py-1.5 text-xs
-                                      focus:outline-none focus:ring-1 focus:ring-blue-400">
-                    </div>
-                    @endforeach
-                </div>
-                @error('header_mapping')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
-            </div>
-
-            <button type="submit"
-                    class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
-                Crear perfil
-            </button>
-        </form>
-    </div>
-
-    {{-- Lista de perfiles existentes --}}
-    @if($importProfiles->count() > 0)
-    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div class="px-5 py-3 border-b border-slate-100 bg-slate-50">
-            <p class="text-sm font-semibold text-slate-700">Perfiles guardados</p>
-        </div>
-        @foreach($importProfiles as $profile)
-        <div class="px-5 py-4 border-b border-slate-50 last:border-0">
-            <div class="flex items-start justify-between gap-4">
                 <div>
-                    <p class="text-sm font-medium text-slate-800">{{ $profile->name }}</p>
-                    @if($profile->description)
-                        <p class="text-xs text-slate-400 mt-0.5">{{ $profile->description }}</p>
-                    @endif
-                    <div class="flex flex-wrap gap-1 mt-1.5">
-                        @foreach($profile->header_mapping as $field => $header)
-                        <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">
-                            {{ $header }}
-                        </span>
-                        @endforeach
-                    </div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Precio <span class="text-red-500">*</span></label>
+                    <input type="text" name="excel_col_price"
+                           value="{{ old('excel_col_price', $store->excel_col_price ?? 'precio') }}"
+                           required maxlength="100"
+                           class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500
+                                  @error('excel_col_price') border-red-400 @enderror">
+                    @error('excel_col_price')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
-                <form method="POST"
-                      action="{{ route('dashboard.settings.import-profiles.destroy', $profile) }}"
-                      onsubmit="return confirm('¿Eliminar el perfil {{ addslashes($profile->name) }}?')">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="text-red-500 hover:text-red-700 text-xs font-medium">
-                        Eliminar
-                    </button>
-                </form>
             </div>
         </div>
-        @endforeach
-    </div>
-    @else
-    <div class="bg-white rounded-xl border border-slate-200 px-5 py-10 text-center text-slate-400 text-sm">
-        No hay perfiles guardados todavía.
-    </div>
-    @endif
 
+        {{-- Card: visualización en escáner --}}
+        <div class="bg-white rounded-xl border border-slate-200 p-6">
+            <h3 class="font-semibold text-slate-800 mb-1">Visualización en el escáner</h3>
+            <p class="text-xs text-slate-400 mb-5">
+                El precio secundario se calcula aplicando el descuento al precio principal.
+            </p>
+
+            <div class="space-y-4">
+                <div class="max-w-xs">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Etiqueta precio principal <span class="text-red-500">*</span></label>
+                    <input type="text" name="retail_label"
+                           value="{{ old('retail_label', $store->retail_label ?? 'Precio') }}"
+                           required maxlength="100"
+                           class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500
+                                  @error('retail_label') border-red-400 @enderror">
+                    @error('retail_label')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                </div>
+
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" name="show_wholesale" value="1"
+                           x-model="showWholesale"
+                           {{ (old('show_wholesale') !== null ? old('show_wholesale') : ($store->show_wholesale ?? false)) ? 'checked' : '' }}
+                           class="w-4 h-4 text-blue-600 border-slate-300 rounded">
+                    <span class="text-sm text-slate-700">Mostrar precio secundario (mayorista)</span>
+                </label>
+
+                <div x-show="showWholesale" class="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Etiqueta precio secundario</label>
+                        <input type="text" name="wholesale_label"
+                               value="{{ old('wholesale_label', $store->wholesale_label ?? 'Mayorista') }}"
+                               maxlength="100"
+                               class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                                      focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Descuento % sobre precio principal</label>
+                        <input type="number" name="wholesale_discount" step="0.01" min="0" max="100"
+                               value="{{ old('wholesale_discount', $store->wholesale_discount ?? 0) }}"
+                               class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                                      focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <button type="submit"
+                    class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold
+                           hover:bg-blue-700 transition">
+                Guardar cambios
+            </button>
+        </div>
+    </form>
 </div>
+
+@push('scripts')
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+@endpush
 @endif
 
 {{-- ════════════════════════════════════════════════════════ --}}
-{{-- TAB: Configuración de Impresión                        --}}
+{{-- TAB: Impresión QR                                       --}}
 {{-- ════════════════════════════════════════════════════════ --}}
 @if($activeTab === 'print')
 <div class="max-w-2xl">
@@ -257,26 +250,6 @@
             <i class="fa-solid fa-store"></i>
             Ir a sucursales
         </a>
-    </div>
-</div>
-@endif
-
-{{-- ════════════════════════════════════════════════════════ --}}
-{{-- TAB: Visual en Celular                                  --}}
-{{-- ════════════════════════════════════════════════════════ --}}
-@if($activeTab === 'mobile')
-<div class="max-w-2xl">
-    <div class="bg-white rounded-xl border border-slate-200 p-8 text-center">
-        <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-            <i class="fa-solid fa-mobile-screen text-2xl text-slate-400"></i>
-        </div>
-        <h3 class="font-semibold text-slate-700 mb-2">Personalización de la vista del escáner</h3>
-        <p class="text-sm text-slate-400 max-w-sm mx-auto">
-            Próximamente podrás personalizar los colores, logo y estilo de la pantalla que ven tus clientes al escanear el QR.
-        </p>
-        <span class="inline-block mt-4 text-xs bg-amber-100 text-amber-700 font-medium px-3 py-1 rounded-full">
-            Próximamente
-        </span>
     </div>
 </div>
 @endif

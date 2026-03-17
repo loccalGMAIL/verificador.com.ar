@@ -2,10 +2,9 @@
 
 namespace App\Jobs;
 
-use App\Models\PriceList;
 use App\Models\Product;
 use App\Models\ProductImport;
-use App\Models\ProductPrice;
+use App\Models\Store;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Storage;
@@ -28,37 +27,49 @@ class ProcessProductImport implements ShouldQueue
         $this->import->update(['status' => 'processing']);
 
         try {
+            $store = Store::find($this->import->store_id);
+
+            $colBarcode = $this->normalizeHeader($store->excel_col_barcode ?? 'codigo');
+            $colName    = $this->normalizeHeader($store->excel_col_name    ?? 'nombre');
+            $colPrice   = $this->normalizeHeader($store->excel_col_price   ?? 'precio');
+
             $absolutePath = Storage::disk('local')->path($this->import->file_name);
             $spreadsheet  = IOFactory::load($absolutePath);
             $sheet        = $spreadsheet->getActiveSheet();
-            $rows         = $sheet->toArray(null, true, true, false);
+            // formatData = false: evita que PhpSpreadsheet transforme los valores de celda
+            $rows = $sheet->toArray(null, true, false, false);
 
-            // Quitar la primera fila (encabezados)
+            // Primera fila = encabezados normalizados
+            $headers = array_map(fn ($h) => $this->normalizeHeader((string) $h), $rows[0] ?? []);
             array_shift($rows);
 
-            $col = $this->resolveMapping($this->import->mapping);
+            // Resolver índices de columnas por nombre
+            $idxBarcode = array_search($colBarcode, $headers, true);
+            $idxName    = array_search($colName, $headers, true);
+            $idxPrice   = array_search($colPrice, $headers, true);
 
-            if ($col === null) {
+            if ($idxBarcode === false || $idxName === false) {
+                $found = implode(', ', array_filter($headers));
                 $this->import->update([
                     'status'    => 'failed',
-                    'error_log' => [['row' => 0, 'error' => 'No se pudo determinar el mapeo de columnas.']],
+                    'error_log' => [['row' => 0, 'error' => "No se encontraron las columnas '{$colBarcode}' y/o '{$colName}' en el archivo. Columnas detectadas: {$found}"]],
                 ]);
                 return;
             }
-
-            // Separar campos base de campos de precio por lista
-            $baseCol       = $this->extractBaseColumns($col);
-            $priceListCols = $this->extractPriceListColumns($col);
-
-            // Resolver la lista destino por defecto (para los campos legacy price_ars/price_usd)
-            $defaultList = PriceList::where('store_id', $this->import->store_id)
-                ->where('is_default', true)
-                ->first();
 
             $rowsTotal = count($rows);
             $rowsOk    = 0;
             $rowsError = 0;
             $errorLog  = [];
+
+            // Advertencia si la columna de precio no se encontró
+            if ($idxPrice === false) {
+                $detected = implode(' | ', array_filter($headers, fn($h) => $h !== ''));
+                $errorLog[] = [
+                    'row'   => 0,
+                    'error' => "⚠ Columna de precio '{$colPrice}' no encontrada. Encabezados detectados: {$detected}",
+                ];
+            }
 
             foreach ($rows as $index => $row) {
                 $rowNum = $index + 2;
@@ -70,17 +81,10 @@ class ProcessProductImport implements ShouldQueue
                     continue;
                 }
 
-                $barcode  = $baseCol['barcode'] !== null ? trim((string) ($row[$baseCol['barcode']] ?? '')) : '';
-                $name     = $baseCol['name'] !== null ? trim((string) ($row[$baseCol['name']] ?? '')) : '';
-                $desc     = $baseCol['desc'] !== null ? trim((string) ($row[$baseCol['desc']] ?? '')) : null;
-                $currency = 'ARS';
+                $barcode = trim((string) ($row[$idxBarcode] ?? ''));
+                $name    = trim((string) ($row[$idxName]    ?? ''));
+                $price   = $idxPrice !== false ? $this->parseDecimal($row[$idxPrice] ?? null) : null;
 
-                if ($baseCol['currency'] !== null) {
-                    $raw = strtoupper(trim((string) ($row[$baseCol['currency']] ?? '')));
-                    $currency = in_array($raw, ['ARS', 'USD']) ? $raw : 'ARS';
-                }
-
-                // Validaciones
                 if ($barcode === '') {
                     $errorLog[] = ['row' => $rowNum, 'error' => 'Código de barras vacío'];
                     $rowsError++;
@@ -92,68 +96,14 @@ class ProcessProductImport implements ShouldQueue
                     continue;
                 }
 
-                // Upsert del producto (campos base — sin precio legacy al principio)
-                $product = Product::updateOrCreate(
+                Product::updateOrCreate(
                     ['store_id' => $this->import->store_id, 'barcode' => $barcode],
                     [
-                        'name'        => $name,
-                        'description' => $desc ?: null,
-                        'active'      => true,
+                        'name'   => $name,
+                        'price'  => $price,
+                        'active' => true,
                     ]
                 );
-
-                // ── Precios por lista (campos price_list_{id}_ars/usd) ──
-                $firstPriceArs = null;
-                $firstPriceUsd = null;
-                $firstCurrency = $currency;
-
-                foreach ($priceListCols as $listId => $priceCol) {
-                    $priceArs = $priceCol['ars'] !== null
-                        ? $this->parseDecimal($row[$priceCol['ars']] ?? null)
-                        : null;
-                    $priceUsd = $priceCol['usd'] !== null
-                        ? $this->parseDecimal($row[$priceCol['usd']] ?? null)
-                        : null;
-
-                    if ($priceArs === null && $priceUsd === null) {
-                        continue;
-                    }
-
-                    $list = PriceList::find($listId);
-                    if (! $list || $list->store_id !== $this->import->store_id) {
-                        continue;
-                    }
-
-                    // Listas calculadas no se editan manualmente
-                    if ($list->isCalculated()) {
-                        continue;
-                    }
-
-                    ProductPrice::updateOrCreate(
-                        ['product_id' => $product->id, 'price_list_id' => $listId],
-                        [
-                            'price_ars'        => $priceArs,
-                            'price_usd'        => $priceUsd,
-                            'currency_default' => $currency,
-                        ]
-                    );
-
-                    // Tomar el primer precio para sincronizar campos legacy
-                    if ($firstPriceArs === null && $firstPriceUsd === null) {
-                        $firstPriceArs = $priceArs;
-                        $firstPriceUsd = $priceUsd;
-                        $firstCurrency = $currency;
-                    }
-                }
-
-                // Sincronizar campos legacy en el producto con el primer precio encontrado
-                if ($firstPriceArs !== null || $firstPriceUsd !== null) {
-                    $product->update([
-                        'price_ars'        => $firstPriceArs,
-                        'price_usd'        => $firstPriceUsd,
-                        'currency_default' => $firstCurrency,
-                    ]);
-                }
 
                 $rowsOk++;
             }
@@ -174,59 +124,17 @@ class ProcessProductImport implements ShouldQueue
         }
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────
-
     /**
-     * Convierte el mapeo guardado { campo => índice } al formato interno.
-     * Devuelve null si no tiene las columnas mínimas requeridas.
+     * Normaliza un encabezado para comparación:
+     * - Quita caracteres de control e invisibles (zero-width space, BOM, etc.)
+     * - Trim
+     * - mb_strtolower para manejar acentos y ñ correctamente
      */
-    private function resolveMapping(?array $savedMapping): ?array
+    private function normalizeHeader(string $value): string
     {
-        if (empty($savedMapping)) {
-            return null;
-        }
-
-        return $savedMapping;
-    }
-
-    /**
-     * Extrae solo los campos base (barcode, name, desc, currency)
-     * del mapping, devolviendo { campo => indice|null }.
-     */
-    private function extractBaseColumns(array $mapping): array
-    {
-        return [
-            'barcode'  => $mapping['barcode']  ?? null,
-            'name'     => $mapping['name']      ?? null,
-            'desc'     => $mapping['desc']      ?? null,
-            'currency' => $mapping['currency']  ?? null,
-        ];
-    }
-
-    /**
-     * Extrae los campos de precio por lista del mapping.
-     * Devuelve { list_id => { ars => col_index|null, usd => col_index|null } }
-     *
-     * Soporta:
-     *   price_list_{id}_ars / price_list_{id}_usd  → nuevos campos por lista
-     */
-    private function extractPriceListColumns(array $mapping): array
-    {
-        $result = [];
-
-        foreach ($mapping as $field => $colIndex) {
-            if (preg_match('/^price_list_(\d+)_(ars|usd)$/', $field, $m)) {
-                $listId    = (int) $m[1];
-                $currency  = $m[2]; // 'ars' o 'usd'
-
-                if (! isset($result[$listId])) {
-                    $result[$listId] = ['ars' => null, 'usd' => null];
-                }
-                $result[$listId][$currency] = $colIndex;
-            }
-        }
-
-        return $result;
+        // Eliminar caracteres de control y no imprimibles (incluye BOM y zero-width spaces)
+        $clean = preg_replace('/[\x00-\x1F\x7F\xC2\xA0\x{200B}-\x{200D}\x{FEFF}]/u', '', $value);
+        return mb_strtolower(trim($clean ?? $value));
     }
 
     private function parseDecimal(mixed $value): ?float

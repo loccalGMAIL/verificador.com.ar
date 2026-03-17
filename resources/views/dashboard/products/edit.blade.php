@@ -40,66 +40,19 @@
                                  focus:outline-none focus:ring-2 focus:ring-blue-500">{{ old('description', $product->description) }}</textarea>
             </div>
 
-            {{-- ── Precios por lista ────────────────────────────── --}}
+            {{-- Precio --}}
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Precios</label>
-
-                @forelse($priceLists as $list)
-                @php $pp = $product->prices->firstWhere('price_list_id', $list->id); @endphp
-                <div class="border border-slate-200 rounded-xl p-4 mb-3">
-                    <div class="flex items-center gap-2 mb-3">
-                        <i class="fa-solid fa-tags text-slate-400 text-xs"></i>
-                        <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                            {{ $list->name }}
-                            @if($list->is_default)
-                                <span class="ml-1 text-blue-500 font-normal normal-case">(principal)</span>
-                            @endif
-                        </span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-xs text-slate-500 mb-1">Precio ARS</label>
-                            <div class="relative">
-                                <span class="absolute left-2 top-2 text-slate-400 text-xs">$</span>
-                                <input type="number" step="0.01" min="0"
-                                       name="prices[{{ $list->id }}][price_ars]"
-                                       value="{{ old("prices.{$list->id}.price_ars", $pp?->price_ars) }}"
-                                       placeholder="—"
-                                       class="w-full border border-slate-300 rounded-lg pl-5 pr-2 py-2 text-sm
-                                              focus:outline-none focus:ring-2 focus:ring-blue-400">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-500 mb-1">Precio USD</label>
-                            <div class="relative">
-                                <span class="absolute left-2 top-2 text-slate-400 text-xs">U$S</span>
-                                <input type="number" step="0.01" min="0"
-                                       name="prices[{{ $list->id }}][price_usd]"
-                                       value="{{ old("prices.{$list->id}.price_usd", $pp?->price_usd) }}"
-                                       placeholder="—"
-                                       class="w-full border border-slate-300 rounded-lg pl-9 pr-2 py-2 text-sm
-                                              focus:outline-none focus:ring-2 focus:ring-blue-400">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-500 mb-1">Mostrar en</label>
-                            <select name="prices[{{ $list->id }}][currency_default]"
-                                    class="w-full border border-slate-300 rounded-lg px-2 py-2 text-sm
-                                           focus:outline-none focus:ring-2 focus:ring-blue-400">
-                                <option value="ARS" {{ old("prices.{$list->id}.currency_default", $pp?->currency_default ?? 'ARS') === 'ARS' ? 'selected' : '' }}>ARS</option>
-                                <option value="USD" {{ old("prices.{$list->id}.currency_default", $pp?->currency_default) === 'USD' ? 'selected' : '' }}>USD</option>
-                            </select>
-                        </div>
-                    </div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Precio</label>
+                <div class="relative">
+                    <span class="absolute left-3 top-2.5 text-slate-400 text-sm">$</span>
+                    <input type="number" step="0.01" min="0" name="price"
+                           value="{{ old('price', $product->price) }}" placeholder="0.00"
+                           class="w-full border border-slate-300 rounded-lg pl-7 pr-3 py-2.5 text-sm
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500
+                                  @error('price') border-red-400 @enderror">
                 </div>
-                @empty
-                <p class="text-xs text-slate-400">No hay listas de precios activas.</p>
-                @endforelse
+                @error('price')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
-
-            <input type="hidden" name="price_ars" value="">
-            <input type="hidden" name="price_usd" value="">
-            <input type="hidden" name="currency_default" value="ARS">
 
             {{-- Imagen actual + nueva --}}
             <div>

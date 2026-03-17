@@ -16,9 +16,7 @@ class Product extends Model
         'name',
         'barcode',
         'description',
-        'price_ars',       // Legacy — se mantiene como fallback
-        'price_usd',       // Legacy — se mantiene como fallback
-        'currency_default',
+        'price',
         'image_path',
         'active',
     ];
@@ -26,9 +24,8 @@ class Product extends Model
     protected function casts(): array
     {
         return [
-            'price_ars' => 'decimal:2',
-            'price_usd' => 'decimal:2',
-            'active'    => 'boolean',
+            'price'  => 'decimal:2',
+            'active' => 'boolean',
         ];
     }
 
@@ -52,13 +49,8 @@ class Product extends Model
         return $this->prices->firstWhere('price_list_id', $list->id);
     }
 
-    /** Precio legado formateado (para compatibilidad con código existente) */
     public function formattedPrice(): string
     {
-        if ($this->currency_default === 'USD') {
-            return 'U$S ' . number_format((float) $this->price_usd, 2, ',', '.');
-        }
-
-        return '$ ' . number_format((float) $this->price_ars, 2, ',', '.');
+        return '$ ' . number_format((float) $this->price, 2, ',', '.');
     }
 }

@@ -65,8 +65,17 @@ class RegisterController extends Controller
                 'store_id'      => $store->id,
                 'plan_id'       => $basicPlan->id,
                 'status'        => 'trial',
-                'trial_ends_at' => now()->addDays(7),
+                'trial_ends_at' => now()->addDays(config('app.trial_days')),
             ]);
+
+            // 5. Crear sucursal principal automáticamente
+            if ($store->branches()->count() === 0) {
+                $store->branches()->create([
+                    'name'      => $store->name,
+                    'active'    => true,
+                    'qr_token'  => \Illuminate\Support\Str::random(12),
+                ]);
+            }
 
             Auth::login($user);
         });

@@ -45,7 +45,7 @@
                           hover:border-blue-300 hover:bg-blue-50 transition group">
                     <i class="fa-solid fa-file-arrow-up text-blue-500 text-sm w-4 text-center"></i>
                     <div class="min-w-0">
-                        <p class="text-sm font-medium text-slate-800 group-hover:text-blue-700">Importar CSV</p>
+                        <p class="text-sm font-medium text-slate-800 group-hover:text-blue-700">Importar Excel</p>
                         <p class="text-xs text-slate-400 truncate">Carga masiva</p>
                     </div>
                 </a>

@@ -12,8 +12,6 @@ class ScanController extends Controller
     /**
      * Consulta el precio de un producto dado el token de la sucursal y el código de barras.
      * GET /api/scan/{token}/{barcode}
-     *
-     * Devuelve el producto con sus precios en TODAS las listas activas del comercio.
      */
     public function __invoke(string $token, string $barcode): JsonResponse
     {
@@ -26,7 +24,9 @@ class ScanController extends Controller
             return response()->json(['found' => false, 'error' => 'Sucursal no encontrada.'], 404);
         }
 
-        if (! $branch->store->hasActiveSubscription()) {
+        $store = $branch->store;
+
+        if (! $store->hasActiveSubscription()) {
             return response()->json(['found' => false, 'error' => 'Servicio no disponible.'], 403);
         }
 
@@ -39,37 +39,23 @@ class ScanController extends Controller
             return response()->json(['found' => false]);
         }
 
-        // Todas las listas activas del comercio con el precio de este producto
-        $priceLists = $branch->store
-            ->priceLists()
-            ->where('active', true)
-            ->with(['productPrices' => fn ($q) => $q->where('product_id', $product->id)])
-            ->orderBy('sort_order')
-            ->get();
+        $retailPrice = (float) $product->price;
 
-        $prices = $priceLists->map(function ($list) {
-            $pp = $list->productPrices->first();
+        $response = [
+            'found'          => true,
+            'name'           => $product->name,
+            'store_name'     => $store->name,
+            'retail_label'   => $store->retail_label  ?? 'Precio',
+            'retail_price'   => $retailPrice,
+            'show_wholesale' => (bool) $store->show_wholesale,
+        ];
 
-            if (! $pp) {
-                return [
-                    'list_name' => $list->name,
-                    'available' => false,
-                    'price'     => null,
-                ];
-            }
+        if ($store->show_wholesale) {
+            $discount = (float) ($store->wholesale_discount ?? 0);
+            $response['wholesale_label'] = $store->wholesale_label ?? 'Mayorista';
+            $response['wholesale_price'] = round($retailPrice * (1 - $discount / 100), 2);
+        }
 
-            return [
-                'list_name' => $list->name,
-                'available' => true,
-                'price'     => $pp->formattedPrice(),
-            ];
-        });
-
-        return response()->json([
-            'found'      => true,
-            'name'       => $product->name,
-            'store_name' => $branch->store->name,
-            'prices'     => $prices,
-        ]);
+        return response()->json($response);
     }
 }

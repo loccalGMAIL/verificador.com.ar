@@ -37,18 +37,31 @@
         <div class="w-full rounded-xl overflow-hidden bg-black mb-6" id="reader"></div>
 
         {{-- Nombre del producto --}}
-        <div id="result-header" class="hidden w-full mb-3 text-center">
+        <div id="result-header" class="hidden w-full mb-4 text-center">
             <p id="result-store" class="text-xs text-slate-500 mb-0.5"></p>
             <p id="result-name" class="text-lg font-bold text-white leading-snug"></p>
         </div>
 
-        {{-- Tabla de precios por lista --}}
-        <div id="prices-table" class="hidden w-full space-y-2 mb-4"></div>
+        {{-- Precio principal --}}
+        <div id="retail-box" class="hidden w-full bg-slate-800 rounded-xl px-5 py-4 border border-slate-700 mb-3">
+            <p id="retail-label" class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">
+                <i class="fa-solid fa-tags mr-1.5 text-emerald-600"></i>Precio
+            </p>
+            <p id="retail-price" class="text-5xl font-black text-emerald-400"></p>
+        </div>
 
-        {{-- Sin precio en ninguna lista --}}
-        <div id="no-prices-box"
+        {{-- Precio mayorista --}}
+        <div id="wholesale-box" class="hidden w-full bg-slate-800/60 rounded-xl px-5 py-3 border border-slate-700/60 mb-4">
+            <p id="wholesale-label" class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-0.5">
+                <i class="fa-solid fa-tags mr-1.5 text-blue-500"></i>Mayorista
+            </p>
+            <p id="wholesale-price" class="text-2xl font-bold text-blue-300"></p>
+        </div>
+
+        {{-- Sin precio --}}
+        <div id="no-price-box"
              class="hidden w-full bg-slate-800 rounded-xl p-4 text-center border border-slate-700 mb-4">
-            <p class="text-slate-400 text-sm">Este producto no tiene precios cargados.</p>
+            <p class="text-slate-400 text-sm">Este producto no tiene precio cargado.</p>
         </div>
 
         {{-- Error --}}
@@ -105,23 +118,28 @@
                 document.getElementById('result-name').textContent  = data.name;
                 document.getElementById('result-header').classList.remove('hidden');
 
-                // Precios
-                const prices = data.prices || [];
-                const table  = document.getElementById('prices-table');
+                // Precio principal
+                if (data.retail_price !== undefined && data.retail_price !== null) {
+                    const retailBox   = document.getElementById('retail-box');
+                    const retailLabel = document.getElementById('retail-label');
+                    const retailPrice = document.getElementById('retail-price');
 
-                const available = prices.filter(p => p.available);
-                const unavail   = prices.filter(p => !p.available);
-
-                if (available.length === 0 && unavail.length === 0) {
-                    document.getElementById('no-prices-box').classList.remove('hidden');
+                    retailLabel.innerHTML = `<i class="fa-solid fa-tags mr-1.5 text-emerald-600"></i>${esc(data.retail_label || 'Precio')}`;
+                    retailPrice.textContent = formatPrice(data.retail_price);
+                    retailBox.classList.remove('hidden');
                 } else {
-                    // Primero los disponibles
-                    available.forEach(p => table.appendChild(buildPriceRow(p)));
-                    // Luego los no disponibles (si hay más de una lista)
-                    if (prices.length > 1) {
-                        unavail.forEach(p => table.appendChild(buildPriceRow(p)));
-                    }
-                    table.classList.remove('hidden');
+                    document.getElementById('no-price-box').classList.remove('hidden');
+                }
+
+                // Precio mayorista
+                if (data.show_wholesale && data.wholesale_price !== undefined) {
+                    const wsBox   = document.getElementById('wholesale-box');
+                    const wsLabel = document.getElementById('wholesale-label');
+                    const wsPrice = document.getElementById('wholesale-price');
+
+                    wsLabel.innerHTML = `<i class="fa-solid fa-tags mr-1.5 text-blue-500"></i>${esc(data.wholesale_label || 'Mayorista')}`;
+                    wsPrice.textContent = formatPrice(data.wholesale_price);
+                    wsBox.classList.remove('hidden');
                 }
 
                 document.getElementById('scan-again').classList.remove('hidden');
@@ -132,36 +150,14 @@
             }
         }
 
-        // ── Construir fila de precio ─────────────────────────────────
-        function buildPriceRow(p) {
-            const row = document.createElement('div');
-            row.className = 'flex items-center justify-between rounded-xl px-4 py-3 border ' +
-                (p.available
-                    ? 'bg-slate-800 border-slate-700'
-                    : 'bg-slate-900 border-slate-800');
-
-            if (p.available) {
-                row.innerHTML = `
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide">
-                        <i class="fa-solid fa-tags mr-1.5 text-emerald-600"></i>${esc(p.list_name)}
-                    </span>
-                    <span class="text-2xl font-black text-emerald-400">${esc(p.price)}</span>`;
-            } else {
-                row.innerHTML = `
-                    <span class="text-xs text-slate-600 uppercase tracking-wide">
-                        <i class="fa-solid fa-tags mr-1.5"></i>${esc(p.list_name)}
-                    </span>
-                    <span class="text-sm text-slate-700 italic">No disponible</span>`;
-            }
-
-            return row;
+        // ── Helpers ──────────────────────────────────────────────────
+        function formatPrice(value) {
+            return '$ ' + Number(value).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        // ── Helpers ──────────────────────────────────────────────────
         function clearResults() {
-            ['result-header','prices-table','no-prices-box','error-box','scan-again']
+            ['result-header','retail-box','wholesale-box','no-price-box','error-box','scan-again']
                 .forEach(id => document.getElementById(id).classList.add('hidden'));
-            document.getElementById('prices-table').innerHTML = '';
         }
 
         function showError(msg) {

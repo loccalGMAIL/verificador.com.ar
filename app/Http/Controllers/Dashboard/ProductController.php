@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use App\Models\ProductPrice;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -14,15 +13,13 @@ class ProductController extends Controller
 {
     public function index(Request $request): View
     {
-        $store    = auth()->user()->store;
-        $search   = $request->get('q');
-        $currency = $request->get('currency');
-        $status   = $request->get('status');
+        $store  = auth()->user()->store;
+        $search = $request->get('q');
+        $status = $request->get('status');
 
         $products = $store->products()
             ->when($search, fn ($q) => $q->where('name', 'like', "%{$search}%")
                 ->orWhere('barcode', 'like', "%{$search}%"))
-            ->when($currency, fn ($q) => $q->where('currency_default', $currency))
             ->when($status !== null && $status !== '', fn ($q) => $q->where('active', (bool) $status))
             ->orderBy('name')
             ->paginate(20)
@@ -33,15 +30,14 @@ class ProductController extends Controller
         $productCount = $store->products()->where('active', true)->count();
 
         return view('dashboard.products.index', compact(
-            'products', 'search', 'currency', 'status', 'productLimit', 'productCount'
+            'products', 'search', 'status', 'productLimit', 'productCount'
         ));
     }
 
     public function create(): View
     {
         $this->checkProductLimit();
-        $priceLists = auth()->user()->store->priceLists()->where('active', true)->get();
-        return view('dashboard.products.create', compact('priceLists'));
+        return view('dashboard.products.create');
     }
 
     public function store(Request $request): RedirectResponse
@@ -49,14 +45,12 @@ class ProductController extends Controller
         $this->checkProductLimit();
 
         $data = $request->validate([
-            'name'             => ['required', 'string', 'max:255'],
-            'barcode'          => ['required', 'string', 'max:50'],
-            'description'      => ['nullable', 'string', 'max:1000'],
-            'price_ars'        => ['nullable', 'numeric', 'min:0', 'max:99999999'],
-            'price_usd'        => ['nullable', 'numeric', 'min:0', 'max:999999'],
-            'currency_default' => ['required', 'in:ARS,USD'],
-            'active'           => ['sometimes', 'boolean'],
-            'image'            => ['nullable', 'image', 'max:2048'],
+            'name'        => ['required', 'string', 'max:255'],
+            'barcode'     => ['required', 'string', 'max:50'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'price'       => ['nullable', 'numeric', 'min:0', 'max:99999999'],
+            'active'      => ['sometimes', 'boolean'],
+            'image'       => ['nullable', 'image', 'max:2048'],
         ]);
 
         $storeId = auth()->user()->store_id;
@@ -77,9 +71,6 @@ class ProductController extends Controller
 
         $product = Product::create($data);
 
-        // Guardar precios por lista
-        $this->savePricesForProduct($request, $product);
-
         return redirect()->route('dashboard.products.index')
             ->with('success', 'Producto creado correctamente.');
     }
@@ -87,9 +78,7 @@ class ProductController extends Controller
     public function edit(Product $product): View
     {
         $this->authorizeProduct($product);
-        $priceLists = auth()->user()->store->priceLists()->where('active', true)->get();
-        $product->load('prices');
-        return view('dashboard.products.edit', compact('product', 'priceLists'));
+        return view('dashboard.products.edit', compact('product'));
     }
 
     public function update(Request $request, Product $product): RedirectResponse
@@ -99,14 +88,12 @@ class ProductController extends Controller
         $storeId = auth()->user()->store_id;
 
         $data = $request->validate([
-            'name'             => ['required', 'string', 'max:255'],
-            'barcode'          => ['required', 'string', 'max:50'],
-            'description'      => ['nullable', 'string', 'max:1000'],
-            'price_ars'        => ['nullable', 'numeric', 'min:0', 'max:99999999'],
-            'price_usd'        => ['nullable', 'numeric', 'min:0', 'max:999999'],
-            'currency_default' => ['required', 'in:ARS,USD'],
-            'active'           => ['sometimes', 'boolean'],
-            'image'            => ['nullable', 'image', 'max:2048'],
+            'name'        => ['required', 'string', 'max:255'],
+            'barcode'     => ['required', 'string', 'max:50'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'price'       => ['nullable', 'numeric', 'min:0', 'max:99999999'],
+            'active'      => ['sometimes', 'boolean'],
+            'image'       => ['nullable', 'image', 'max:2048'],
         ]);
 
         // Verificar barcode único (excluyendo este producto)
@@ -131,9 +118,6 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        // Actualizar precios por lista
-        $this->savePricesForProduct($request, $product);
-
         return redirect()->route('dashboard.products.index')
             ->with('success', 'Producto actualizado correctamente.');
     }
@@ -157,50 +141,6 @@ class ProductController extends Controller
     private function authorizeProduct(Product $product): void
     {
         abort_if($product->store_id !== auth()->user()->store_id, 403);
-    }
-
-    /**
-     * Upsert de precios por lista a partir del request.
-     * Espera un campo prices[{price_list_id}][price_ars|price_usd|currency_default].
-     */
-    private function savePricesForProduct(Request $request, Product $product): void
-    {
-        $pricesInput = $request->input('prices', []);
-        $legacySync  = null; // datos de la lista default para sincronizar campos legacy
-
-        foreach ($pricesInput as $priceListId => $row) {
-            $priceListId = (int) $priceListId;
-
-            if (empty($row['price_ars']) && empty($row['price_usd'])) {
-                ProductPrice::where('product_id', $product->id)
-                    ->where('price_list_id', $priceListId)
-                    ->delete();
-                continue;
-            }
-
-            $saved = ProductPrice::updateOrCreate(
-                ['product_id' => $product->id, 'price_list_id' => $priceListId],
-                [
-                    'price_ars'        => $row['price_ars'] ?: null,
-                    'price_usd'        => $row['price_usd'] ?: null,
-                    'currency_default' => $row['currency_default'] ?? 'ARS',
-                ]
-            );
-
-            // Guardar referencia a la lista default para sincronizar legacy
-            if ($legacySync === null) {
-                $legacySync = $saved;
-            }
-        }
-
-        // Sincronizar campos legacy del producto con el primer precio guardado
-        if ($legacySync) {
-            $product->update([
-                'price_ars'        => $legacySync->price_ars,
-                'price_usd'        => $legacySync->price_usd,
-                'currency_default' => $legacySync->currency_default,
-            ]);
-        }
     }
 
     private function checkProductLimit(): void
