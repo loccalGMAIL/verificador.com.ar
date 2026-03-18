@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\StoreController as AdminStoreController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
 use App\Http\Controllers\Admin\PlanController as AdminPlanController;
+use App\Http\Controllers\Admin\ImpersonateController;
 use Illuminate\Support\Facades\Route;
 
 // ============================================================
@@ -47,6 +48,11 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [LoginController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
+
+// Salir de impersonación (disponible cuando el usuario es owner/employee impersonado)
+Route::post('/impersonate/leave', [ImpersonateController::class, 'leave'])
+    ->middleware('auth')
+    ->name('impersonate.leave');
 
 // ============================================================
 // DASHBOARD — Comercio (owner / employee)
@@ -122,4 +128,8 @@ Route::middleware(['auth', 'role:admin'])
         // --- Planes ---
         Route::resource('plans', AdminPlanController::class)
             ->except(['show']);
+
+        // --- Impersonación ---
+        Route::post('/users/{user}/impersonate', [ImpersonateController::class, 'impersonate'])
+            ->name('users.impersonate');
     });
