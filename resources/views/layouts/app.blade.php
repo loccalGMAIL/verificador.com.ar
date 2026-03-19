@@ -27,7 +27,7 @@
 
     @stack('styles')
 </head>
-<body class="bg-slate-50 text-slate-800" style="font-family: 'Inter', sans-serif;">
+<body class="bg-slate-50 text-slate-800 overflow-hidden" style="font-family: 'Inter', sans-serif;">
 
     <div class="flex h-screen overflow-hidden">
 

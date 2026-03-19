@@ -9,13 +9,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
 
     @php
-        $isPreview   = request()->boolean('preview');
-        $scheme      = request('scheme', 'blue');
-        $layout      = request('layout', 'a5');   // 'a5' | 'a4'
-        $headline    = request('headline', 'Verificá tu precio');
-        $instruction = request('instruction', "Escaneá el código con tu celular\npara verificar el precio al instante");
-        $showLogo    = request('show_logo', '1') === '1';
-        $showBranch  = request('show_branch', '1') === '1';
+        $isPreview    = request()->boolean('preview');
+        $scheme       = request('scheme', 'blue');
+        $layout       = request('layout', 'a5');
+        $headline     = request('headline', 'Verificá tu precio');
+        $instruction  = request('instruction', "Escaneá el código con tu celular\npara verificar el precio al instante");
+        $showLogo     = request('show_logo', '1') === '1';
+        $showBranch   = request('show_branch', '1') === '1';
+        $logoPosition = request('logo_position', 'center');
+
+        $headerAlign     = match($logoPosition) { 'left' => 'flex-start', 'right' => 'flex-end', default => 'center' };
+        $headerTextAlign = match($logoPosition) { 'left' => 'left',       'right' => 'right',    default => 'center' };
 
         // ── Tamaños configurables ─────────────────────────────────────
         $qrSizeMap = [
@@ -61,6 +65,11 @@
             'dark'   => ['from' => '#111827', 'to' => '#374151', 'sub' => '#d1d5db', 'text' => '#111827'],
             'purple' => ['from' => '#4c1d95', 'to' => '#7c3aed', 'sub' => '#ddd6fe', 'text' => '#4c1d95'],
             'orange' => ['from' => '#7c2d12', 'to' => '#ea580c', 'sub' => '#fed7aa', 'text' => '#7c2d12'],
+            'red'    => ['from' => '#991b1b', 'to' => '#dc2626', 'sub' => '#fecaca', 'text' => '#991b1b'],
+            'sky'    => ['from' => '#0c4a6e', 'to' => '#0284c7', 'sub' => '#bae6fd', 'text' => '#0c4a6e'],
+            'pink'   => ['from' => '#831843', 'to' => '#db2777', 'sub' => '#fbcfe8', 'text' => '#831843'],
+            'teal'   => ['from' => '#134e4a', 'to' => '#0d9488', 'sub' => '#99f6e4', 'text' => '#134e4a'],
+            'amber'  => ['from' => '#92400e', 'to' => '#d97706', 'sub' => '#fde68a', 'text' => '#92400e'],
         ];
         $p = $palettes[$scheme] ?? $palettes['blue'];
     @endphp
@@ -153,7 +162,7 @@
             padding: @if($isA4) 14px 20px 12px @else 8px 14px 7px @endif;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: {{ $headerAlign }};
             gap: @if($isA4) 6px @else 4px @endif;
             flex-shrink: 0;
         }
@@ -170,10 +179,11 @@
             font-size: @if($isA4) 20px @else 13px @endif;
             font-weight: 900;
             letter-spacing: .4px;
-            text-align: center;
+            text-align: {{ $headerTextAlign }};
             line-height: 1.1;
             text-transform: uppercase;
             text-shadow: 0 1px 3px rgba(0,0,0,.3);
+            width: 100%;
         }
 
         .header-branch {
@@ -182,7 +192,8 @@
             font-weight: 600;
             letter-spacing: 1.5px;
             text-transform: uppercase;
-            text-align: center;
+            text-align: {{ $headerTextAlign }};
+            width: 100%;
         }
 
         /* ── Cuerpo ─────────────────────────────────────────── */
@@ -299,7 +310,7 @@
                      class="header-logo">
             @endif
             <div class="header-name">{{ $branch->store->name }}</div>
-            @if($showBranch && $branch->store->branches()->count() > 1)
+            @if($showBranch)
                 <div class="header-branch">{{ $branch->name }}</div>
             @endif
         </div>
@@ -328,7 +339,7 @@
                      class="header-logo">
             @endif
             <div class="header-name">{{ $branch->store->name }}</div>
-            @if($showBranch && $branch->store->branches()->count() > 1)
+            @if($showBranch)
                 <div class="header-branch">{{ $branch->name }}</div>
             @endif
         </div>

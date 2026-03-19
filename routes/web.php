@@ -90,6 +90,7 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
             ->except(['show']);
         Route::get('/branches/{branch}/qr',           [BranchController::class, 'qr'])->name('branches.qr');
         Route::get('/branches/{branch}/qr/configure', [BranchController::class, 'qrConfigure'])->name('branches.qr.configure');
+        Route::post('/branches/{branch}/qr/save',     [BranchController::class, 'qrSave'])->name('branches.qr.save');
 
         // --- Subscripción ---
         Route::get('/subscription', [DashboardSubscription::class, 'index'])->name('subscription');
