@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessProductImport;
 use App\Models\ProductImport;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -56,10 +57,62 @@ class ProductImportController extends Controller
             'status'    => 'pending',
         ]);
 
-        ProcessProductImport::dispatch($import);
+        return redirect()->route('dashboard.products.import.show', $import);
+    }
 
-        return redirect()->route('dashboard.products.import.index')
-            ->with('success', 'Importación iniciada. Te avisamos cuando termine.');
+    public function show(ProductImport $import): View
+    {
+        abort_if($import->store_id !== auth()->user()->store_id, 403);
+        return view('dashboard.products.import-show', compact('import'));
+    }
+
+    public function process(ProductImport $import): JsonResponse
+    {
+        abort_if($import->store_id !== auth()->user()->store_id, 403);
+
+        if ($import->status !== 'pending') {
+            return response()->json(['ok' => false, 'message' => 'No está pendiente']);
+        }
+
+        // Liberar el lock de sesión para que los requests de polling no queden bloqueados
+        session()->save();
+
+        ProcessProductImport::dispatchSync($import);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function progress(ProductImport $import): JsonResponse
+    {
+        abort_if($import->store_id !== auth()->user()->store_id, 403);
+        $import->refresh();
+
+        $pct = $import->rows_total > 0
+            ? round(($import->rows_processed / $import->rows_total) * 100)
+            : 0;
+
+        return response()->json([
+            'status'      => $import->status,
+            'total'       => $import->rows_total,
+            'processed'   => $import->rows_processed,
+            'ok'          => $import->rows_ok,
+            'errors'      => $import->rows_error,
+            'percentage'  => $pct,
+            'is_complete' => in_array($import->status, ['completed', 'failed', 'cancelled']),
+        ]);
+    }
+
+    public function cancel(ProductImport $import): RedirectResponse
+    {
+        abort_if($import->store_id !== auth()->user()->store_id, 403);
+
+        if ($import->status !== 'pending') {
+            return back()->with('error', 'Solo se pueden cancelar importaciones pendientes.');
+        }
+
+        $import->update(['status' => 'cancelled']);
+
+        return back()->with('success', 'Importación cancelada.');
     }
 
     /** Descarga la plantilla CSV de ejemplo */

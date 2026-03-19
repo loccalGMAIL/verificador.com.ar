@@ -25,8 +25,8 @@ class CheckSubscription
             return redirect()->route('login');
         }
 
-        // Admins no tienen suscripción, siempre pasan
-        if ($user->role === 'admin') {
+        // Admins (o admin impersonando) no tienen restricción de suscripción
+        if ($user->role === 'admin' || $request->session()->has('impersonating_admin_id')) {
             return $next($request);
         }
 

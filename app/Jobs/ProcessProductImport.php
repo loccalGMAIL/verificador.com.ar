@@ -24,6 +24,15 @@ class ProcessProductImport implements ShouldQueue
 
     public function handle(): void
     {
+        set_time_limit(300);
+        ini_set('memory_limit', '256M');
+
+        $this->import->refresh();
+        if ($this->import->status === 'cancelled') {
+            Storage::delete($this->import->file_name);
+            return;
+        }
+
         $this->import->update(['status' => 'processing']);
 
         try {
@@ -61,6 +70,7 @@ class ProcessProductImport implements ShouldQueue
             $rowsOk    = 0;
             $rowsError = 0;
             $errorLog  = [];
+            $processed = 0;
 
             // Advertencia si la columna de precio no se encontró
             if ($idxPrice === false) {
@@ -88,11 +98,19 @@ class ProcessProductImport implements ShouldQueue
                 if ($barcode === '') {
                     $errorLog[] = ['row' => $rowNum, 'error' => 'Código de barras vacío'];
                     $rowsError++;
+                    $processed++;
+                    if ($processed % 10 === 0) {
+                        $this->import->update(['rows_processed' => $processed]);
+                    }
                     continue;
                 }
                 if ($name === '') {
                     $errorLog[] = ['row' => $rowNum, 'error' => "Nombre vacío (barcode: {$barcode})"];
                     $rowsError++;
+                    $processed++;
+                    if ($processed % 10 === 0) {
+                        $this->import->update(['rows_processed' => $processed]);
+                    }
                     continue;
                 }
 
@@ -106,14 +124,19 @@ class ProcessProductImport implements ShouldQueue
                 );
 
                 $rowsOk++;
+                $processed++;
+                if ($processed % 10 === 0) {
+                    $this->import->update(['rows_processed' => $processed]);
+                }
             }
 
             $this->import->update([
-                'status'     => 'completed',
-                'rows_total' => $rowsTotal,
-                'rows_ok'    => $rowsOk,
-                'rows_error' => $rowsError,
-                'error_log'  => empty($errorLog) ? null : $errorLog,
+                'status'         => 'completed',
+                'rows_total'     => $rowsTotal,
+                'rows_processed' => $processed,
+                'rows_ok'        => $rowsOk,
+                'rows_error'     => $rowsError,
+                'error_log'      => empty($errorLog) ? null : $errorLog,
             ]);
 
         } catch (Throwable $e) {

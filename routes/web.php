@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\StoreController as AdminStoreController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
 use App\Http\Controllers\Admin\PlanController as AdminPlanController;
+use App\Http\Controllers\Admin\ImpersonateController;
 use Illuminate\Support\Facades\Route;
 
 // ============================================================
@@ -48,6 +49,11 @@ Route::post('/logout', [LoginController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
+// Salir de impersonación (disponible cuando el usuario es owner/employee impersonado)
+Route::post('/impersonate/leave', [ImpersonateController::class, 'leave'])
+    ->middleware('auth')
+    ->name('impersonate.leave');
+
 // ============================================================
 // DASHBOARD — Comercio (owner / employee)
 // ============================================================
@@ -59,9 +65,13 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         Route::get('/', DashboardHome::class)->name('home');
 
         // --- Productos: import primero para evitar conflicto con {product} ---
-        Route::get('/products/import',          [ProductImportController::class, 'index'])->name('products.import.index');
-        Route::post('/products/import',         [ProductImportController::class, 'store'])->name('products.import.store');
-        Route::get('/products/import/template', [ProductImportController::class, 'template'])->name('products.import.template');
+        Route::get('/products/import',                           [ProductImportController::class, 'index'])->name('products.import.index');
+        Route::post('/products/import',                          [ProductImportController::class, 'store'])->name('products.import.store');
+        Route::get('/products/import/template',                  [ProductImportController::class, 'template'])->name('products.import.template');
+        Route::get('/products/import/{import}',                  [ProductImportController::class, 'show'])->name('products.import.show');
+        Route::post('/products/import/{import}/cancel',          [ProductImportController::class, 'cancel'])->name('products.import.cancel');
+        Route::post('/products/import/{import}/process',         [ProductImportController::class, 'process'])->name('products.import.process');
+        Route::get('/products/import/{import}/progress',         [ProductImportController::class, 'progress'])->name('products.import.progress');
 
         Route::resource('products', ProductController::class)
             ->except(['show'])
@@ -122,4 +132,8 @@ Route::middleware(['auth', 'role:admin'])
         // --- Planes ---
         Route::resource('plans', AdminPlanController::class)
             ->except(['show']);
+
+        // --- Impersonación ---
+        Route::post('/users/{user}/impersonate', [ImpersonateController::class, 'impersonate'])
+            ->name('users.impersonate');
     });
