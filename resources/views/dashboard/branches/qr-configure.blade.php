@@ -100,6 +100,127 @@ para verificar el precio al instante</textarea>
             </div>
         </div>
 
+        {{-- Diseño e impresión --}}
+        <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <h3 class="text-sm font-semibold text-slate-700 mb-4">Diseño e impresión</h3>
+
+            {{-- Layout --}}
+            <div class="mb-4">
+                <p class="text-xs font-medium text-slate-600 mb-2">Formato de hoja</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="layout-option cursor-pointer">
+                        <input type="radio" name="layout_radio" value="a5" class="sr-only" checked
+                               onchange="onLayoutChange('a5'); schedulePreviewUpdate()">
+                        <div class="layout-card border-2 border-slate-200 bg-slate-50 rounded-lg p-3 text-center transition">
+                            {{-- Ícono A5 apaisado: 2 rectángulos lado a lado --}}
+                            <div class="flex justify-center gap-1 mb-1.5">
+                                <div class="layout-icon-block w-8 h-6 bg-slate-400 rounded-sm"></div>
+                                <div class="layout-icon-block w-8 h-6 bg-slate-400 rounded-sm"></div>
+                            </div>
+                            <p class="layout-label text-xs font-semibold text-slate-600">2 copias · A5</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Apaisado</p>
+                        </div>
+                    </label>
+                    <label class="layout-option cursor-pointer">
+                        <input type="radio" name="layout_radio" value="a4" class="sr-only"
+                               onchange="onLayoutChange('a4'); schedulePreviewUpdate()">
+                        <div class="layout-card border-2 border-slate-200 bg-slate-50 rounded-lg p-3 text-center transition">
+                            {{-- Ícono A4 vertical: 1 rectángulo alto --}}
+                            <div class="flex justify-center mb-1.5">
+                                <div class="layout-icon-block w-8 h-10 bg-slate-400 rounded-sm"></div>
+                            </div>
+                            <p class="layout-label text-xs font-semibold text-slate-600">1 copia · A4</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Vertical</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            {{-- Tamaño del QR --}}
+            <div class="mb-4">
+                <label class="block text-xs font-medium text-slate-600 mb-2">
+                    Tamaño del código QR
+                </label>
+                <div class="flex gap-1">
+                    @foreach(['sm' => 'Pequeño', 'md' => 'Normal', 'lg' => 'Grande', 'xl' => 'Muy grande'] as $val => $lbl)
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="qr_size" value="{{ $val }}" class="sr-only"
+                               {{ $val === 'md' ? 'checked' : '' }}
+                               onchange="schedulePreviewUpdate()">
+                        <div class="size-pill border border-slate-200 rounded-lg py-1.5 text-center text-xs font-medium
+                                    text-slate-500 hover:border-blue-400 hover:text-blue-600 transition
+                                    {{ $val === 'md' ? '!border-blue-500 !text-blue-600 bg-blue-50' : '' }}">
+                            {{ $lbl }}
+                        </div>
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Tamaño del título --}}
+            <div class="mb-4">
+                <label class="block text-xs font-medium text-slate-600 mb-2">
+                    Tamaño del título
+                </label>
+                <div class="flex gap-1">
+                    @foreach(['sm' => 'Pequeño', 'md' => 'Normal', 'lg' => 'Grande'] as $val => $lbl)
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="headline_size" value="{{ $val }}" class="sr-only"
+                               {{ $val === 'md' ? 'checked' : '' }}
+                               onchange="schedulePreviewUpdate()">
+                        <div class="size-pill border border-slate-200 rounded-lg py-1.5 text-center text-xs font-medium
+                                    text-slate-500 hover:border-blue-400 hover:text-blue-600 transition
+                                    {{ $val === 'md' ? '!border-blue-500 !text-blue-600 bg-blue-50' : '' }}">
+                            {{ $lbl }}
+                        </div>
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Tamaño de instrucción --}}
+            <div class="mb-4">
+                <label class="block text-xs font-medium text-slate-600 mb-2">
+                    Tamaño del texto de instrucción
+                </label>
+                <div class="flex gap-1">
+                    @foreach(['sm' => 'Pequeño', 'md' => 'Normal', 'lg' => 'Grande'] as $val => $lbl)
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="instr_size" value="{{ $val }}" class="sr-only"
+                               {{ $val === 'md' ? 'checked' : '' }}
+                               onchange="schedulePreviewUpdate()">
+                        <div class="size-pill border border-slate-200 rounded-lg py-1.5 text-center text-xs font-medium
+                                    text-slate-500 hover:border-blue-400 hover:text-blue-600 transition
+                                    {{ $val === 'md' ? '!border-blue-500 !text-blue-600 bg-blue-50' : '' }}">
+                            {{ $lbl }}
+                        </div>
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Tamaño del logo --}}
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-2">
+                    Tamaño del logo
+                </label>
+                <div class="flex gap-1">
+                    @foreach(['sm' => 'Pequeño', 'md' => 'Normal', 'lg' => 'Grande'] as $val => $lbl)
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="logo_size" value="{{ $val }}" class="sr-only"
+                               {{ $val === 'md' ? 'checked' : '' }}
+                               onchange="schedulePreviewUpdate()">
+                        <div class="size-pill border border-slate-200 rounded-lg py-1.5 text-center text-xs font-medium
+                                    text-slate-500 hover:border-blue-400 hover:text-blue-600 transition
+                                    {{ $val === 'md' ? '!border-blue-500 !text-blue-600 bg-blue-50' : '' }}">
+                            {{ $lbl }}
+                        </div>
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
         {{-- Botón Imprimir --}}
         <button id="btn-print"
                 class="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white font-semibold
@@ -114,15 +235,14 @@ para verificar el precio al instante</textarea>
         <p class="text-xs font-medium text-slate-500 mb-3 uppercase tracking-wide">Vista previa</p>
 
         {{--
-            El iframe carga exactamente la misma vista de impresión con ?preview=1
-            (desactiva auto-print). Se escala con CSS transform para entrar en el panel.
+            El iframe carga exactamente la misma vista de impresión con ?preview=1.
+            Se escala con CSS transform para entrar en el panel (ancho fijo = 480px).
 
-            Dimensiones reales de la hoja A5 apaisado a 96dpi:
-              210mm × 148mm → 794px × 559px
-            Factor de escala para 480px de ancho de contenedor:
-              480 / 794 ≈ 0.604  →  alto resultante: 559 × 0.604 ≈ 337px
+            A5 apaisado (794×559): scale = 480/794 ≈ 0.6045 → container height ≈ 338px
+            A4 vertical (794×1123): scale = 480/794 ≈ 0.6045 → container height ≈ 679px
         --}}
-        <div class="rounded-xl shadow-lg border border-slate-200 overflow-hidden bg-white"
+        <div id="preview-wrap"
+             class="rounded-xl shadow-lg border border-slate-200 overflow-hidden bg-white transition-all duration-300"
              style="width: 480px; height: 338px; position: relative;">
 
             {{-- Overlay de carga --}}
@@ -141,13 +261,13 @@ para verificar el precio al instante</textarea>
                     height="559"
                     scrolling="no"
                     style="border: none; display: block;
-                           transform: scale(0.604);
+                           transform: scale(0.6045);
                            transform-origin: top left;"
                     onload="document.getElementById('preview-loading').style.display = 'none'">
             </iframe>
         </div>
 
-        <p class="text-xs text-slate-400 mt-3">
+        <p id="layout-hint" class="text-xs text-slate-400 mt-3">
             <i class="fa-solid fa-scissors mr-1"></i>
             Se imprimirán 2 carteles por hoja A5 apaisado
         </p>
@@ -163,26 +283,73 @@ para verificar el precio al instante</textarea>
     input:checked + .toggle-track { background-color: #10b981; }
     input:checked ~ .toggle-dot   { transform: translateX(20px); }
     .toggle-track, .toggle-dot    { transition: all .2s; }
+
+    /* Size pills: activar resaltado cuando radio está checked */
+    input[type="radio"]:checked + .size-pill {
+        border-color: #3b82f6 !important;
+        color: #2563eb !important;
+        background-color: #eff6ff;
+    }
+
+    /* Layout cards */
+    input[type="radio"]:checked + .layout-card {
+        border-color: #3b82f6 !important;
+        background-color: #eff6ff !important;
+    }
+    input[type="radio"]:checked + .layout-card .layout-label {
+        color: #1d4ed8 !important;
+    }
+    input[type="radio"]:checked + .layout-card .layout-icon-block {
+        background-color: #3b82f6 !important;
+    }
 </style>
 @endpush
 
 @push('scripts')
 <script>
 (function () {
-    const BASE_URL   = "{{ route('dashboard.branches.qr', $branch) }}";
-    const iframe     = document.getElementById('preview-iframe');
-    const btnPrint   = document.getElementById('btn-print');
+    const BASE_URL = "{{ route('dashboard.branches.qr', $branch) }}";
+    const iframe   = document.getElementById('preview-iframe');
+    const btnPrint = document.getElementById('btn-print');
+    const wrap     = document.getElementById('preview-wrap');
+    const hint     = document.getElementById('layout-hint');
     let   debounce;
+
+    const SCALE = 0.6045;
+    const LAYOUTS = {
+        a5: { iframeW: 794, iframeH: 559,  containerH: Math.round(559  * SCALE), hint: '2 carteles por hoja A5 apaisado' },
+        a4: { iframeW: 794, iframeH: 1123, containerH: Math.round(1123 * SCALE), hint: '1 cartel por hoja A4 vertical' },
+    };
+
+    // ── Cambio de layout (inmediato, sin debounce) ───────────────────
+    window.onLayoutChange = function (layout) {
+        const l = LAYOUTS[layout] || LAYOUTS.a5;
+        iframe.width       = l.iframeW;
+        iframe.height      = l.iframeH;
+        wrap.style.height  = l.containerH + 'px';
+        hint.innerHTML     = '<i class="fa-solid fa-scissors mr-1"></i>' + l.hint;
+    };
 
     // ── Construir parámetros actuales ────────────────────────────────
     function buildParams(isPreview) {
-        const scheme = document.querySelector('.scheme-option input:checked')?.value ?? 'blue';
+        const scheme       = document.querySelector('[name="scheme_radio"]:checked')?.value      ?? 'blue';
+        const layout       = document.querySelector('[name="layout_radio"]:checked')?.value      ?? 'a5';
+        const qrSize       = document.querySelector('[name="qr_size"]:checked')?.value           ?? 'md';
+        const headlineSize = document.querySelector('[name="headline_size"]:checked')?.value     ?? 'md';
+        const instrSize    = document.querySelector('[name="instr_size"]:checked')?.value        ?? 'md';
+        const logoSize     = document.querySelector('[name="logo_size"]:checked')?.value         ?? 'md';
+
         return new URLSearchParams({
             scheme,
-            headline:    document.getElementById('input-headline').value    || 'Verificá tu precio',
-            instruction: document.getElementById('input-instruction').value || '',
-            show_logo:   document.getElementById('toggle-logo').checked    ? '1' : '0',
-            show_branch: document.getElementById('toggle-branch').checked  ? '1' : '0',
+            layout,
+            qr_size:       qrSize,
+            headline_size: headlineSize,
+            instr_size:    instrSize,
+            logo_size:     logoSize,
+            headline:      document.getElementById('input-headline').value    || 'Verificá tu precio',
+            instruction:   document.getElementById('input-instruction').value || '',
+            show_logo:     document.getElementById('toggle-logo').checked    ? '1' : '0',
+            show_branch:   document.getElementById('toggle-branch').checked  ? '1' : '0',
             ...(isPreview ? { preview: '1' } : {}),
         });
     }
@@ -191,17 +358,16 @@ para verificar el precio al instante</textarea>
     window.schedulePreviewUpdate = function () {
         clearTimeout(debounce);
         debounce = setTimeout(function () {
-            // Actualizar anillo de selección del swatch
-            const selected = document.querySelector('.scheme-option input:checked')?.value;
+            // Actualizar anillo del swatch de color
+            const selected = document.querySelector('[name="scheme_radio"]:checked')?.value;
             document.querySelectorAll('.scheme-swatch').forEach(el => {
-                const isActive = el.dataset.scheme === selected;
-                el.classList.toggle('ring-2',         isActive);
-                el.classList.toggle('ring-offset-2',  isActive);
-                el.classList.toggle('ring-slate-500', isActive);
-                el.classList.toggle('!border-slate-500', isActive);
+                const active = el.dataset.scheme === selected;
+                el.classList.toggle('ring-2',            active);
+                el.classList.toggle('ring-offset-2',     active);
+                el.classList.toggle('ring-slate-500',    active);
+                el.classList.toggle('!border-slate-500', active);
             });
 
-            // _t evita que el navegador cachee la respuesta anterior
             iframe.src = BASE_URL + '?' + buildParams(true).toString() + '&_t=' + Date.now();
         }, 350);
     };
