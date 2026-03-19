@@ -43,6 +43,26 @@ class SettingsController extends Controller
                 ->with('success', 'Configuración de importación guardada.');
         }
 
+        if ($tab === 'appearance') {
+            $data = $request->validate([
+                'scan_bg_color'        => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+                'scan_accent_color'    => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+                'scan_secondary_color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+                'scan_card_style'      => ['required', 'in:dark,light'],
+                'scan_font_size'       => ['required', 'in:sm,md,lg,xl'],
+                'scan_show_logo'       => ['boolean'],
+                'scan_header_text'     => ['nullable', 'string', 'max:100'],
+            ]);
+
+            $data['scan_show_logo']   = $request->boolean('scan_show_logo');
+            $data['scan_header_text'] = $data['scan_header_text'] ?? 'Consultá el precio';
+
+            $store->update($data);
+
+            return redirect()->route('dashboard.settings', ['tab' => 'appearance'])
+                ->with('success', 'Apariencia guardada.');
+        }
+
         // Tab: general (default)
         $data = $request->validate([
             'name'    => ['required', 'string', 'max:255'],

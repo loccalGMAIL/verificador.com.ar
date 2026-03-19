@@ -15,6 +15,7 @@
         'general'      => ['icon' => 'fa-store',         'label' => 'General'],
         'excel-import' => ['icon' => 'fa-file-excel',    'label' => 'Importación Excel'],
         'print'        => ['icon' => 'fa-print',         'label' => 'Impresión QR'],
+        'appearance'   => ['icon' => 'fa-palette',       'label' => 'Apariencia'],
     ] as $tab => $meta)
     <a href="{{ route('dashboard.settings', ['tab' => $tab]) }}"
        class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition
@@ -222,14 +223,12 @@
     </form>
 </div>
 
-@push('scripts')
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-@endpush
 @endif
 
 {{-- ════════════════════════════════════════════════════════ --}}
 {{-- TAB: Impresión QR                                       --}}
 {{-- ════════════════════════════════════════════════════════ --}}
+
 @if($activeTab === 'print')
 <div class="max-w-2xl">
     <div class="bg-white rounded-xl border border-slate-200 p-6">
@@ -252,6 +251,238 @@
         </a>
     </div>
 </div>
+@endif
+
+{{-- ════════════════════════════════════════════════════════ --}}
+{{-- TAB: Apariencia                                         --}}
+{{-- ════════════════════════════════════════════════════════ --}}
+@if($activeTab === 'appearance')
+@php
+    $logoUrl = $store->logo_path ? Storage::url($store->logo_path) : null;
+@endphp
+<div x-data="{
+        bgColor:        '{{ old('scan_bg_color',        $store->scan_bg_color        ?? '#0f172a') }}',
+        accentColor:    '{{ old('scan_accent_color',    $store->scan_accent_color    ?? '#34d399') }}',
+        secondaryColor: '{{ old('scan_secondary_color', $store->scan_secondary_color ?? '#93c5fd') }}',
+        cardStyle:      '{{ old('scan_card_style',      $store->scan_card_style      ?? 'dark') }}',
+        fontSize:       '{{ old('scan_font_size',       $store->scan_font_size       ?? 'lg') }}',
+        showLogo:       {{ (old('scan_show_logo') !== null ? old('scan_show_logo') : ($store->scan_show_logo ?? false)) ? 'true' : 'false' }},
+        headerText:     '{{ old('scan_header_text', $store->scan_header_text ?? 'Consultá el precio') }}',
+        logoUrl:        '{{ $logoUrl }}',
+        get cardBg()     { return this.cardStyle === 'light' ? '#f1f5f9' : '#1e293b'; },
+        get cardBorder() { return this.cardStyle === 'light' ? '#cbd5e1' : '#334155'; },
+        get cardText()   { return this.cardStyle === 'light' ? '#1e293b' : '#ffffff'; },
+        get priceFontClass() {
+            const map = { sm: 'text-3xl', md: 'text-4xl', lg: 'text-5xl', xl: 'text-7xl' };
+            return map[this.fontSize] || 'text-5xl';
+        }
+     }">
+
+    <div class="flex flex-col xl:flex-row gap-8">
+
+        {{-- ── Formulario ───────────────────────────────────────── --}}
+        <div class="flex-1 max-w-lg">
+            <form method="POST" action="{{ route('dashboard.settings.update') }}" class="space-y-5">
+                @csrf @method('PUT')
+                <input type="hidden" name="_tab" value="appearance">
+
+                <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-5">
+                    <h3 class="font-semibold text-slate-800">Pantalla de escaneo</h3>
+
+                    {{-- Color de fondo --}}
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Color de fondo</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" name="scan_bg_color"
+                                       x-model="bgColor"
+                                       class="w-10 h-10 rounded-lg border border-slate-300 cursor-pointer p-0.5">
+                                <input type="text" x-model="bgColor"
+                                       class="w-28 border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono
+                                              focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                       maxlength="7" placeholder="#0f172a">
+                            </div>
+                            @error('scan_bg_color')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                        </div>
+                    </div>
+
+                    {{-- Color precio principal --}}
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Color precio principal</label>
+                        <div class="flex items-center gap-2">
+                            <input type="color" name="scan_accent_color"
+                                   x-model="accentColor"
+                                   class="w-10 h-10 rounded-lg border border-slate-300 cursor-pointer p-0.5">
+                            <input type="text" x-model="accentColor"
+                                   class="w-28 border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono
+                                          focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   maxlength="7" placeholder="#34d399">
+                        </div>
+                        @error('scan_accent_color')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Color precio mayorista --}}
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Color precio secundario</label>
+                        <div class="flex items-center gap-2">
+                            <input type="color" name="scan_secondary_color"
+                                   x-model="secondaryColor"
+                                   class="w-10 h-10 rounded-lg border border-slate-300 cursor-pointer p-0.5">
+                            <input type="text" x-model="secondaryColor"
+                                   class="w-28 border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono
+                                          focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   maxlength="7" placeholder="#93c5fd">
+                        </div>
+                        @error('scan_secondary_color')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Estilo tarjetas --}}
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Estilo de tarjetas</label>
+                        <select name="scan_card_style" x-model="cardStyle"
+                                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="dark">Oscuro</option>
+                            <option value="light">Claro</option>
+                        </select>
+                        @error('scan_card_style')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Tamaño precio --}}
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Tamaño del precio</label>
+                        <select name="scan_font_size" x-model="fontSize"
+                                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="sm">Pequeño</option>
+                            <option value="md">Mediano</option>
+                            <option value="lg">Grande</option>
+                            <option value="xl">Muy grande</option>
+                        </select>
+                        @error('scan_font_size')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+
+                    {{-- Mostrar logo --}}
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" name="scan_show_logo" value="1"
+                               x-model="showLogo"
+                               class="w-4 h-4 text-blue-600 border-slate-300 rounded">
+                        <span class="text-sm text-slate-700">Mostrar logo del comercio en el encabezado</span>
+                    </label>
+                    @if(!$store->logo_path)
+                    <p class="text-xs text-slate-400 -mt-3 pl-7">
+                        <i class="fa-solid fa-info-circle mr-1"></i>
+                        Primero subí tu logo en la pestaña General.
+                    </p>
+                    @endif
+
+                    {{-- Texto encabezado --}}
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Texto del encabezado</label>
+                        <input type="text" name="scan_header_text"
+                               x-model="headerText"
+                               maxlength="100"
+                               class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm
+                                      focus:outline-none focus:ring-2 focus:ring-blue-500
+                                      @error('scan_header_text') border-red-400 @enderror"
+                               placeholder="Consultá el precio">
+                        @error('scan_header_text')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
+                <button type="submit"
+                        class="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold
+                               hover:bg-blue-700 transition">
+                    Guardar cambios
+                </button>
+            </form>
+        </div>
+
+        {{-- ── Preview celular ──────────────────────────────────── --}}
+        <div class="flex-shrink-0">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Vista previa</p>
+
+            {{-- Marco del celular --}}
+            <div class="relative mx-auto" style="width: 240px;">
+                {{-- Pantalla del celular --}}
+                <div class="rounded-[2rem] overflow-hidden shadow-2xl ring-[6px] ring-slate-800"
+                     style="height: 480px;">
+
+                    {{-- Contenido de la pantalla --}}
+                    <div class="h-full flex flex-col overflow-hidden"
+                         :style="{ backgroundColor: bgColor }">
+
+                        {{-- Header --}}
+                        <div class="px-3 py-3 flex items-center gap-1.5">
+                            <template x-if="showLogo && logoUrl">
+                                <img :src="logoUrl" alt="Logo" class="h-5 max-w-[80px] object-contain">
+                            </template>
+                            <template x-if="!(showLogo && logoUrl)">
+                                <div class="flex items-center gap-1">
+                                    <svg viewBox="0 0 36 36" class="w-4 h-4 flex-none" aria-hidden="true">
+                                        <circle cx="18" cy="18" r="14" fill="white" stroke="#2563eb" stroke-width="2.5"/>
+                                        <path d="M11 19 L16 24 L33 8" fill="none" stroke="#10b981" stroke-width="4"
+                                              stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                    <span class="text-[9px] font-semibold text-slate-300">verificador.com.ar</span>
+                                </div>
+                            </template>
+                        </div>
+
+                        {{-- Título --}}
+                        <div class="px-3 pb-2 text-center">
+                            <p class="text-xs font-bold text-white leading-tight" x-text="headerText || 'Consultá el precio'"></p>
+                            <p class="text-[9px] text-slate-400 mt-0.5">Apuntá la cámara al código de barras</p>
+                        </div>
+
+                        {{-- Simulación cámara --}}
+                        <div class="mx-3 rounded-lg bg-black h-14 flex items-center justify-center mb-3">
+                            <i class="fa-solid fa-camera text-slate-600 text-lg"></i>
+                        </div>
+
+                        {{-- Nombre producto fake --}}
+                        <div class="px-3 mb-2 text-center">
+                            <p class="text-[9px] text-white font-bold leading-snug">Fideos Spaghetti N°5 x 500g</p>
+                        </div>
+
+                        {{-- Precio principal fake --}}
+                        <div class="mx-3 rounded-xl px-3 py-2 mb-2"
+                             :style="{ backgroundColor: cardBg, border: '1px solid ' + cardBorder }">
+                            <p class="text-[8px] font-semibold uppercase tracking-wide mb-0.5"
+                               :style="{ color: cardText, opacity: 0.6 }">
+                                <i class="fa-solid fa-tags mr-0.5"></i>Precio
+                            </p>
+                            <p class="font-black leading-none"
+                               :class="{
+                                   'text-lg':  fontSize === 'sm',
+                                   'text-xl':  fontSize === 'md',
+                                   'text-2xl': fontSize === 'lg',
+                                   'text-3xl': fontSize === 'xl'
+                               }"
+                               :style="{ color: accentColor }">$ 1.250,00</p>
+                        </div>
+
+                        {{-- Precio mayorista fake --}}
+                        <div class="mx-3 rounded-xl px-3 py-1.5"
+                             :style="{ backgroundColor: cardBg, border: '1px solid ' + cardBorder, opacity: '0.85' }">
+                            <p class="text-[8px] font-semibold uppercase tracking-wide mb-0.5"
+                               :style="{ color: cardText, opacity: 0.6 }">
+                                <i class="fa-solid fa-tags mr-0.5"></i>Mayorista
+                            </p>
+                            <p class="text-sm font-bold" :style="{ color: secondaryColor }">$ 1.000,00</p>
+                        </div>
+
+                    </div>
+                </div>
+
+                {{-- Notch decorativo --}}
+                <div class="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-1.5 bg-slate-800 rounded-full"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
 @endif
 
 @endsection

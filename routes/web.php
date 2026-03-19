@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\ScanViewController;
 use App\Http\Controllers\Dashboard\HomeController as DashboardHome;
 use App\Http\Controllers\Dashboard\ProductController;
 use App\Http\Controllers\Dashboard\ProductImportController;
@@ -27,7 +28,7 @@ Route::get('/', fn () => view('welcome'))->name('home');
 // ============================================================
 // PÚBLICO — Escáner QR (clientes de los comercios)
 // ============================================================
-Route::get('/v/{token}', fn ($token) => view('scan.index', compact('token')))
+Route::get('/v/{token}', ScanViewController::class)
     ->name('scan.index');
 
 // ============================================================
