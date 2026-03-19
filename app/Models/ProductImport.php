@@ -19,6 +19,7 @@ class ProductImport extends Model
         'import_profile_id',
         'status',
         'rows_total',
+        'rows_processed',
         'rows_ok',
         'rows_error',
         'error_log',

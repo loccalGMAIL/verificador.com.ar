@@ -65,9 +65,13 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         Route::get('/', DashboardHome::class)->name('home');
 
         // --- Productos: import primero para evitar conflicto con {product} ---
-        Route::get('/products/import',          [ProductImportController::class, 'index'])->name('products.import.index');
-        Route::post('/products/import',         [ProductImportController::class, 'store'])->name('products.import.store');
-        Route::get('/products/import/template', [ProductImportController::class, 'template'])->name('products.import.template');
+        Route::get('/products/import',                           [ProductImportController::class, 'index'])->name('products.import.index');
+        Route::post('/products/import',                          [ProductImportController::class, 'store'])->name('products.import.store');
+        Route::get('/products/import/template',                  [ProductImportController::class, 'template'])->name('products.import.template');
+        Route::get('/products/import/{import}',                  [ProductImportController::class, 'show'])->name('products.import.show');
+        Route::post('/products/import/{import}/cancel',          [ProductImportController::class, 'cancel'])->name('products.import.cancel');
+        Route::post('/products/import/{import}/process',         [ProductImportController::class, 'process'])->name('products.import.process');
+        Route::get('/products/import/{import}/progress',         [ProductImportController::class, 'progress'])->name('products.import.progress');
 
         Route::resource('products', ProductController::class)
             ->except(['show'])

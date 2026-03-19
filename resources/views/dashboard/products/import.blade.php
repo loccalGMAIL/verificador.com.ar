@@ -113,33 +113,51 @@
                     </p>
                     @endif
                 </div>
-                <span class="flex-shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
-                    {{ $import->status === 'completed'       ? 'bg-emerald-100 text-emerald-700' : '' }}
-                    {{ $import->status === 'processing'      ? 'bg-blue-100 text-blue-700' : '' }}
-                    {{ $import->status === 'pending'         ? 'bg-amber-100 text-amber-700' : '' }}
-                    {{ $import->status === 'pending_mapping' ? 'bg-slate-100 text-slate-600' : '' }}
-                    {{ $import->status === 'failed'          ? 'bg-red-100 text-red-700' : '' }}">
-                    {{ match($import->status) {
-                        'completed'       => 'Completado',
-                        'processing'      => 'Procesando...',
-                        'pending'         => 'En cola',
-                        'pending_mapping' => 'Esperando mapeo',
-                        'failed'          => 'Fallido',
-                        default           => $import->status
-                    } }}
-                </span>
+                <div class="flex-shrink-0 flex items-center gap-2">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
+                        {{ $import->status === 'completed'       ? 'bg-emerald-100 text-emerald-700' : '' }}
+                        {{ $import->status === 'processing'      ? 'bg-blue-100 text-blue-700' : '' }}
+                        {{ $import->status === 'pending'         ? 'bg-amber-100 text-amber-700' : '' }}
+                        {{ $import->status === 'pending_mapping' ? 'bg-slate-100 text-slate-600' : '' }}
+                        {{ $import->status === 'failed'          ? 'bg-red-100 text-red-700' : '' }}
+                        {{ $import->status === 'cancelled'       ? 'bg-slate-100 text-slate-500' : '' }}">
+                        {{ match($import->status) {
+                            'completed'       => 'Completado',
+                            'processing'      => 'Procesando...',
+                            'pending'         => 'En cola',
+                            'pending_mapping' => 'Esperando mapeo',
+                            'failed'          => 'Fallido',
+                            'cancelled'       => 'Cancelado',
+                            default           => $import->status
+                        } }}
+                    </span>
+                    <a href="{{ route('dashboard.products.import.show', $import) }}"
+                       class="text-xs text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap">
+                        Ver estado
+                    </a>
+                    @if($import->status === 'pending')
+                    <form method="POST" action="{{ route('dashboard.products.import.cancel', $import) }}"
+                          onsubmit="return confirm('¿Cancelar esta importación?')">
+                        @csrf
+                        <button type="submit"
+                                class="text-xs text-red-500 hover:text-red-700 font-medium whitespace-nowrap">
+                            Cancelar
+                        </button>
+                    </form>
+                    @endif
+                </div>
             </div>
 
             {{-- Errores del import --}}
             @if($import->error_log && count($import->error_log) > 0)
-            <details class="mt-2">
+            <details {{ $import->status === 'failed' ? 'open' : '' }} class="mt-2">
                 <summary class="text-xs text-red-500 cursor-pointer hover:text-red-700 font-medium">
                     Ver {{ count($import->error_log) }} error(es)
                 </summary>
                 <ul class="mt-2 space-y-0.5 max-h-32 overflow-y-auto">
                     @foreach($import->error_log as $err)
                     <li class="text-xs text-red-600 bg-red-50 px-3 py-1 rounded">
-                        {{ $err['error'] }}
+                        @if(($err['row'] ?? 0) > 0) Fila {{ $err['row'] }}: @endif{{ $err['error'] }}
                     </li>
                     @endforeach
                 </ul>
