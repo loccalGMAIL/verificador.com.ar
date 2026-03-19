@@ -10,13 +10,19 @@
 
     @php
         $isPreview    = request()->boolean('preview');
-        $scheme       = request('scheme', 'blue');
-        $layout       = request('layout', 'a5');
-        $headline     = request('headline', 'Verificá tu precio');
-        $instruction  = request('instruction', "Escaneá el código con tu celular\npara verificar el precio al instante");
-        $showLogo     = request('show_logo', '1') === '1';
-        $showBranch   = request('show_branch', '1') === '1';
-        $logoPosition = request('logo_position', 'center');
+        $scheme       = request('scheme',        $defaults['scheme']);
+        $layout       = request('layout',        $defaults['layout']);
+        $headline     = request('headline',      $defaults['headline']);
+        $instruction  = request('instruction',   $defaults['instruction']);
+        $showLogo     = request('show_logo',     $defaults['show_logo'])   === '1';
+        $showBranch   = request('show_branch',   $defaults['show_branch']) === '1';
+        $logoPosition = request('logo_position', $defaults['logo_position']);
+
+        // Tamaños: también usan defaults guardados
+        $savedQrSize       = $defaults['qr_size'];
+        $savedHeadlineSize = $defaults['headline_size'];
+        $savedInstrSize    = $defaults['instr_size'];
+        $savedLogoSize     = $defaults['logo_size'];
 
         $headerAlign     = match($logoPosition) { 'left' => 'flex-start', 'right' => 'flex-end', default => 'center' };
         $headerTextAlign = match($logoPosition) { 'left' => 'left',       'right' => 'right',    default => 'center' };
@@ -44,10 +50,10 @@
             'lg' => ['a5' => '48px', 'a4' => '80px'],
         ];
 
-        $qrSize       = $qrSizeMap[request('qr_size', 'md')][$layout]       ?? ($layout === 'a4' ? '72mm' : '48mm');
-        $headlineSize = $headlineSizeMap[request('headline_size', 'md')][$layout] ?? ($layout === 'a4' ? '19px' : '12px');
-        $instrSize    = $instrSizeMap[request('instr_size', 'md')][$layout]   ?? ($layout === 'a4' ? '14px' : '9px');
-        $logoSize     = $logoSizeMap[request('logo_size', 'md')][$layout]     ?? ($layout === 'a4' ? '56px' : '32px');
+        $qrSize       = $qrSizeMap[request('qr_size', $savedQrSize)][$layout]             ?? ($layout === 'a4' ? '72mm' : '48mm');
+        $headlineSize = $headlineSizeMap[request('headline_size', $savedHeadlineSize)][$layout] ?? ($layout === 'a4' ? '19px' : '12px');
+        $instrSize    = $instrSizeMap[request('instr_size', $savedInstrSize)][$layout]         ?? ($layout === 'a4' ? '14px' : '9px');
+        $logoSize     = $logoSizeMap[request('logo_size', $savedLogoSize)][$layout]            ?? ($layout === 'a4' ? '56px' : '32px');
 
         // ── Layout dimensions ──────────────────────────────────────────
         // A5 landscape: 210mm × 148mm — 2 tarjetas side-by-side

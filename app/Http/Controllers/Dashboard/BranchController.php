@@ -147,7 +147,22 @@ class BranchController extends Controller
             };
         }
 
-        return view('dashboard.branches.qr-print', compact('branch', 'svg', 'logoBase64', 'logoMime'));
+        // Valores guardados como defaults para qr-print (usados cuando no hay params en la URL)
+        $defaults = [
+            'scheme'        => $branch->qr_scheme        ?? 'blue',
+            'layout'        => $branch->qr_layout        ?? 'a5',
+            'headline'      => $branch->qr_headline      ?? 'Verificá tu precio',
+            'instruction'   => $branch->qr_instruction   ?? "Escaneá el código con tu celular\npara verificar el precio al instante",
+            'show_logo'     => ($branch->qr_show_logo    ?? true)  ? '1' : '0',
+            'show_branch'   => ($branch->qr_show_branch  ?? true)  ? '1' : '0',
+            'logo_position' => $branch->qr_logo_position ?? 'center',
+            'qr_size'       => $branch->qr_qr_size       ?? 'md',
+            'headline_size' => $branch->qr_headline_size ?? 'md',
+            'instr_size'    => $branch->qr_instr_size    ?? 'md',
+            'logo_size'     => $branch->qr_logo_size     ?? 'md',
+        ];
+
+        return view('dashboard.branches.qr-print', compact('branch', 'svg', 'logoBase64', 'logoMime', 'defaults'));
     }
 
     // ----------------------------------------------------------------
