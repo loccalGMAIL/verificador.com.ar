@@ -207,6 +207,12 @@
                 }
 
 
+                // Nombre del producto
+                if (data.name) {
+                    document.getElementById('result-name').textContent = data.name;
+                    document.getElementById('result-header').classList.remove('hidden');
+                }
+
                 // Precio principal
                 if (data.retail_price !== undefined && data.retail_price !== null) {
                     const retailBox   = document.getElementById('retail-box');
