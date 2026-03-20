@@ -11,7 +11,9 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         #reader { width: 100%; }
-        #reader video { border-radius: 12px; width: 100% !important; }
+        #reader video { border-radius: 0 0 12px 12px; width: 100% !important; }
+        #camera-accordion { overflow: hidden; transition: max-height 0.4s ease; max-height: 600px; }
+        #camera-accordion.collapsed { max-height: 0; }
     </style>
 </head>
 @php
@@ -69,12 +71,18 @@
     <main class="flex-1 flex flex-col items-center justify-start px-4 pb-8 pt-4 max-w-md mx-auto w-full">
 
         <h1 class="text-xl font-bold mb-1 text-center">{{ $headerText }}</h1>
-        <p class="text-slate-400 text-sm text-center mb-6">
-            Apuntá la cámara al código de barras del producto
-        </p>
 
-        {{-- Lector --}}
-        <div class="w-1/2 rounded-xl overflow-hidden bg-black mb-6" id="reader"></div>
+        {{-- Acordeón cámara --}}
+        <div class="w-full rounded-xl border border-white/10 overflow-hidden mb-6">
+            <button id="camera-toggle" onclick="toggleCamera()"
+                    class="w-full flex items-center justify-between px-4 py-3 bg-white/5 text-sm font-medium text-slate-300">
+                <span><i class="fa-solid fa-barcode mr-2 text-slate-400"></i>Apuntá al código de barras</span>
+                <i id="camera-chevron" class="fa-solid fa-chevron-up text-xs text-slate-400 transition-transform duration-300"></i>
+            </button>
+            <div id="camera-accordion">
+                <div id="reader"></div>
+            </div>
+        </div>
 
         {{-- Nombre del producto --}}
         <div id="result-header" class="hidden w-full mb-4 text-center">
@@ -127,6 +135,28 @@
         const API   = `/api/scan/${TOKEN}/`;
         let scanning = true;
 
+        // ── Acordeón cámara ───────────────────────────────────────────
+        function toggleCamera() {
+            const acc     = document.getElementById('camera-accordion');
+            const chevron = document.getElementById('camera-chevron');
+            acc.classList.toggle('collapsed');
+            chevron.style.transform = acc.classList.contains('collapsed') ? 'rotate(180deg)' : '';
+        }
+
+        function collapseCamera() {
+            const acc     = document.getElementById('camera-accordion');
+            const chevron = document.getElementById('camera-chevron');
+            acc.classList.add('collapsed');
+            chevron.style.transform = 'rotate(180deg)';
+        }
+
+        function expandCamera() {
+            const acc     = document.getElementById('camera-accordion');
+            const chevron = document.getElementById('camera-chevron');
+            acc.classList.remove('collapsed');
+            chevron.style.transform = '';
+        }
+
         // ── Scanner ──────────────────────────────────────────────────
         const scanner = new Html5Qrcode("reader");
 
@@ -151,15 +181,12 @@
                 const data = await res.json();
 
                 if (!data.found) {
+                    collapseCamera();
                     showError(data.error || 'Producto no encontrado en este comercio.');
                     document.getElementById('scan-again').classList.remove('hidden');
                     return;
                 }
 
-                // Nombre y comercio
-                document.getElementById('result-store').textContent = data.store_name || '';
-                document.getElementById('result-name').textContent  = data.name;
-                document.getElementById('result-header').classList.remove('hidden');
 
                 // Precio principal
                 if (data.retail_price !== undefined && data.retail_price !== null) {
@@ -185,9 +212,11 @@
                     wsBox.classList.remove('hidden');
                 }
 
+                collapseCamera();
                 document.getElementById('scan-again').classList.remove('hidden');
 
             } catch {
+                collapseCamera();
                 showError('Error de conexión. Intentá de nuevo.');
                 document.getElementById('scan-again').classList.remove('hidden');
             }
@@ -211,6 +240,7 @@
         function scanAgain() {
             scanning = true;
             clearResults();
+            expandCamera();
         }
 
         function esc(str) {
