@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        #reader { width: 100%; }
+        #reader { width: 100%; max-width: 240px; margin: 0 auto; }
         #reader video { border-radius: 12px; width: 100% !important; }
     </style>
 </head>
@@ -74,7 +74,7 @@
         </p>
 
         {{-- Lector --}}
-        <div class="w-1/2 rounded-xl overflow-hidden bg-black mb-6" id="reader"></div>
+        <div class="rounded-xl overflow-hidden bg-black mb-6" id="reader"></div>
 
         {{-- Nombre del producto --}}
         <div id="result-header" class="hidden w-full mb-4 text-center">
@@ -156,10 +156,6 @@
                     return;
                 }
 
-                // Nombre y comercio
-                document.getElementById('result-store').textContent = data.store_name || '';
-                document.getElementById('result-name').textContent  = data.name;
-                document.getElementById('result-header').classList.remove('hidden');
 
                 // Precio principal
                 if (data.retail_price !== undefined && data.retail_price !== null) {
