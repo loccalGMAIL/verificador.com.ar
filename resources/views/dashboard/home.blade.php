@@ -12,52 +12,86 @@
 {{-- ══ FILA 1: Plan + Acciones rápidas ══ --}}
 <div class="flex flex-col lg:flex-row gap-4 mb-6">
 
-    {{-- Card Plan --}}
-    <div class="bg-white rounded-xl border border-slate-200 p-5 flex-1">
-        <div class="flex items-center justify-between mb-3">
-            <span class="text-sm font-medium text-slate-500">Plan</span>
-            <span class="w-9 h-9 bg-violet-50 rounded-lg flex items-center justify-center">
-                <i class="fa-solid fa-credit-card text-violet-600 text-sm"></i>
-            </span>
-        </div>
-        <p class="text-3xl font-bold text-slate-900">{{ $sub?->plan?->name ?? 'Sin plan' }}</p>
-        <div class="flex items-center justify-between mt-1">
+    {{-- Card Plan (compacta) --}}
+    <div class="bg-white rounded-xl border border-slate-200 px-5 py-4 flex items-center gap-4 lg:w-72 flex-shrink-0">
+        <span class="w-10 h-10 bg-violet-50 rounded-lg flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-credit-card text-violet-600"></i>
+        </span>
+        <div class="min-w-0 flex-1">
+            <p class="text-xs text-slate-400 font-medium">Plan</p>
+            <p class="text-lg font-bold text-slate-900 truncate">{{ $sub?->plan?->name ?? 'Sin plan' }}</p>
             <p class="text-xs {{ $sub?->isOnTrial() ? 'text-amber-500' : 'text-slate-400' }}">
-                @if($sub?->isOnTrial())    Trial · {{ $sub->trialDaysRemaining() }} día(s) restantes
-                @elseif($sub?->isActive()) Suscripción activa
+                @if($sub?->isOnTrial())    Trial · {{ $sub->trialDaysRemaining() }} día(s)
+                @elseif($sub?->isActive()) Activa
                 @else                     {{ ucfirst($sub?->status ?? 'sin suscripción') }}
                 @endif
             </p>
-            <a href="{{ route('dashboard.subscription') }}"
-               class="text-xs text-violet-600 hover:text-violet-800 font-medium transition">
-                Ver planes <i class="fa-solid fa-arrow-right ml-0.5"></i>
-            </a>
         </div>
+        <a href="{{ route('dashboard.subscription') }}"
+           class="text-xs text-violet-600 hover:text-violet-800 font-medium transition flex-shrink-0">
+            Ver <i class="fa-solid fa-arrow-right ml-0.5"></i>
+        </a>
     </div>
 
     {{-- Acciones rápidas --}}
-    <div class="lg:w-56 flex-shrink-0">
-        <div class="bg-white rounded-xl border border-slate-200 p-5 h-full flex flex-col">
-            <h3 class="text-sm font-semibold text-slate-700 mb-3">Acciones rápidas</h3>
-            <div class="space-y-2 flex-1">
+    @php $firstBranch = $branches->first(); @endphp
+    <div class="flex-1">
+        <div class="bg-white rounded-xl border border-slate-200 p-4 h-full flex flex-col">
+            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Acciones rápidas</h3>
+            <div class="grid grid-cols-3 gap-2 flex-1">
+
+                {{-- Col 1+2, Fila 1 --}}
                 <a href="{{ route('dashboard.products.import.index') }}"
-                   class="flex items-center gap-3 p-3 rounded-lg border border-slate-200
+                   class="flex items-center gap-2.5 p-3 rounded-lg border border-slate-200
                           hover:border-blue-300 hover:bg-blue-50 transition group">
-                    <i class="fa-solid fa-file-arrow-up text-blue-500 text-sm w-4 text-center"></i>
+                    <i class="fa-solid fa-file-arrow-up text-blue-500 text-sm w-4 text-center flex-shrink-0"></i>
                     <div class="min-w-0">
-                        <p class="text-sm font-medium text-slate-800 group-hover:text-blue-700">Importar Excel</p>
+                        <p class="text-sm font-medium text-slate-800 group-hover:text-blue-700 leading-tight">Importar Excel</p>
                         <p class="text-xs text-slate-400 truncate">Carga masiva</p>
                     </div>
                 </a>
                 <a href="{{ route('dashboard.branches.create') }}"
-                   class="flex items-center gap-3 p-3 rounded-lg border border-slate-200
+                   class="flex items-center gap-2.5 p-3 rounded-lg border border-slate-200
                           hover:border-emerald-300 hover:bg-emerald-50 transition group">
-                    <i class="fa-solid fa-store text-emerald-600 text-sm w-4 text-center"></i>
+                    <i class="fa-solid fa-store text-emerald-600 text-sm w-4 text-center flex-shrink-0"></i>
                     <div class="min-w-0">
-                        <p class="text-sm font-medium text-slate-800 group-hover:text-emerald-700">Nueva sucursal</p>
+                        <p class="text-sm font-medium text-slate-800 group-hover:text-emerald-700 leading-tight">Nueva sucursal</p>
                         <p class="text-xs text-slate-400 truncate">Crear y generar QR</p>
                     </div>
                 </a>
+
+                {{-- Col 3, Fila 1+2 (alto doble) --}}
+                <a href="{{ route('dashboard.settings', ['tab' => 'appearance']) }}"
+                   class="row-span-2 flex flex-col items-center justify-center gap-2 p-3 rounded-lg border border-slate-200
+                          hover:border-pink-300 hover:bg-pink-50 transition group text-center">
+                    <i class="fa-solid fa-palette text-pink-500 text-xl flex-shrink-0"></i>
+                    <div>
+                        <p class="text-sm font-medium text-slate-800 group-hover:text-pink-700 leading-tight">Apariencia</p>
+                        <p class="text-xs text-slate-400 leading-tight mt-0.5">App celular</p>
+                    </div>
+                </a>
+
+                {{-- Col 1+2, Fila 2 --}}
+                <a href="{{ $firstBranch ? ($branches->count() === 1 ? route('dashboard.branches.qr', $firstBranch) : route('dashboard.branches.index')) : route('dashboard.branches.index') }}"
+                   {{ $firstBranch && $branches->count() === 1 ? 'target="_blank"' : '' }}
+                   class="flex items-center gap-2.5 p-3 rounded-lg border border-slate-200
+                          hover:border-violet-300 hover:bg-violet-50 transition group">
+                    <i class="fa-solid fa-print text-violet-600 text-sm w-4 text-center flex-shrink-0"></i>
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium text-slate-800 group-hover:text-violet-700 leading-tight">Imprimir QR</p>
+                        <p class="text-xs text-slate-400 truncate">Hoja lista para imprimir</p>
+                    </div>
+                </a>
+                <a href="{{ $firstBranch ? ($branches->count() === 1 ? route('dashboard.branches.qr.configure', $firstBranch) : route('dashboard.branches.index')) : route('dashboard.branches.index') }}"
+                   class="flex items-center gap-2.5 p-3 rounded-lg border border-slate-200
+                          hover:border-orange-300 hover:bg-orange-50 transition group">
+                    <i class="fa-solid fa-sliders text-orange-500 text-sm w-4 text-center flex-shrink-0"></i>
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium text-slate-800 group-hover:text-orange-700 leading-tight">Configurar QR</p>
+                        <p class="text-xs text-slate-400 truncate">Colores, texto y diseño</p>
+                    </div>
+                </a>
+
             </div>
         </div>
     </div>

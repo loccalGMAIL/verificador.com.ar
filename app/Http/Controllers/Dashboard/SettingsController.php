@@ -15,8 +15,12 @@ class SettingsController extends Controller
     {
         $store          = auth()->user()->store;
         $importProfiles = $store->importProfiles()->latest()->get();
+        $branches       = $store->branches()->where('active', true)->orderBy('name')->get();
 
-        return view('dashboard.settings', compact('store', 'importProfiles'));
+        // Pre-cargar store en cada branch (necesario para el partial de configuración QR)
+        $branches->each(fn ($b) => $b->setRelation('store', $store));
+
+        return view('dashboard.settings', compact('store', 'importProfiles', 'branches'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -41,6 +45,31 @@ class SettingsController extends Controller
 
             return redirect()->route('dashboard.settings', ['tab' => 'excel-import'])
                 ->with('success', 'Configuración de importación guardada.');
+        }
+
+        if ($tab === 'appearance') {
+            $data = $request->validate([
+                'scan_bg_color'        => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+                'scan_accent_color'    => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+                'scan_secondary_color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+                'scan_card_style'      => ['required', 'in:dark,light'],
+                'scan_font_size'       => ['required', 'in:sm,md,lg,xl'],
+                'scan_show_logo'        => ['boolean'],
+                'scan_header_text'      => ['nullable', 'string', 'max:100'],
+                'scan_show_store_name'       => ['boolean'],
+                'scan_show_branch_name'      => ['boolean'],
+                'scan_wholesale_card_color'  => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            ]);
+
+            $data['scan_show_logo']             = $request->boolean('scan_show_logo');
+            $data['scan_show_store_name']       = $request->boolean('scan_show_store_name');
+            $data['scan_show_branch_name']      = $request->boolean('scan_show_branch_name');
+            $data['scan_header_text']           = $data['scan_header_text'] ?? 'Consultá el precio';
+
+            $store->update($data);
+
+            return redirect()->route('dashboard.settings', ['tab' => 'appearance'])
+                ->with('success', 'Apariencia guardada.');
         }
 
         // Tab: general (default)

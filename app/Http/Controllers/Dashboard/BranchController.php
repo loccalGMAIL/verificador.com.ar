@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -89,6 +88,35 @@ class BranchController extends Controller
         return view('dashboard.branches.qr-configure', compact('branch'));
     }
 
+    /** Guardar configuración del QR */
+    public function qrSave(Request $request, Branch $branch): RedirectResponse
+    {
+        $this->authorizeBranch($branch);
+
+        $data = $request->validate([
+            'qr_header_color'  => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'qr_layout'        => ['required', 'in:a5,a4'],
+            'qr_headline'      => ['nullable', 'string', 'max:80'],
+            'qr_instruction'   => ['nullable', 'string', 'max:200'],
+            'qr_show_logo'     => ['boolean'],
+            'qr_show_branch'   => ['boolean'],
+            'qr_logo_position' => ['required', 'in:left,center,right'],
+            'qr_qr_size'       => ['required', 'in:sm,md,lg,xl'],
+            'qr_headline_size' => ['required', 'in:sm,md,lg'],
+            'qr_instr_size'    => ['required', 'in:sm,md,lg'],
+            'qr_logo_size'     => ['required', 'in:sm,md,lg'],
+        ]);
+
+        $data['qr_show_logo']   = $request->boolean('qr_show_logo');
+        $data['qr_show_branch'] = $request->boolean('qr_show_branch');
+        $data['qr_headline']    = $data['qr_headline'] ?? 'Verificá tu precio';
+
+        $branch->update($data);
+
+        return redirect()->route('dashboard.branches.qr.configure', $branch)
+            ->with('success', 'Configuración del QR guardada.');
+    }
+
     /** Página de impresión del QR — se abre en pestaña nueva */
     public function qr(Branch $branch): View
     {
@@ -115,7 +143,22 @@ class BranchController extends Controller
             };
         }
 
-        return view('dashboard.branches.qr-print', compact('branch', 'svg', 'logoBase64', 'logoMime'));
+        // Valores guardados como defaults para qr-print (usados cuando no hay params en la URL)
+        $defaults = [
+            'header_color'  => $branch->qr_header_color  ?? '#1e3a8a',
+            'layout'        => $branch->qr_layout        ?? 'a5',
+            'headline'      => $branch->qr_headline      ?? 'Verificá tu precio',
+            'instruction'   => $branch->qr_instruction   ?? "Escaneá el código con tu celular\npara verificar el precio al instante",
+            'show_logo'     => ($branch->qr_show_logo    ?? true)  ? '1' : '0',
+            'show_branch'   => ($branch->qr_show_branch  ?? true)  ? '1' : '0',
+            'logo_position' => $branch->qr_logo_position ?? 'center',
+            'qr_size'       => $branch->qr_qr_size       ?? 'md',
+            'headline_size' => $branch->qr_headline_size ?? 'md',
+            'instr_size'    => $branch->qr_instr_size    ?? 'md',
+            'logo_size'     => $branch->qr_logo_size     ?? 'md',
+        ];
+
+        return view('dashboard.branches.qr-print', compact('branch', 'svg', 'logoBase64', 'logoMime', 'defaults'));
     }
 
     // ----------------------------------------------------------------

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\ScanViewController;
 use App\Http\Controllers\Dashboard\HomeController as DashboardHome;
 use App\Http\Controllers\Dashboard\ProductController;
 use App\Http\Controllers\Dashboard\ProductImportController;
@@ -27,7 +28,7 @@ Route::get('/', fn () => view('welcome'))->name('home');
 // ============================================================
 // PÚBLICO — Escáner QR (clientes de los comercios)
 // ============================================================
-Route::get('/v/{token}', fn ($token) => view('scan.index', compact('token')))
+Route::get('/v/{token}', ScanViewController::class)
     ->name('scan.index');
 
 // ============================================================
@@ -89,6 +90,7 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
             ->except(['show']);
         Route::get('/branches/{branch}/qr',           [BranchController::class, 'qr'])->name('branches.qr');
         Route::get('/branches/{branch}/qr/configure', [BranchController::class, 'qrConfigure'])->name('branches.qr.configure');
+        Route::post('/branches/{branch}/qr/save',     [BranchController::class, 'qrSave'])->name('branches.qr.save');
 
         // --- Subscripción ---
         Route::get('/subscription', [DashboardSubscription::class, 'index'])->name('subscription');

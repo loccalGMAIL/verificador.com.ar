@@ -25,6 +25,16 @@ class Store extends Model
         'show_wholesale',
         'wholesale_label',
         'wholesale_discount',
+        'scan_bg_color',
+        'scan_accent_color',
+        'scan_secondary_color',
+        'scan_card_style',
+        'scan_font_size',
+        'scan_show_logo',
+        'scan_header_text',
+        'scan_show_store_name',
+        'scan_show_branch_name',
+        'scan_wholesale_card_color',
     ];
 
     // --- Relaciones ---

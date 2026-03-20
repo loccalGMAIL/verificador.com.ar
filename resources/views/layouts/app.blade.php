@@ -22,9 +22,12 @@
     {{-- Estilos propios --}}
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 
+    {{-- Alpine.js --}}
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     @stack('styles')
 </head>
-<body class="bg-slate-50 text-slate-800" style="font-family: 'Inter', sans-serif;">
+<body class="bg-slate-50 text-slate-800 overflow-hidden" style="font-family: 'Inter', sans-serif;">
 
     <div class="flex h-screen overflow-hidden">
 
@@ -93,12 +96,35 @@
                     <span>Subscripción</span>
                 </a> --}}
 
-                <a href="{{ route('dashboard.settings') }}"
-                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
-                          {{ $seg === 'settings' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
-                    <i class="fa-solid fa-gear w-4 text-center"></i>
-                    <span>Configuración</span>
-                </a>
+                {{-- Configuración expandible --}}
+                <div x-data="{ open: {{ $seg === 'settings' ? 'true' : 'false' }} }">
+                    <button @click="open = !open"
+                            class="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition
+                                   {{ $seg === 'settings' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
+                        <i class="fa-solid fa-gear w-4 text-center"></i>
+                        <span class="flex-1 text-left">Configuración</span>
+                        <i class="fa-solid fa-chevron-down text-xs transition-transform"
+                           :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    <div x-show="open" class="mt-0.5 space-y-0.5 pl-3">
+                        @php $currentTab = request('tab', 'general'); @endphp
+                        @foreach([
+                            'general'      => 'General',
+                            'excel-import' => 'Importación Excel',
+                            'print'        => 'Impresión QR',
+                            'appearance'   => 'Apariencia',
+                        ] as $tabKey => $tabLabel)
+                        <a href="{{ route('dashboard.settings', ['tab' => $tabKey]) }}"
+                           class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition
+                                  {{ $seg === 'settings' && $currentTab === $tabKey
+                                      ? 'bg-blue-700 text-white'
+                                      : 'text-blue-300 hover:bg-blue-900 hover:text-white' }}">
+                            <i class="fa-solid fa-minus w-3 text-center text-blue-500"></i>
+                            {{ $tabLabel }}
+                        </a>
+                        @endforeach
+                    </div>
+                </div>
             </nav>
 
             {{-- Footer del sidebar --}}

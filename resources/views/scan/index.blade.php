@@ -14,21 +14,61 @@
         #reader video { border-radius: 12px; width: 100% !important; }
     </style>
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex flex-col">
+@php
+    $bgColor              = $store->scan_bg_color              ?? '#0f172a';
+    $accentColor          = $store->scan_accent_color          ?? '#34d399';
+    $secondaryColor       = $store->scan_secondary_color       ?? '#93c5fd';
+    $wholesaleCardColor   = $store->scan_wholesale_card_color  ?? '#172033';
+    $cardStyle            = $store->scan_card_style            ?? 'dark';
+    $fontSize             = $store->scan_font_size             ?? 'lg';
+    $showLogo             = $store->scan_show_logo             ?? false;
+    $showStoreName        = $store->scan_show_store_name       ?? true;
+    $showBranchName       = $store->scan_show_branch_name      ?? true;
+    $headerText           = $store->scan_header_text           ?? 'Consultá el precio';
+
+    $cardBg     = $cardStyle === 'light' ? '#f1f5f9' : '#1e293b';
+    $cardBorder = $cardStyle === 'light' ? '#cbd5e1' : '#334155';
+    $cardText   = $cardStyle === 'light' ? '#1e293b' : '#ffffff';
+
+    $fontSizeMap = [
+        'sm' => 'text-3xl',
+        'md' => 'text-4xl',
+        'lg' => 'text-5xl',
+        'xl' => 'text-7xl',
+    ];
+    $priceClass = $fontSizeMap[$fontSize] ?? 'text-5xl';
+@endphp
+<body class="min-h-screen flex flex-col text-white" style="background-color: {{ $bgColor }};">
 
     {{-- Header --}}
-    <header class="px-4 py-4 flex items-center gap-2">
-        <svg viewBox="0 0 36 36" class="w-6 h-6 flex-none" aria-hidden="true">
-            <circle cx="18" cy="18" r="14" fill="white" stroke="#2563eb" stroke-width="2.5"/>
-            <path d="M11 19 L16 24 L33 8" fill="none" stroke="#10b981" stroke-width="4"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="text-sm font-semibold text-slate-300">verificador.com.ar</span>
+    <header class="px-4 py-4 flex items-center gap-3">
+        @if($showLogo && !empty($store->logo_path))
+            <img src="{{ Storage::url($store->logo_path) }}" alt="{{ $store->name }}"
+                 class="h-8 max-w-[120px] object-contain flex-shrink-0">
+        @else
+            <svg viewBox="0 0 36 36" class="w-6 h-6 flex-none" aria-hidden="true">
+                <circle cx="18" cy="18" r="14" fill="white" stroke="#2563eb" stroke-width="2.5"/>
+                <path d="M11 19 L16 24 L33 8" fill="none" stroke="#10b981" stroke-width="4"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        @endif
+        @if($showStoreName || $showBranchName)
+        <div class="min-w-0">
+            @if($showStoreName)
+                <p class="text-sm font-bold text-white leading-tight truncate">{{ $store->name }}</p>
+            @endif
+            @if($showBranchName && $branch)
+                <p class="text-xs text-slate-400 leading-tight truncate">{{ $branch->name }}</p>
+            @endif
+        </div>
+        @elseif(!$showLogo)
+            <span class="text-sm font-semibold text-slate-300">verificador.com.ar</span>
+        @endif
     </header>
 
     <main class="flex-1 flex flex-col items-center justify-start px-4 pb-8 pt-4 max-w-md mx-auto w-full">
 
-        <h1 class="text-xl font-bold mb-1 text-center">Consultá el precio</h1>
+        <h1 class="text-xl font-bold mb-1 text-center">{{ $headerText }}</h1>
         <p class="text-slate-400 text-sm text-center mb-6">
             Apuntá la cámara al código de barras del producto
         </p>
@@ -43,24 +83,27 @@
         </div>
 
         {{-- Precio principal --}}
-        <div id="retail-box" class="hidden w-full bg-slate-800 rounded-xl px-5 py-4 border border-slate-700 mb-3">
-            <p id="retail-label" class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">
-                <i class="fa-solid fa-tags mr-1.5 text-emerald-600"></i>Precio
+        <div id="retail-box" class="hidden w-full rounded-xl px-5 py-4 mb-3"
+             style="background-color: {{ $cardBg }}; border: 1px solid {{ $cardBorder }}; color: {{ $cardText }};">
+            <p id="retail-label" class="text-xs font-semibold uppercase tracking-wide mb-1" style="color: {{ $cardText }}; opacity: 0.6;">
+                <i class="fa-solid fa-tags mr-1.5"></i>Precio
             </p>
-            <p id="retail-price" class="text-5xl font-black text-emerald-400"></p>
+            <p id="retail-price" class="{{ $priceClass }} font-black" style="color: {{ $accentColor }};"></p>
         </div>
 
         {{-- Precio mayorista --}}
-        <div id="wholesale-box" class="hidden w-full bg-slate-800/60 rounded-xl px-5 py-3 border border-slate-700/60 mb-4">
-            <p id="wholesale-label" class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-0.5">
-                <i class="fa-solid fa-tags mr-1.5 text-blue-500"></i>Mayorista
+        <div id="wholesale-box" class="hidden w-full rounded-xl px-5 py-3 mb-4"
+             style="background-color: {{ $wholesaleCardColor }}; border: 1px solid {{ $cardBorder }};">
+            <p id="wholesale-label" class="text-xs font-semibold uppercase tracking-wide mb-0.5" style="color: {{ $cardText }}; opacity: 0.6;">
+                <i class="fa-solid fa-tags mr-1.5"></i>Mayorista
             </p>
-            <p id="wholesale-price" class="text-2xl font-bold text-blue-300"></p>
+            <p id="wholesale-price" class="{{ $priceClass }} font-black" style="color: {{ $secondaryColor }};"></p>
         </div>
 
         {{-- Sin precio --}}
         <div id="no-price-box"
-             class="hidden w-full bg-slate-800 rounded-xl p-4 text-center border border-slate-700 mb-4">
+             class="hidden w-full rounded-xl p-4 text-center mb-4"
+             style="background-color: {{ $cardBg }}; border: 1px solid {{ $cardBorder }};">
             <p class="text-slate-400 text-sm">Este producto no tiene precio cargado.</p>
         </div>
 
@@ -124,7 +167,7 @@
                     const retailLabel = document.getElementById('retail-label');
                     const retailPrice = document.getElementById('retail-price');
 
-                    retailLabel.innerHTML = `<i class="fa-solid fa-tags mr-1.5 text-emerald-600"></i>${esc(data.retail_label || 'Precio')}`;
+                    retailLabel.innerHTML = `<i class="fa-solid fa-tags mr-1.5"></i>${esc(data.retail_label || 'Precio')}`;
                     retailPrice.textContent = formatPrice(data.retail_price);
                     retailBox.classList.remove('hidden');
                 } else {
@@ -137,7 +180,7 @@
                     const wsLabel = document.getElementById('wholesale-label');
                     const wsPrice = document.getElementById('wholesale-price');
 
-                    wsLabel.innerHTML = `<i class="fa-solid fa-tags mr-1.5 text-blue-500"></i>${esc(data.wholesale_label || 'Mayorista')}`;
+                    wsLabel.innerHTML = `<i class="fa-solid fa-tags mr-1.5"></i>${esc(data.wholesale_label || 'Mayorista')}`;
                     wsPrice.textContent = formatPrice(data.wholesale_price);
                     wsBox.classList.remove('hidden');
                 }

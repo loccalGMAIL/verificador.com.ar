@@ -43,12 +43,18 @@
                 </td>
                 <td class="px-4 py-4 text-right">
                     <div class="flex items-center justify-end gap-1">
-                        {{-- Configurar e imprimir QR --}}
-                        <a href="{{ route('dashboard.branches.qr.configure', $branch) }}"
-                           title="Configurar e imprimir QR"
+                        <a href="{{ route('dashboard.branches.qr', $branch) }}"
+                           target="_blank"
+                           title="Imprimir QR"
                            class="text-emerald-600 hover:text-emerald-800 px-2 py-1 text-xs font-medium flex items-center gap-1">
                             <i class="fa-solid fa-print"></i>
-                            <span class="hidden sm:inline">Imprimir QR</span>
+                            <span class="hidden sm:inline">Imprimir</span>
+                        </a>
+                        <a href="{{ route('dashboard.branches.qr.configure', $branch) }}"
+                           title="Configurar QR"
+                           class="text-violet-600 hover:text-violet-800 px-2 py-1 text-xs font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-sliders"></i>
+                            <span class="hidden sm:inline">Configurar QR</span>
                         </a>
                         <a href="{{ route('dashboard.branches.edit', $branch) }}"
                            class="text-blue-600 hover:text-blue-800 px-2 py-1 text-xs font-medium">

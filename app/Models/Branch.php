@@ -17,12 +17,26 @@ class Branch extends Model
         'address',
         'qr_token',
         'active',
+        'qr_scheme',
+        'qr_layout',
+        'qr_headline',
+        'qr_instruction',
+        'qr_show_logo',
+        'qr_show_branch',
+        'qr_logo_position',
+        'qr_qr_size',
+        'qr_headline_size',
+        'qr_instr_size',
+        'qr_logo_size',
+        'qr_header_color',
     ];
 
     protected function casts(): array
     {
         return [
-            'active' => 'boolean',
+            'active'         => 'boolean',
+            'qr_show_logo'   => 'boolean',
+            'qr_show_branch' => 'boolean',
         ];
     }
 
