@@ -50,7 +50,7 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">Logo del comercio</label>
                 @if($store->logo_path)
                 <div class="mb-3 flex items-center gap-3">
-                    <img src="{{ Storage::url($store->logo_path) }}" alt="Logo"
+                    <img src="{{ $logoDataUri }}" alt="Logo"
                          class="w-20 h-20 rounded-xl object-contain border border-slate-200 bg-slate-50 p-1">
                     <p class="text-xs text-slate-500">Logo actual. Subí uno nuevo para reemplazarlo.</p>
                 </div>
@@ -279,9 +279,9 @@
 {{-- TAB: Apariencia                                         --}}
 {{-- ════════════════════════════════════════════════════════ --}}
 @if($activeTab === 'appearance')
-@php
-    $logoUrl = $store->logo_path ? Storage::url($store->logo_path) : null;
-@endphp
+@if($logoDataUri)
+<input type="hidden" id="app-logo-uri" value="{{ $logoDataUri }}">
+@endif
 <div x-data="{
         open:                null,
         bgColor:             '{{ old('scan_bg_color',              $store->scan_bg_color              ?? '#0f172a') }}',
@@ -294,7 +294,8 @@
         showStoreName:       {{ (old('scan_show_store_name')   !== null ? old('scan_show_store_name')   : ($store->scan_show_store_name   ?? true))  ? 'true' : 'false' }},
         showBranchName:      {{ (old('scan_show_branch_name')  !== null ? old('scan_show_branch_name')  : ($store->scan_show_branch_name  ?? true))  ? 'true' : 'false' }},
         headerText:          '{{ old('scan_header_text', $store->scan_header_text ?? 'Consultá el precio') }}',
-        logoUrl:             '{{ $logoUrl }}',
+        logoUrl:             null,
+        init() { const el = document.getElementById('app-logo-uri'); if (el) this.logoUrl = el.value; },
         get cardBg()     { return this.cardStyle === 'light' ? '#f1f5f9' : '#1e293b'; },
         get cardBorder() { return this.cardStyle === 'light' ? '#cbd5e1' : '#334155'; },
         get cardText()   { return this.cardStyle === 'light' ? '#1e293b' : '#ffffff'; },

@@ -20,7 +20,22 @@ class SettingsController extends Controller
         // Pre-cargar store en cada branch (necesario para el partial de configuración QR)
         $branches->each(fn ($b) => $b->setRelation('store', $store));
 
-        return view('dashboard.settings', compact('store', 'importProfiles', 'branches'));
+        // Generar data URI del logo (evita depender del symlink storage:link)
+        $logoDataUri = null;
+        if ($store->logo_path && Storage::disk('public')->exists($store->logo_path)) {
+            $ext         = strtolower(pathinfo($store->logo_path, PATHINFO_EXTENSION));
+            $mime        = match ($ext) {
+                'png'  => 'image/png',
+                'gif'  => 'image/gif',
+                'webp' => 'image/webp',
+                default => 'image/jpeg',
+            };
+            $logoDataUri = 'data:' . $mime . ';base64,' . base64_encode(
+                Storage::disk('public')->get($store->logo_path)
+            );
+        }
+
+        return view('dashboard.settings', compact('store', 'importProfiles', 'branches', 'logoDataUri'));
     }
 
     public function update(Request $request): RedirectResponse
