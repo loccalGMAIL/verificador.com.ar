@@ -93,12 +93,8 @@ class BranchController extends Controller
     {
         $this->authorizeBranch($branch);
 
-        $valid = [
-            'blue','green','dark','purple','orange','red','sky','pink','teal','amber',
-        ];
-
         $data = $request->validate([
-            'qr_scheme'        => ['required', 'string', 'in:' . implode(',', $valid)],
+            'qr_header_color'  => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'qr_layout'        => ['required', 'in:a5,a4'],
             'qr_headline'      => ['nullable', 'string', 'max:80'],
             'qr_instruction'   => ['nullable', 'string', 'max:200'],
@@ -113,7 +109,7 @@ class BranchController extends Controller
 
         $data['qr_show_logo']   = $request->boolean('qr_show_logo');
         $data['qr_show_branch'] = $request->boolean('qr_show_branch');
-        $data['qr_headline']    = $data['qr_headline']  ?? 'Verificá tu precio';
+        $data['qr_headline']    = $data['qr_headline'] ?? 'Verificá tu precio';
 
         $branch->update($data);
 
@@ -149,7 +145,7 @@ class BranchController extends Controller
 
         // Valores guardados como defaults para qr-print (usados cuando no hay params en la URL)
         $defaults = [
-            'scheme'        => $branch->qr_scheme        ?? 'blue',
+            'header_color'  => $branch->qr_header_color  ?? '#1e3a8a',
             'layout'        => $branch->qr_layout        ?? 'a5',
             'headline'      => $branch->qr_headline      ?? 'Verificá tu precio',
             'instruction'   => $branch->qr_instruction   ?? "Escaneá el código con tu celular\npara verificar el precio al instante",

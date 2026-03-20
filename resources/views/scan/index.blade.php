@@ -15,13 +15,16 @@
     </style>
 </head>
 @php
-    $bgColor        = $store->scan_bg_color       ?? '#0f172a';
-    $accentColor    = $store->scan_accent_color    ?? '#34d399';
-    $secondaryColor = $store->scan_secondary_color ?? '#93c5fd';
-    $cardStyle      = $store->scan_card_style      ?? 'dark';
-    $fontSize       = $store->scan_font_size       ?? 'lg';
-    $showLogo       = $store->scan_show_logo       ?? false;
-    $headerText     = $store->scan_header_text     ?? 'Consultá el precio';
+    $bgColor              = $store->scan_bg_color              ?? '#0f172a';
+    $accentColor          = $store->scan_accent_color          ?? '#34d399';
+    $secondaryColor       = $store->scan_secondary_color       ?? '#93c5fd';
+    $wholesaleCardColor   = $store->scan_wholesale_card_color  ?? '#172033';
+    $cardStyle            = $store->scan_card_style            ?? 'dark';
+    $fontSize             = $store->scan_font_size             ?? 'lg';
+    $showLogo             = $store->scan_show_logo             ?? false;
+    $showStoreName        = $store->scan_show_store_name       ?? true;
+    $showBranchName       = $store->scan_show_branch_name      ?? true;
+    $headerText           = $store->scan_header_text           ?? 'Consultá el precio';
 
     $cardBg     = $cardStyle === 'light' ? '#f1f5f9' : '#1e293b';
     $cardBorder = $cardStyle === 'light' ? '#cbd5e1' : '#334155';
@@ -38,16 +41,27 @@
 <body class="min-h-screen flex flex-col text-white" style="background-color: {{ $bgColor }};">
 
     {{-- Header --}}
-    <header class="px-4 py-4 flex items-center gap-2">
+    <header class="px-4 py-4 flex items-center gap-3">
         @if($showLogo && !empty($store->logo_path))
             <img src="{{ Storage::url($store->logo_path) }}" alt="{{ $store->name }}"
-                 class="h-8 max-w-[120px] object-contain">
+                 class="h-8 max-w-[120px] object-contain flex-shrink-0">
         @else
             <svg viewBox="0 0 36 36" class="w-6 h-6 flex-none" aria-hidden="true">
                 <circle cx="18" cy="18" r="14" fill="white" stroke="#2563eb" stroke-width="2.5"/>
                 <path d="M11 19 L16 24 L33 8" fill="none" stroke="#10b981" stroke-width="4"
                       stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
+        @endif
+        @if($showStoreName || $showBranchName)
+        <div class="min-w-0">
+            @if($showStoreName)
+                <p class="text-sm font-bold text-white leading-tight truncate">{{ $store->name }}</p>
+            @endif
+            @if($showBranchName && $branch)
+                <p class="text-xs text-slate-400 leading-tight truncate">{{ $branch->name }}</p>
+            @endif
+        </div>
+        @elseif(!$showLogo)
             <span class="text-sm font-semibold text-slate-300">verificador.com.ar</span>
         @endif
     </header>
@@ -79,11 +93,11 @@
 
         {{-- Precio mayorista --}}
         <div id="wholesale-box" class="hidden w-full rounded-xl px-5 py-3 mb-4"
-             style="background-color: {{ $cardBg }}; border: 1px solid {{ $cardBorder }}; opacity: 0.85;">
+             style="background-color: {{ $wholesaleCardColor }}; border: 1px solid {{ $cardBorder }};">
             <p id="wholesale-label" class="text-xs font-semibold uppercase tracking-wide mb-0.5" style="color: {{ $cardText }}; opacity: 0.6;">
                 <i class="fa-solid fa-tags mr-1.5"></i>Mayorista
             </p>
-            <p id="wholesale-price" class="text-2xl font-bold" style="color: {{ $secondaryColor }};"></p>
+            <p id="wholesale-price" class="{{ $priceClass }} font-black" style="color: {{ $secondaryColor }};"></p>
         </div>
 
         {{-- Sin precio --}}

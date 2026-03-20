@@ -32,6 +32,9 @@ class Store extends Model
         'scan_font_size',
         'scan_show_logo',
         'scan_header_text',
+        'scan_show_store_name',
+        'scan_show_branch_name',
+        'scan_wholesale_card_color',
     ];
 
     // --- Relaciones ---

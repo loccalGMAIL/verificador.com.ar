@@ -28,6 +28,7 @@ class Branch extends Model
         'qr_headline_size',
         'qr_instr_size',
         'qr_logo_size',
+        'qr_header_color',
     ];
 
     protected function casts(): array

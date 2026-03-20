@@ -12,6 +12,6 @@ class ScanViewController extends Controller
         $branch = Branch::where('qr_token', $token)->with('store')->first();
         $store  = $branch?->store;
 
-        return view('scan.index', compact('token', 'store'));
+        return view('scan.index', compact('token', 'store', 'branch'));
     }
 }

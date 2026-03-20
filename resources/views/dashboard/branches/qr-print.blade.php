@@ -10,7 +10,6 @@
 
     @php
         $isPreview    = request()->boolean('preview');
-        $scheme       = request('scheme',        $defaults['scheme']);
         $layout       = request('layout',        $defaults['layout']);
         $headline     = request('headline',      $defaults['headline']);
         $instruction  = request('instruction',   $defaults['instruction']);
@@ -64,20 +63,24 @@
         $previewW = 794;
         $previewH = $isA4 ? 1123 : 559;
 
-        // ── Paletas ────────────────────────────────────────────────────
-        $palettes = [
-            'blue'   => ['from' => '#1e3a8a', 'to' => '#1d4ed8', 'sub' => '#bfdbfe', 'text' => '#1e3a8a'],
-            'green'  => ['from' => '#065f46', 'to' => '#059669', 'sub' => '#a7f3d0', 'text' => '#065f46'],
-            'dark'   => ['from' => '#111827', 'to' => '#374151', 'sub' => '#d1d5db', 'text' => '#111827'],
-            'purple' => ['from' => '#4c1d95', 'to' => '#7c3aed', 'sub' => '#ddd6fe', 'text' => '#4c1d95'],
-            'orange' => ['from' => '#7c2d12', 'to' => '#ea580c', 'sub' => '#fed7aa', 'text' => '#7c2d12'],
-            'red'    => ['from' => '#991b1b', 'to' => '#dc2626', 'sub' => '#fecaca', 'text' => '#991b1b'],
-            'sky'    => ['from' => '#0c4a6e', 'to' => '#0284c7', 'sub' => '#bae6fd', 'text' => '#0c4a6e'],
-            'pink'   => ['from' => '#831843', 'to' => '#db2777', 'sub' => '#fbcfe8', 'text' => '#831843'],
-            'teal'   => ['from' => '#134e4a', 'to' => '#0d9488', 'sub' => '#99f6e4', 'text' => '#134e4a'],
-            'amber'  => ['from' => '#92400e', 'to' => '#d97706', 'sub' => '#fde68a', 'text' => '#92400e'],
-        ];
-        $p = $palettes[$scheme] ?? $palettes['blue'];
+        // ── Color del encabezado (libre) ───────────────────────────────
+        $headerColor = request('header_color', $defaults['header_color'] ?? '#1e3a8a');
+        if (!preg_match('/^#[0-9a-fA-F]{6}$/', $headerColor)) {
+            $headerColor = '#1e3a8a';
+        }
+        $hr = hexdec(substr($headerColor, 1, 2));
+        $hg = hexdec(substr($headerColor, 3, 2));
+        $hb = hexdec(substr($headerColor, 5, 2));
+
+        // from: versión oscurecida (×0.6)
+        $fromColor = sprintf('#%02x%02x%02x', (int)($hr * 0.6), (int)($hg * 0.6), (int)($hb * 0.6));
+        // sub: versión aclarada (mezcla con blanco al 65%)
+        $subColor  = sprintf('#%02x%02x%02x',
+            min(255, (int)($hr + (255 - $hr) * 0.65)),
+            min(255, (int)($hg + (255 - $hg) * 0.65)),
+            min(255, (int)($hb + (255 - $hb) * 0.65)));
+
+        $p = ['from' => $fromColor, 'to' => $headerColor, 'sub' => $subColor, 'text' => $headerColor];
     @endphp
 
     <style>

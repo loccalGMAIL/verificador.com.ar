@@ -7,7 +7,7 @@
     $def_instruction = "Escaneá el código con tu celular\npara verificar el precio al instante";
 
     $saved = [
-        'scheme'        => old('qr_scheme',        $branch->qr_scheme        ?? 'blue'),
+        'header_color'  => old('qr_header_color',  $branch->qr_header_color  ?? '#1e3a8a'),
         'layout'        => old('qr_layout',        $branch->qr_layout        ?? 'a5'),
         'headline'      => old('qr_headline',      $branch->qr_headline      ?? 'Verificá tu precio'),
         'instruction'   => old('qr_instruction',   $branch->qr_instruction   ?? $def_instruction),
@@ -20,18 +20,6 @@
         'logo_size'     => old('qr_logo_size',     $branch->qr_logo_size     ?? 'md'),
     ];
 
-    $schemes = [
-        'blue'   => ['label' => 'Azul',      'from' => '#1e3a8a', 'to' => '#1d4ed8'],
-        'green'  => ['label' => 'Verde',     'from' => '#065f46', 'to' => '#059669'],
-        'dark'   => ['label' => 'Oscuro',    'from' => '#111827', 'to' => '#374151'],
-        'purple' => ['label' => 'Violeta',   'from' => '#4c1d95', 'to' => '#7c3aed'],
-        'orange' => ['label' => 'Naranja',   'from' => '#7c2d12', 'to' => '#ea580c'],
-        'red'    => ['label' => 'Rojo',      'from' => '#991b1b', 'to' => '#dc2626'],
-        'sky'    => ['label' => 'Celeste',   'from' => '#0c4a6e', 'to' => '#0284c7'],
-        'pink'   => ['label' => 'Rosa',      'from' => '#831843', 'to' => '#db2777'],
-        'teal'   => ['label' => 'Turquesa',  'from' => '#134e4a', 'to' => '#0d9488'],
-        'amber'  => ['label' => 'Dorado',    'from' => '#92400e', 'to' => '#d97706'],
-    ];
 
     $formId    = 'qr-form-' . $branch->id;
     $iframeId  = 'preview-iframe-' . $branch->id;
@@ -56,28 +44,30 @@
                     <span class="flex items-center gap-2 text-sm font-semibold text-slate-700">
                         <i class="fa-solid fa-palette w-4 text-center text-slate-400"></i>
                         Color del encabezado
-                        <span class="text-xs font-normal text-slate-400">· {{ $schemes[$saved['scheme']]['label'] ?? '' }}</span>
+                        <span class="w-4 h-4 rounded border border-slate-300 inline-block flex-shrink-0"
+                              id="color-preview-{{ $branch->id }}"
+                              style="background: {{ $saved['header_color'] }}"></span>
                     </span>
                     <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform duration-200"
                        :class="open === 'color' ? 'rotate-180' : ''"></i>
                 </button>
                 <div x-show="open === 'color'" x-transition class="px-5 pb-5 border-t border-slate-100">
-                    <div class="grid grid-cols-5 gap-2 pt-4">
-                        @foreach($schemes as $key => $s)
-                        <label class="scheme-option cursor-pointer group" title="{{ $s['label'] }}">
-                            <input type="radio" name="qr_scheme" value="{{ $key }}"
-                                   class="sr-only"
-                                   {{ $key === $saved['scheme'] ? 'checked' : '' }}
-                                   onchange="schedulePreviewUpdate_{{ $branch->id }}()">
-                            <div class="w-full aspect-square rounded-lg border-2 border-transparent
-                                        group-hover:border-slate-400 transition scheme-swatch-{{ $branch->id }}
-                                        {{ $key === $saved['scheme'] ? 'ring-2 ring-offset-2 ring-slate-500 !border-slate-500' : '' }}"
-                                 data-scheme="{{ $key }}"
-                                 style="background: linear-gradient(135deg, {{ $s['from'] }}, {{ $s['to'] }})">
-                            </div>
-                            <p class="text-[10px] text-slate-500 text-center mt-1 leading-tight">{{ $s['label'] }}</p>
-                        </label>
-                        @endforeach
+                    <div class="pt-4">
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Color del encabezado</label>
+                        <div class="flex items-center gap-2">
+                            <input type="color"
+                                   id="input-header-color-{{ $branch->id }}"
+                                   name="qr_header_color"
+                                   value="{{ $saved['header_color'] }}"
+                                   class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5">
+                            <input type="text"
+                                   id="input-header-color-text-{{ $branch->id }}"
+                                   value="{{ $saved['header_color'] }}"
+                                   maxlength="7"
+                                   placeholder="#1e3a8a"
+                                   class="w-28 border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono
+                                          focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -318,7 +308,7 @@
             <iframe id="{{ $iframeId }}"
                     src="{{ route('dashboard.branches.qr', $branch) }}?{{ http_build_query([
                         'preview'       => '1',
-                        'scheme'        => $saved['scheme'],
+                        'header_color'  => $saved['header_color'],
                         'layout'        => $saved['layout'],
                         'headline'      => $saved['headline'],
                         'instruction'   => $saved['instruction'],
@@ -397,19 +387,37 @@
         hint.innerHTML      = '<i class="fa-solid fa-scissors mr-1"></i>' + l.hint;
     };
 
+    // Sync color picker ↔ text input
+    const colorPicker = document.getElementById('input-header-color-{{ $branch->id }}');
+    const colorText   = document.getElementById('input-header-color-text-{{ $branch->id }}');
+    const colorPreview= document.getElementById('color-preview-{{ $branch->id }}');
+
+    colorPicker.addEventListener('input', () => {
+        colorText.value    = colorPicker.value;
+        colorPreview.style.background = colorPicker.value;
+        schedulePreviewUpdate_{{ $branch->id }}();
+    });
+    colorText.addEventListener('input', () => {
+        if (/^#[0-9a-fA-F]{6}$/.test(colorText.value)) {
+            colorPicker.value = colorText.value;
+            colorPreview.style.background = colorText.value;
+            schedulePreviewUpdate_{{ $branch->id }}();
+        }
+    });
+
     function buildParams(isPreview) {
         return new URLSearchParams({
-            scheme:        formEl.querySelector('[name="qr_scheme"]:checked')?.value         ?? 'blue',
-            layout:        formEl.querySelector('[name="qr_layout"]:checked')?.value         ?? 'a5',
-            qr_size:       formEl.querySelector('[name="qr_qr_size"]:checked')?.value        ?? 'md',
-            headline_size: formEl.querySelector('[name="qr_headline_size"]:checked')?.value  ?? 'md',
-            instr_size:    formEl.querySelector('[name="qr_instr_size"]:checked')?.value     ?? 'md',
-            logo_size:     formEl.querySelector('[name="qr_logo_size"]:checked')?.value      ?? 'md',
-            logo_position: formEl.querySelector('[name="qr_logo_position"]:checked')?.value  ?? 'center',
-            headline:      document.getElementById('input-headline-{{ $branch->id }}').value    || 'Verificá tu precio',
-            instruction:   document.getElementById('input-instruction-{{ $branch->id }}').value || '',
-            show_logo:     document.getElementById('toggle-logo-{{ $branch->id }}').checked    ? '1' : '0',
-            show_branch:   document.getElementById('toggle-branch-{{ $branch->id }}').checked  ? '1' : '0',
+            header_color:  colorPicker.value                                                  || '#1e3a8a',
+            layout:        formEl.querySelector('[name="qr_layout"]:checked')?.value          ?? 'a5',
+            qr_size:       formEl.querySelector('[name="qr_qr_size"]:checked')?.value         ?? 'md',
+            headline_size: formEl.querySelector('[name="qr_headline_size"]:checked')?.value   ?? 'md',
+            instr_size:    formEl.querySelector('[name="qr_instr_size"]:checked')?.value      ?? 'md',
+            logo_size:     formEl.querySelector('[name="qr_logo_size"]:checked')?.value       ?? 'md',
+            logo_position: formEl.querySelector('[name="qr_logo_position"]:checked')?.value   ?? 'center',
+            headline:      document.getElementById('input-headline-{{ $branch->id }}').value     || 'Verificá tu precio',
+            instruction:   document.getElementById('input-instruction-{{ $branch->id }}').value  || '',
+            show_logo:     document.getElementById('toggle-logo-{{ $branch->id }}').checked     ? '1' : '0',
+            show_branch:   document.getElementById('toggle-branch-{{ $branch->id }}').checked   ? '1' : '0',
             ...(isPreview ? { preview: '1' } : {}),
         });
     }
@@ -417,14 +425,6 @@
     window['schedulePreviewUpdate_{{ $branch->id }}'] = function () {
         clearTimeout(debounce);
         debounce = setTimeout(function () {
-            const selected = formEl.querySelector('[name="qr_scheme"]:checked')?.value;
-            formEl.querySelectorAll('.scheme-swatch-{{ $branch->id }}').forEach(el => {
-                const active = el.dataset.scheme === selected;
-                el.classList.toggle('ring-2',            active);
-                el.classList.toggle('ring-offset-2',     active);
-                el.classList.toggle('ring-slate-500',    active);
-                el.classList.toggle('!border-slate-500', active);
-            });
             iframe.src = BASE_URL + '?' + buildParams(true).toString() + '&_t=' + Date.now();
         }, 350);
     };
