@@ -44,8 +44,9 @@
 
     {{-- Header --}}
     <header class="px-4 py-4 flex items-center gap-3">
-        @if($showLogo && !empty($store->logo_path))
-            <img src="{{ Storage::url($store->logo_path) }}" alt="{{ $store->name }}"
+        {{-- Logo o ícono fallback --}}
+        @if($showLogo && $logoDataUri)
+            <img src="{{ $logoDataUri }}" alt="{{ $store->name }}"
                  class="h-8 max-w-[120px] object-contain flex-shrink-0">
         @else
             <svg viewBox="0 0 36 36" class="w-6 h-6 flex-none" aria-hidden="true">
@@ -54,18 +55,18 @@
                       stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         @endif
-        @if($showStoreName || $showBranchName)
+        {{-- Nombre del comercio y sucursal, en la misma línea que el logo --}}
         <div class="min-w-0">
-            @if($showStoreName)
+            @if($showStoreName && $store)
                 <p class="text-sm font-bold text-white leading-tight truncate">{{ $store->name }}</p>
             @endif
             @if($showBranchName && $branch)
                 <p class="text-xs text-slate-400 leading-tight truncate">{{ $branch->name }}</p>
             @endif
+            @if(!$showStoreName && !$showBranchName)
+                <span class="text-sm font-semibold text-slate-300">verificador.com.ar</span>
+            @endif
         </div>
-        @elseif(!$showLogo)
-            <span class="text-sm font-semibold text-slate-300">verificador.com.ar</span>
-        @endif
     </header>
 
     <main class="flex-1 flex flex-col items-center justify-start px-4 pb-8 pt-4 max-w-md mx-auto w-full">
