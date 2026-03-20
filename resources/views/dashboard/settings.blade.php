@@ -230,27 +230,49 @@
 {{-- ════════════════════════════════════════════════════════ --}}
 
 @if($activeTab === 'print')
-<div class="max-w-2xl">
-    <div class="bg-white rounded-xl border border-slate-200 p-6">
-        <div class="flex items-start gap-4 mb-5">
-            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                <i class="fa-solid fa-print text-blue-500"></i>
-            </div>
-            <div>
-                <h3 class="font-semibold text-slate-800">Configuración de impresión QR</h3>
-                <p class="text-sm text-slate-500 mt-0.5">
-                    La personalización del QR (colores, logo, textos) se configura individualmente para cada sucursal.
-                </p>
-            </div>
-        </div>
 
-        <a href="{{ route('dashboard.branches.index') }}"
-           class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
-            <i class="fa-solid fa-store"></i>
-            Ir a sucursales
-        </a>
+@if($branches->isEmpty())
+
+    {{-- Sin sucursales --}}
+    <div class="max-w-md">
+        <div class="bg-white rounded-xl border border-slate-200 p-8 text-center">
+            <i class="fa-solid fa-store text-3xl text-slate-300 mb-3 block"></i>
+            <p class="font-medium text-slate-700 mb-1">Todavía no tenés sucursales</p>
+            <p class="text-sm text-slate-400 mb-5">Creá una sucursal para configurar e imprimir su QR.</p>
+            <a href="{{ route('dashboard.branches.create') }}"
+               class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+                <i class="fa-solid fa-plus"></i>
+                Nueva sucursal
+            </a>
+        </div>
     </div>
-</div>
+
+@elseif($branches->count() > 1)
+
+    {{-- Selector de sucursal --}}
+    @php $selectedId = request('branch', $branches->first()->id); @endphp
+    <div class="flex flex-wrap gap-2 mb-6">
+        @foreach($branches as $b)
+        <a href="{{ route('dashboard.settings', ['tab' => 'print', 'branch' => $b->id]) }}"
+           class="px-4 py-2 rounded-lg border text-sm font-medium transition
+                  {{ $b->id == $selectedId
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600' }}">
+            {{ $b->name }}
+        </a>
+        @endforeach
+    </div>
+
+    @php $branch = $branches->firstWhere('id', $selectedId) ?? $branches->first(); @endphp
+    @include('dashboard.branches._qr-configure-form', ['branch' => $branch])
+
+@else
+
+    {{-- Una sola sucursal: mostrar configuración directamente --}}
+    @include('dashboard.branches._qr-configure-form', ['branch' => $branches->first()])
+
+@endif
+
 @endif
 
 {{-- ════════════════════════════════════════════════════════ --}}

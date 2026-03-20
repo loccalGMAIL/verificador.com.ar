@@ -15,8 +15,12 @@ class SettingsController extends Controller
     {
         $store          = auth()->user()->store;
         $importProfiles = $store->importProfiles()->latest()->get();
+        $branches       = $store->branches()->where('active', true)->orderBy('name')->get();
 
-        return view('dashboard.settings', compact('store', 'importProfiles'));
+        // Pre-cargar store en cada branch (necesario para el partial de configuración QR)
+        $branches->each(fn ($b) => $b->setRelation('store', $store));
+
+        return view('dashboard.settings', compact('store', 'importProfiles', 'branches'));
     }
 
     public function update(Request $request): RedirectResponse
