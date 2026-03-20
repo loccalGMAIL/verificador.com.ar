@@ -24,6 +24,8 @@
     $cardStyle            = $store->scan_card_style            ?? 'dark';
     $fontSize             = $store->scan_font_size             ?? 'lg';
     $showLogo             = $store->scan_show_logo             ?? false;
+    $logoSize             = $store->scan_logo_size             ?? 'md';
+    $headerFontSize       = $store->scan_header_font_size      ?? 'sm';
     $showStoreName        = $store->scan_show_store_name       ?? true;
     $showBranchName       = $store->scan_show_branch_name      ?? true;
     $headerText           = $store->scan_header_text           ?? 'Consultá el precio';
@@ -39,6 +41,22 @@
         'xl' => 'text-7xl',
     ];
     $priceClass = $fontSizeMap[$fontSize] ?? 'text-5xl';
+
+    $logoSizeMap = [
+        'sm' => 'h-6',
+        'md' => 'h-8',
+        'lg' => 'h-12',
+        'xl' => 'h-16',
+    ];
+    $logoClass = $logoSizeMap[$logoSize] ?? 'h-8';
+
+    $headerFontMap = [
+        'xs' => ['name' => 'text-xs',  'branch' => 'text-[10px]'],
+        'sm' => ['name' => 'text-sm',  'branch' => 'text-xs'],
+        'md' => ['name' => 'text-base','branch' => 'text-sm'],
+        'lg' => ['name' => 'text-lg',  'branch' => 'text-sm'],
+    ];
+    $headerFont = $headerFontMap[$headerFontSize] ?? $headerFontMap['sm'];
 @endphp
 <body class="min-h-screen flex flex-col text-white" style="background-color: {{ $bgColor }};">
 
@@ -47,7 +65,7 @@
         {{-- Logo o ícono fallback --}}
         @if($showLogo && $logoDataUri)
             <img src="{{ $logoDataUri }}" alt="{{ $store->name }}"
-                 class="h-8 max-w-[120px] object-contain flex-shrink-0">
+                 class="{{ $logoClass }} max-w-[140px] object-contain flex-shrink-0">
         @else
             <svg viewBox="0 0 36 36" class="w-6 h-6 flex-none" aria-hidden="true">
                 <circle cx="18" cy="18" r="14" fill="white" stroke="#2563eb" stroke-width="2.5"/>
@@ -58,10 +76,10 @@
         {{-- Nombre del comercio y sucursal, en la misma línea que el logo --}}
         <div class="min-w-0">
             @if($showStoreName && $store)
-                <p class="text-sm font-bold text-white leading-tight truncate">{{ $store->name }}</p>
+                <p class="{{ $headerFont['name'] }} font-bold text-white leading-tight truncate">{{ $store->name }}</p>
             @endif
             @if($showBranchName && $branch)
-                <p class="text-xs text-slate-400 leading-tight truncate">{{ $branch->name }}</p>
+                <p class="{{ $headerFont['branch'] }} text-slate-400 leading-tight truncate">{{ $branch->name }}</p>
             @endif
             @if(!$showStoreName && !$showBranchName)
                 <span class="text-sm font-semibold text-slate-300">verificador.com.ar</span>

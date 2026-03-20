@@ -291,6 +291,8 @@
         cardStyle:           '{{ old('scan_card_style',            $store->scan_card_style            ?? 'dark') }}',
         fontSize:            '{{ old('scan_font_size',             $store->scan_font_size             ?? 'lg') }}',
         showLogo:            {{ (old('scan_show_logo')         !== null ? old('scan_show_logo')         : ($store->scan_show_logo         ?? false)) ? 'true' : 'false' }},
+        logoSize:            '{{ old('scan_logo_size',         $store->scan_logo_size         ?? 'md') }}',
+        headerFontSize:      '{{ old('scan_header_font_size',  $store->scan_header_font_size  ?? 'sm') }}',
         showStoreName:       {{ (old('scan_show_store_name')   !== null ? old('scan_show_store_name')   : ($store->scan_show_store_name   ?? true))  ? 'true' : 'false' }},
         showBranchName:      {{ (old('scan_show_branch_name')  !== null ? old('scan_show_branch_name')  : ($store->scan_show_branch_name  ?? true))  ? 'true' : 'false' }},
         headerText:          '{{ old('scan_header_text', $store->scan_header_text ?? 'Consultá el precio') }}',
@@ -468,6 +470,22 @@
                             </p>
                             @endif
 
+                            {{-- Tamaño del logo --}}
+                            <div x-show="showLogo" class="pl-1">
+                                <p class="text-xs font-medium text-slate-600 mb-2">Tamaño del logo</p>
+                                <div class="flex gap-1">
+                                    @foreach(['sm' => 'Pequeño', 'md' => 'Mediano', 'lg' => 'Grande', 'xl' => 'Muy gde.'] as $val => $lbl)
+                                    <label class="flex-1 cursor-pointer">
+                                        <input type="radio" name="scan_logo_size" value="{{ $val }}" class="sr-only" x-model="logoSize">
+                                        <div class="size-pill border border-slate-200 rounded-lg py-1.5 text-center text-xs font-medium
+                                                    text-slate-500 hover:border-blue-400 hover:text-blue-600 transition select-none">
+                                            {{ $lbl }}
+                                        </div>
+                                    </label>
+                                    @endforeach
+                                </div>
+                            </div>
+
                             <label class="flex items-center justify-between cursor-pointer">
                                 <span class="text-sm text-slate-700">Mostrar nombre del comercio</span>
                                 <div class="relative">
@@ -487,6 +505,22 @@
                                     <div class="toggle-dot absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition"></div>
                                 </div>
                             </label>
+
+                            {{-- Tamaño del texto del nombre --}}
+                            <div x-show="showStoreName || showBranchName" class="pl-1">
+                                <p class="text-xs font-medium text-slate-600 mb-2">Tamaño del texto del nombre</p>
+                                <div class="flex gap-1">
+                                    @foreach(['xs' => 'Pequeño', 'sm' => 'Mediano', 'md' => 'Grande', 'lg' => 'Muy gde.'] as $val => $lbl)
+                                    <label class="flex-1 cursor-pointer">
+                                        <input type="radio" name="scan_header_font_size" value="{{ $val }}" class="sr-only" x-model="headerFontSize">
+                                        <div class="size-pill border border-slate-200 rounded-lg py-1.5 text-center text-xs font-medium
+                                                    text-slate-500 hover:border-blue-400 hover:text-blue-600 transition select-none">
+                                            {{ $lbl }}
+                                        </div>
+                                    </label>
+                                    @endforeach
+                                </div>
+                            </div>
 
                         </div>
                     </div>

@@ -69,14 +69,16 @@ class SettingsController extends Controller
                 'scan_secondary_color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
                 'scan_card_style'      => ['required', 'in:dark,light'],
                 'scan_font_size'       => ['required', 'in:sm,md,lg,xl'],
-                'scan_show_logo'        => ['boolean'],
-                'scan_header_text'      => ['nullable', 'string', 'max:100'],
+                'scan_show_logo'          => ['boolean'],
+                'scan_logo_size'          => ['required', 'in:sm,md,lg,xl'],
+                'scan_header_font_size'   => ['required', 'in:xs,sm,md,lg'],
+                'scan_header_text'        => ['nullable', 'string', 'max:100'],
                 'scan_show_store_name'       => ['boolean'],
                 'scan_show_branch_name'      => ['boolean'],
                 'scan_wholesale_card_color'  => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             ]);
 
-            $data['scan_show_logo']             = $request->boolean('scan_show_logo');
+            $data['scan_show_logo']           = $request->boolean('scan_show_logo');
             $data['scan_show_store_name']       = $request->boolean('scan_show_store_name');
             $data['scan_show_branch_name']      = $request->boolean('scan_show_branch_name');
             $data['scan_header_text']           = $data['scan_header_text'] ?? 'Consultá el precio';

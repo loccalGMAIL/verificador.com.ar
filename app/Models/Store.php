@@ -31,6 +31,8 @@ class Store extends Model
         'scan_card_style',
         'scan_font_size',
         'scan_show_logo',
+        'scan_logo_size',
+        'scan_header_font_size',
         'scan_header_text',
         'scan_show_store_name',
         'scan_show_branch_name',
