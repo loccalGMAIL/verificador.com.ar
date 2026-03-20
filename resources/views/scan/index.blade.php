@@ -74,7 +74,7 @@
         </p>
 
         {{-- Lector --}}
-        <div class="w-full rounded-xl overflow-hidden bg-black mb-6" id="reader"></div>
+        <div class="w-1/2 rounded-xl overflow-hidden bg-black mb-6" id="reader"></div>
 
         {{-- Nombre del producto --}}
         <div id="result-header" class="hidden w-full mb-4 text-center">
@@ -132,7 +132,7 @@
 
         scanner.start(
             { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 280, height: 120 } },
+            { fps: 10, qrbox: { width: 140, height: 60 } },
             onScanSuccess,
             () => {}
         ).catch(() => {
