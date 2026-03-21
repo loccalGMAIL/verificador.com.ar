@@ -23,7 +23,9 @@ use Illuminate\Support\Facades\Route;
 // ============================================================
 // PÚBLICO — Landing page
 // ============================================================
-Route::get('/', fn () => view('welcome'))->name('home');
+Route::get('/', fn () => view('welcome', [
+    'plans' => \App\Models\Plan::where('active', true)->orderBy('sort_order')->get(),
+]))->name('home');
 
 // ============================================================
 // PÚBLICO — Escáner QR (clientes de los comercios)

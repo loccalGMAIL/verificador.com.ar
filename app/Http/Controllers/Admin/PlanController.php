@@ -25,13 +25,16 @@ class PlanController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name'         => ['required', 'string', 'max:100'],
-            'price_usd'    => ['required', 'numeric', 'min:0'],
-            'max_products' => ['nullable', 'integer', 'min:1'],
-            'description'  => ['nullable', 'string', 'max:500'],
-            'featured'     => ['boolean'],
-            'active'       => ['boolean'],
-            'sort_order'   => ['required', 'integer', 'min:0'],
+            'name'             => ['required', 'string', 'max:100'],
+            'price_usd'        => ['required', 'numeric', 'min:0'],
+            'price_ars'        => ['required', 'numeric', 'min:0'],
+            'max_products'     => ['nullable', 'integer', 'min:1'],
+            'max_branches'     => ['nullable', 'integer', 'min:1'],
+            'max_price_lists'  => ['nullable', 'integer', 'min:1'],
+            'description'      => ['nullable', 'string', 'max:500'],
+            'featured'         => ['boolean'],
+            'active'           => ['boolean'],
+            'sort_order'       => ['required', 'integer', 'min:0'],
         ]);
 
         $data['featured'] = $request->boolean('featured');
@@ -51,13 +54,16 @@ class PlanController extends Controller
     public function update(Request $request, Plan $plan): RedirectResponse
     {
         $data = $request->validate([
-            'name'         => ['required', 'string', 'max:100'],
-            'price_usd'    => ['required', 'numeric', 'min:0'],
-            'max_products' => ['nullable', 'integer', 'min:1'],
-            'description'  => ['nullable', 'string', 'max:500'],
-            'featured'     => ['boolean'],
-            'active'       => ['boolean'],
-            'sort_order'   => ['required', 'integer', 'min:0'],
+            'name'             => ['required', 'string', 'max:100'],
+            'price_usd'        => ['required', 'numeric', 'min:0'],
+            'price_ars'        => ['required', 'numeric', 'min:0'],
+            'max_products'     => ['nullable', 'integer', 'min:1'],
+            'max_branches'     => ['nullable', 'integer', 'min:1'],
+            'max_price_lists'  => ['nullable', 'integer', 'min:1'],
+            'description'      => ['nullable', 'string', 'max:500'],
+            'featured'         => ['boolean'],
+            'active'           => ['boolean'],
+            'sort_order'       => ['required', 'integer', 'min:0'],
         ]);
 
         $data['featured'] = $request->boolean('featured');

@@ -13,6 +13,7 @@ class Plan extends Model
     protected $fillable = [
         'name',
         'price_usd',
+        'price_ars',
         'max_products',
         'max_branches',
         'max_price_lists',
@@ -26,6 +27,7 @@ class Plan extends Model
     {
         return [
             'price_usd'    => 'decimal:2',
+            'price_ars'    => 'decimal:2',
             'featured'     => 'boolean',
             'active'       => 'boolean',
         ];
@@ -74,5 +76,14 @@ class Plan extends Model
         return $this->max_price_lists
             ? number_format($this->max_price_lists)
             : 'Ilimitadas';
+    }
+
+    public function formattedPriceArs(): string
+    {
+        if (is_null($this->price_ars)) {
+            return '—';
+        }
+
+        return '$ ' . number_format((float) $this->price_ars, 0, ',', '.');
     }
 }

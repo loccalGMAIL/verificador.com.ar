@@ -28,9 +28,7 @@
                    class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-base md:text-lg transition">
                     Probar gratis {{ config('app.trial_days') }} días
                 </a>
-                {{-- <button class="bg-white/10 border border-white/40 hover:bg-white/20 text-white px-8 py-4 rounded-xl font-bold text-lg backdrop-blur-sm transition">
-                    Ver demo
-                </button> --}}
+
             </div>
         </div>
     </section>
@@ -223,90 +221,25 @@
     <section id="precios" class="py-10 px-6 bg-slate-50 reveal">
         <div class="max-w-6xl mx-auto">
             <h2 class="text-xl md:text-2xl font-bold text-center mb-2">Planes de suscripción</h2>
-            <p class="text-center text-slate-500 text-sm md:text-base mb-7">Standard es el plan recomendado</p>
+            <p class="text-center text-slate-500 text-sm md:text-base mb-7">Precios en pesos argentinos, sin costos ocultos</p>
 
-            <div class="grid md:grid-cols-4 gap-4 items-start">
+            <div class="grid md:grid-cols-{{ $plans->count() ?: 4 }} gap-4 items-start">
 
-                {{-- Basic --}}
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col reveal reveal-left">
-                    <h3 class="text-lg font-bold text-slate-800 mb-1">Basic</h3>
-                    <div class="text-3xl font-extrabold text-slate-800 mb-1">$5 <span class="text-sm font-normal text-slate-400">/mes</span></div>
-                    <p class="text-xs text-slate-400 mb-5">hasta 2.000 productos</p>
-                    <ul class="text-sm text-slate-600 space-y-2 mb-6 flex-1">
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Subida de Excel</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Consulta por escaneo</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> QR del comercio</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Soporte básico</li>
-                    </ul>
+                @foreach($plans as $plan)
+                <x-plan-card
+                    :plan="$plan"
+                    :featured="$plan->featured"
+                    variant="landing"
+                    class="{{ $loop->first ? 'reveal reveal-left' : ($loop->last ? 'reveal reveal-right reveal--delay-3' : 'reveal reveal--delay-' . $loop->index) }}">
                     <a href="{{ route('register') }}"
-                       class="w-full block py-2.5 border border-blue-600 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition text-center">
-                        Elegir Basic
+                       class="w-full block py-2.5 rounded-xl text-sm font-bold transition text-center
+                              {{ $plan->featured
+                                  ? 'bg-white text-blue-600 hover:bg-blue-50'
+                                  : 'border border-blue-600 text-blue-600 hover:bg-blue-50' }}">
+                        Elegir {{ $plan->name }}
                     </a>
-                </div>
-
-                {{-- Standard (destacado) --}}
-                <div class="bg-blue-600 rounded-2xl shadow-xl p-4 flex flex-col relative reveal reveal--delay-1">
-                    <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-xs font-bold px-4 py-1 rounded-full">Recomendado ⭐</span>
-                    <h3 class="text-lg font-bold text-white mb-1">Standard</h3>
-                    <div class="text-3xl font-extrabold text-white mb-1">$10 <span class="text-sm font-normal text-blue-200">/mes</span></div>
-                    <p class="text-xs text-blue-200 mb-5">hasta 5.000 productos</p>
-                    <ul class="text-sm text-blue-100 space-y-2 mb-6 flex-1">
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-300 w-4"></i> Subida de Excel</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-300 w-4"></i> Consulta por escaneo</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-300 w-4"></i> QR del comercio</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-300 w-4"></i> Búsqueda manual</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-300 w-4"></i> Historial de importaciones</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-300 w-4"></i> Estadísticas básicas</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-300 w-4"></i> Soporte estándar</li>
-                    </ul>
-                    <a href="{{ route('register') }}"
-                       class="w-full block py-2.5 bg-white text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition text-center">
-                        Elegir Standard
-                    </a>
-                </div>
-
-                {{-- Pro --}}
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col reveal reveal--delay-2">
-                    <h3 class="text-lg font-bold text-slate-800 mb-1">Pro</h3>
-                    <div class="text-3xl font-extrabold text-slate-800 mb-1">$20 <span class="text-sm font-normal text-slate-400">/mes</span></div>
-                    <p class="text-xs text-slate-400 mb-5">hasta 15.000 productos</p>
-                    <ul class="text-sm text-slate-600 space-y-2 mb-6 flex-1">
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Subida de Excel</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Consulta por escaneo</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> QR del comercio</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Búsqueda manual</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Historial de importaciones</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Estadísticas avanzadas</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Listas de precios</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Soporte prioritario</li>
-                    </ul>
-                    <a href="{{ route('register') }}"
-                       class="w-full block py-2.5 border border-blue-600 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition text-center">
-                        Elegir Pro
-                    </a>
-                </div>
-
-                {{-- Business --}}
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-col reveal reveal-right reveal--delay-3">
-                    <h3 class="text-lg font-bold text-slate-800 mb-1">Business</h3>
-                    <div class="text-3xl font-extrabold text-slate-800 mb-1">$30 <span class="text-sm font-normal text-slate-400">/mes</span></div>
-                    <p class="text-xs text-slate-400 mb-5">Productos ilimitados</p>
-                    <ul class="text-sm text-slate-600 space-y-2 mb-6 flex-1">
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Subida de Excel</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Consulta por escaneo</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> QR del comercio</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Búsqueda manual</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Historial de importaciones</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Estadísticas avanzadas</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Listas de precios</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Sucursales</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 w-4"></i> Soporte prioritario</li>
-                    </ul>
-                    <a href="{{ route('register') }}"
-                       class="w-full block py-2.5 border border-blue-600 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition text-center">
-                        Elegir Business
-                    </a>
-                </div>
+                </x-plan-card>
+                @endforeach
 
             </div>
         </div>

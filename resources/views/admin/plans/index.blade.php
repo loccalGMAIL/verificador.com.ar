@@ -20,6 +20,7 @@
                 <tr>
                     <th class="text-left px-4 py-3 font-semibold text-slate-600">Plan</th>
                     <th class="text-right px-4 py-3 font-semibold text-slate-600">Precio (USD)</th>
+                    <th class="text-right px-4 py-3 font-semibold text-slate-600">Precio (ARS)</th>
                     <th class="text-right px-4 py-3 font-semibold text-slate-600 hidden md:table-cell">Máx. productos</th>
                     <th class="text-center px-4 py-3 font-semibold text-slate-600 hidden md:table-cell">Subscripciones</th>
                     <th class="text-center px-4 py-3 font-semibold text-slate-600">Estado</th>
@@ -38,6 +39,9 @@
                     </td>
                     <td class="px-4 py-3 text-right font-mono text-slate-700">
                         ${{ number_format($plan->price_usd, 2) }}
+                    </td>
+                    <td class="px-4 py-3 text-right font-mono text-slate-700">
+                        {{ $plan->formattedPriceArs() }}
                     </td>
                     <td class="px-4 py-3 text-right hidden md:table-cell text-slate-600">
                         {{ $plan->maxProductsLabel() }}
@@ -78,7 +82,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-4 py-10 text-center text-slate-400">
+                    <td colspan="8" class="px-4 py-10 text-center text-slate-400">
                         No hay planes configurados.
                     </td>
                 </tr>
