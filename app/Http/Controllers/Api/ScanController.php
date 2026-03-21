@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Product;
+use App\Models\ProductSearch;
 use Illuminate\Http\JsonResponse;
 
 class ScanController extends Controller
@@ -36,8 +37,26 @@ class ScanController extends Controller
             ->first();
 
         if (! $product) {
+            try {
+                ProductSearch::create([
+                    'branch_id'  => $branch->id,
+                    'product_id' => null,
+                    'barcode'    => $barcode,
+                    'found'      => false,
+                ]);
+            } catch (\Throwable) {}
+
             return response()->json(['found' => false]);
         }
+
+        try {
+            ProductSearch::create([
+                'branch_id'  => $branch->id,
+                'product_id' => $product->id,
+                'barcode'    => $barcode,
+                'found'      => true,
+            ]);
+        } catch (\Throwable) {}
 
         $retailPrice = (float) $product->price;
 

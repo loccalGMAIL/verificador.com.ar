@@ -98,80 +98,159 @@
 
 </div>
 
-{{-- ══ FILA 1.5: Uso del plan ══ --}}
+{{-- ══ FILA 1.5: Uso del plan + Visitas QR + Top productos ══ --}}
 @if($sub && !$sub->isExpired())
-<div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
-    <div class="flex items-center justify-between mb-4">
-        <h3 class="text-sm font-semibold text-slate-700">Uso del plan</h3>
-        @if($sub->isOnTrial())
-            <span class="text-xs bg-amber-100 text-amber-700 font-medium px-2.5 py-0.5 rounded-full">
-                Trial · acceso total
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+
+    {{-- Card: Uso del plan --}}
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-semibold text-slate-700">Uso del plan</h3>
+            @if($sub->isOnTrial())
+                <span class="text-xs bg-amber-100 text-amber-700 font-medium px-2.5 py-0.5 rounded-full">
+                    Trial · acceso total
+                </span>
+            @else
+                <a href="{{ route('dashboard.subscription') }}" class="text-xs text-slate-400 hover:text-blue-600 transition">
+                    {{ $sub->plan?->name }} <i class="fa-solid fa-arrow-right ml-1"></i>
+                </a>
+            @endif
+        </div>
+        <div class="flex flex-col gap-4">
+
+            {{-- Productos --}}
+            @php
+                $productCount = $store?->products()->where('active', true)->count() ?? 0;
+                $productLimit = $sub->hasFullAccess() ? null : $sub->plan?->max_products;
+                $productPct   = $productLimit ? min(100, ($productCount / $productLimit) * 100) : 0;
+                $productBar   = $productLimit
+                    ? ($productPct >= 90 ? 'bg-red-500' : ($productPct >= 70 ? 'bg-amber-400' : 'bg-blue-500'))
+                    : 'bg-blue-400';
+            @endphp
+            <div>
+                <div class="flex justify-between text-xs text-slate-500 mb-1.5">
+                    <span class="font-medium text-slate-700">
+                        <i class="fa-solid fa-box mr-1 text-blue-500"></i>Productos
+                    </span>
+                    <span>
+                        {{ number_format($productCount) }}
+                        @if($productLimit) / {{ number_format($productLimit) }}
+                        @else &nbsp;·&nbsp; <span class="text-emerald-600 font-medium">Ilimitados</span>
+                        @endif
+                    </span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div class="{{ $productBar }} h-2 rounded-full transition-all"
+                         style="width: {{ $productLimit ? $productPct : 30 }}%; {{ !$productLimit ? 'opacity:.4' : '' }}">
+                    </div>
+                </div>
+            </div>
+
+            {{-- Sucursales --}}
+            @php
+                $branchCount = $store?->branches()->where('active', true)->count() ?? 0;
+                $branchLimit = $sub->hasFullAccess() ? null : $sub->plan?->max_branches;
+                $branchPct   = $branchLimit ? min(100, ($branchCount / $branchLimit) * 100) : 0;
+                $branchBar   = $branchLimit
+                    ? ($branchPct >= 90 ? 'bg-red-500' : ($branchPct >= 70 ? 'bg-amber-400' : 'bg-emerald-500'))
+                    : 'bg-emerald-400';
+            @endphp
+            <div>
+                <div class="flex justify-between text-xs text-slate-500 mb-1.5">
+                    <span class="font-medium text-slate-700">
+                        <i class="fa-solid fa-store mr-1 text-emerald-500"></i>Sucursales
+                    </span>
+                    <span>
+                        {{ number_format($branchCount) }}
+                        @if($branchLimit) / {{ number_format($branchLimit) }}
+                        @else &nbsp;·&nbsp; <span class="text-emerald-600 font-medium">Ilimitadas</span>
+                        @endif
+                    </span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div class="{{ $branchBar }} h-2 rounded-full transition-all"
+                         style="width: {{ $branchLimit ? $branchPct : 30 }}%; {{ !$branchLimit ? 'opacity:.4' : '' }}">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    {{-- Card: Visitas al QR por sucursal --}}
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-2 mb-4">
+            <span class="w-7 h-7 bg-sky-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-eye text-sky-500 text-xs"></i>
             </span>
+            <h3 class="text-sm font-semibold text-slate-700">Visitas al QR</h3>
+        </div>
+
+        @if($branchVisits->isEmpty())
+            <div class="flex flex-col items-center justify-center h-24 text-center">
+                <i class="fa-solid fa-qrcode text-2xl text-slate-200 mb-2"></i>
+                <p class="text-xs text-slate-400">Sin sucursales activas aún</p>
+            </div>
         @else
-            <a href="{{ route('dashboard.subscription') }}" class="text-xs text-slate-400 hover:text-blue-600 transition">
-                {{ $sub->plan?->name }} <i class="fa-solid fa-arrow-right ml-1"></i>
-            </a>
+            @php $totalVisits = $branchVisits->sum('visits'); @endphp
+            <div class="flex flex-col gap-2.5">
+                @foreach($branchVisits as $bv)
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-slate-600 truncate min-w-0 mr-2">
+                        <i class="fa-solid fa-store text-slate-300 mr-1"></i>{{ $bv['name'] }}
+                    </span>
+                    <span class="text-xs font-semibold text-sky-600 flex-shrink-0">
+                        {{ number_format($bv['visits']) }}
+                    </span>
+                </div>
+                @endforeach
+            </div>
+            @if($totalVisits > 0)
+            <div class="mt-3 pt-3 border-t border-slate-100 flex justify-between items-center">
+                <span class="text-xs text-slate-400">Total</span>
+                <span class="text-xs font-bold text-slate-700">{{ number_format($totalVisits) }}</span>
+            </div>
+            @endif
+            @if($totalVisits === 0)
+            <p class="text-xs text-slate-400 mt-3 text-center">Aún no hay visitas registradas</p>
+            @endif
         @endif
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-        {{-- Productos --}}
-        @php
-            $productCount = $store?->products()->where('active', true)->count() ?? 0;
-            $productLimit = $sub->hasFullAccess() ? null : $sub->plan?->max_products;
-            $productPct   = $productLimit ? min(100, ($productCount / $productLimit) * 100) : 0;
-            $productBar   = $productLimit
-                ? ($productPct >= 90 ? 'bg-red-500' : ($productPct >= 70 ? 'bg-amber-400' : 'bg-blue-500'))
-                : 'bg-blue-400';
-        @endphp
-        <div>
-            <div class="flex justify-between text-xs text-slate-500 mb-1.5">
-                <span class="font-medium text-slate-700">
-                    <i class="fa-solid fa-box mr-1 text-blue-500"></i>Productos
-                </span>
-                <span>
-                    {{ number_format($productCount) }}
-                    @if($productLimit) / {{ number_format($productLimit) }}
-                    @else &nbsp;·&nbsp; <span class="text-emerald-600 font-medium">Ilimitados</span>
-                    @endif
-                </span>
-            </div>
-            <div class="w-full bg-slate-100 rounded-full h-2">
-                <div class="{{ $productBar }} h-2 rounded-full transition-all"
-                     style="width: {{ $productLimit ? $productPct : 30 }}%; {{ !$productLimit ? 'opacity:.4' : '' }}">
-                </div>
-            </div>
+    {{-- Card: Top 5 productos más buscados --}}
+    <div class="bg-white rounded-xl border border-slate-200 p-5">
+        <div class="flex items-center gap-2 mb-4">
+            <span class="w-7 h-7 bg-violet-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-magnifying-glass text-violet-500 text-xs"></i>
+            </span>
+            <h3 class="text-sm font-semibold text-slate-700">Productos más buscados</h3>
         </div>
 
-        {{-- Sucursales --}}
-        @php
-            $branchCount = $store?->branches()->where('active', true)->count() ?? 0;
-            $branchLimit = $sub->hasFullAccess() ? null : $sub->plan?->max_branches;
-            $branchPct   = $branchLimit ? min(100, ($branchCount / $branchLimit) * 100) : 0;
-            $branchBar   = $branchLimit
-                ? ($branchPct >= 90 ? 'bg-red-500' : ($branchPct >= 70 ? 'bg-amber-400' : 'bg-emerald-500'))
-                : 'bg-emerald-400';
-        @endphp
-        <div>
-            <div class="flex justify-between text-xs text-slate-500 mb-1.5">
-                <span class="font-medium text-slate-700">
-                    <i class="fa-solid fa-store mr-1 text-emerald-500"></i>Sucursales
-                </span>
-                <span>
-                    {{ number_format($branchCount) }}
-                    @if($branchLimit) / {{ number_format($branchLimit) }}
-                    @else &nbsp;·&nbsp; <span class="text-emerald-600 font-medium">Ilimitadas</span>
-                    @endif
-                </span>
+        @if($topProducts->isEmpty())
+            <div class="flex flex-col items-center justify-center h-24 text-center">
+                <i class="fa-solid fa-barcode text-2xl text-slate-200 mb-2"></i>
+                <p class="text-xs text-slate-400">Aún no hay búsquedas registradas</p>
             </div>
-            <div class="w-full bg-slate-100 rounded-full h-2">
-                <div class="{{ $branchBar }} h-2 rounded-full transition-all"
-                     style="width: {{ $branchLimit ? $branchPct : 30 }}%; {{ !$branchLimit ? 'opacity:.4' : '' }}">
+        @else
+            <div class="flex flex-col gap-2.5">
+                @foreach($topProducts as $i => $row)
+                <div class="flex items-center gap-2">
+                    <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0
+                        {{ $i === 0 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500' }}">
+                        {{ $i + 1 }}
+                    </span>
+                    <span class="text-xs text-slate-600 truncate flex-1 min-w-0">
+                        {{ $row->product?->name ?? 'Producto eliminado' }}
+                    </span>
+                    <span class="text-xs font-semibold text-violet-600 flex-shrink-0">
+                        {{ number_format($row->searches) }}
+                    </span>
                 </div>
+                @endforeach
             </div>
-        </div>
-
+        @endif
     </div>
+
 </div>
 @endif
 

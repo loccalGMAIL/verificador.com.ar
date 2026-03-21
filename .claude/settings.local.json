@@ -10,7 +10,12 @@
       "Bash(git branch:*)",
       "Bash(grep -r \"superadmin\\\\|super_admin\" /d/DESARROLLO/CoDiGo/verificador.com.ar --include=*.php --include=*.blade.php)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npx skills:*)",
+      "Bash(find D:DESARROLLOCoDiGoverificador.com.arappHttpControllersAuth -type f -name *.php)",
+      "Bash(grep -n \"class User\\\\|public function\\\\|protected $fillable\" \"D:\\\\DESARROLLO\\\\CoDiGo\\\\verificador.com.ar\\\\app\\\\Models\\\\User.php\")",
+      "Bash(grep -n \"class Store\\\\|public function\\\\|protected $fillable\" \"D:\\\\DESARROLLO\\\\CoDiGo\\\\verificador.com.ar\\\\app\\\\Models\\\\Store.php\")",
+      "Bash(grep -l \"store_id\\\\|price_list_id\\\\|product_id\\\\|branch_id\" database/migrations/*.php)"
     ]
   }
 }
