@@ -106,89 +106,36 @@
             Planes disponibles
         @endif
     </h3>
-    <p class="text-sm text-slate-500 mt-0.5">Los precios están expresados en USD por mes.</p>
+    <p class="text-sm text-slate-500 mt-0.5">Los precios están expresados en pesos argentinos por mes.</p>
 </div>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
     @foreach($plans as $plan)
-    @php
-        $isCurrent = $sub?->plan_id === $plan->id && $sub?->isActive();
-        $featured  = $plan->featured;
-    @endphp
-    <div class="relative bg-white rounded-xl border flex flex-col
-                {{ $featured ? 'border-blue-400 ring-2 ring-blue-200 shadow-md' : 'border-slate-200' }}">
-
-        @if($featured)
-        <div class="absolute -top-3 left-1/2 -translate-x-1/2">
-            <span class="bg-blue-600 text-white text-xs font-semibold px-3 py-0.5 rounded-full shadow">
-                Más popular
-            </span>
-        </div>
+    @php $isCurrent = $sub?->plan_id === $plan->id && $sub?->isActive(); @endphp
+    <x-plan-card :plan="$plan" :featured="$plan->featured" variant="dashboard">
+        @if($isCurrent)
+            <div class="w-full text-center py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold">
+                <i class="fa-solid fa-circle-check mr-1"></i> Plan actual
+            </div>
+        @else
+            <button
+                class="w-full py-2.5 rounded-lg text-sm font-semibold transition
+                       {{ $plan->featured
+                           ? 'bg-blue-600 text-white hover:bg-blue-700'
+                           : 'bg-slate-800 text-white hover:bg-slate-900' }}"
+                onclick="alert('El pago con MercadoPago estará disponible próximamente.')">
+                @if($sub?->isExpired())
+                    Activar plan
+                @elseif($sub?->isActive() && $sub->plan && $plan->price_usd > $sub->plan->price_usd)
+                    Mejorar a {{ $plan->name }}
+                @elseif($sub?->isActive() && $sub->plan && $plan->price_usd < $sub->plan->price_usd)
+                    Cambiar a {{ $plan->name }}
+                @else
+                    Elegir {{ $plan->name }}
+                @endif
+            </button>
         @endif
-
-        {{-- Cabecera del plan --}}
-        <div class="p-5 border-b border-slate-100">
-            <p class="font-bold text-slate-800 text-base">{{ $plan->name }}</p>
-            <div class="mt-2 flex items-end gap-1">
-                <span class="text-3xl font-black text-slate-900">${{ number_format($plan->price_usd, 0) }}</span>
-                <span class="text-sm text-slate-400 mb-0.5">USD/mes</span>
-            </div>
-            <p class="text-xs text-slate-500 mt-2">{{ $plan->description }}</p>
-        </div>
-
-        {{-- Features --}}
-        <div class="p-5 flex-1 space-y-2.5">
-            <div class="flex items-center gap-2 text-sm text-slate-700">
-                <i class="fa-solid fa-box text-blue-500 w-4 text-center text-xs"></i>
-                <span>
-                    <strong>{{ $plan->maxProductsLabel() }}</strong>
-                    {{ $plan->max_products ? 'productos' : 'de productos' }}
-                </span>
-            </div>
-            <div class="flex items-center gap-2 text-sm text-slate-700">
-                <i class="fa-solid fa-store text-emerald-500 w-4 text-center text-xs"></i>
-                <span>
-                    <strong>{{ $plan->maxBranchesLabel() }}</strong>
-                    {{ $plan->max_branches ? ($plan->max_branches > 1 ? 'sucursales' : 'sucursal') : 'de sucursales' }}
-                </span>
-            </div>
-            <div class="flex items-center gap-2 text-sm text-slate-700">
-                <i class="fa-solid fa-qrcode text-violet-500 w-4 text-center text-xs"></i>
-                <span>Códigos QR incluidos</span>
-            </div>
-            <div class="flex items-center gap-2 text-sm text-slate-700">
-                <i class="fa-solid fa-file-arrow-up text-orange-500 w-4 text-center text-xs"></i>
-                <span>Importación CSV</span>
-            </div>
-        </div>
-
-        {{-- CTA --}}
-        <div class="p-5 pt-0">
-            @if($isCurrent)
-                <div class="w-full text-center py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold">
-                    <i class="fa-solid fa-circle-check mr-1"></i> Plan actual
-                </div>
-            @else
-                <button
-                    class="w-full py-2.5 rounded-lg text-sm font-semibold transition
-                           {{ $featured
-                               ? 'bg-blue-600 text-white hover:bg-blue-700'
-                               : 'bg-slate-800 text-white hover:bg-slate-900' }}"
-                    onclick="alert('El pago con MercadoPago estará disponible próximamente.')">
-                    @if($sub?->isExpired())
-                        Activar plan
-                    @elseif($sub?->isActive() && $sub->plan && $plan->price_usd > $sub->plan->price_usd)
-                        Mejorar a {{ $plan->name }}
-                    @elseif($sub?->isActive() && $sub->plan && $plan->price_usd < $sub->plan->price_usd)
-                        Cambiar a {{ $plan->name }}
-                    @else
-                        Elegir {{ $plan->name }}
-                    @endif
-                </button>
-            @endif
-        </div>
-
-    </div>
+    </x-plan-card>
     @endforeach
 </div>
 

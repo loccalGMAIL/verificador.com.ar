@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Auth\InviteController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ScanViewController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Dashboard\BranchController;
 use App\Http\Controllers\Dashboard\PriceListController;
 use App\Http\Controllers\Dashboard\ImportProfileController;
 use App\Http\Controllers\Dashboard\SettingsController;
+use App\Http\Controllers\Dashboard\StoreUserController;
 use App\Http\Controllers\Dashboard\SubscriptionController as DashboardSubscription;
 use App\Http\Controllers\Admin\HomeController as AdminHome;
 use App\Http\Controllers\Admin\StoreController as AdminStoreController;
@@ -23,13 +25,20 @@ use Illuminate\Support\Facades\Route;
 // ============================================================
 // PÚBLICO — Landing page
 // ============================================================
-Route::get('/', fn () => view('welcome'))->name('home');
+Route::get('/', fn () => view('welcome', [
+    'plans' => \App\Models\Plan::where('active', true)->orderBy('sort_order')->get(),
+]))->name('home');
 
 // ============================================================
 // PÚBLICO — Escáner QR (clientes de los comercios)
 // ============================================================
 Route::get('/v/{token}', ScanViewController::class)
     ->name('scan.index');
+
+// ============================================================
+// PÚBLICO — Link de invitación a comercio
+// ============================================================
+Route::get('/invite/{token}', [InviteController::class, 'show'])->name('invite.show');
 
 // ============================================================
 // AUTH — Solo para invitados
@@ -95,6 +104,11 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         // --- Subscripción ---
         Route::get('/subscription', [DashboardSubscription::class, 'index'])->name('subscription');
 
+        // --- Usuarios del comercio ---
+        Route::get('/users',              [StoreUserController::class, 'index'])->name('users.index');
+        Route::post('/users/invite',      [StoreUserController::class, 'generateInvite'])->name('users.generate-invite');
+        Route::delete('/users/{user}',    [StoreUserController::class, 'removeEmployee'])->name('users.remove');
+
         // --- Configuración ---
         Route::get('/settings',  [SettingsController::class, 'show'])->name('settings');
         Route::put('/settings',  [SettingsController::class, 'update'])->name('settings.update');
@@ -120,9 +134,14 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/stores/{store}',        [AdminStoreController::class, 'show'])->name('stores.show');
         Route::post('/stores/{store}/suspend',    [AdminStoreController::class, 'suspend'])->name('stores.suspend');
         Route::post('/stores/{store}/reactivate', [AdminStoreController::class, 'reactivate'])->name('stores.reactivate');
+        Route::delete('/stores/{store}',          [AdminStoreController::class, 'destroy'])->name('stores.destroy');
 
         // --- Usuarios ---
-        Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+        Route::get('/users',                          [AdminUserController::class, 'index'])->name('users.index');
+        Route::put('/users/{user}',                   [AdminUserController::class, 'update'])->name('users.update');
+        Route::post('/users/{user}/reassign',         [AdminUserController::class, 'reassign'])->name('users.reassign');
+        Route::post('/users/{user}/suspend',          [AdminUserController::class, 'suspend'])->name('users.suspend');
+        Route::post('/users/{user}/reactivate',       [AdminUserController::class, 'reactivate'])->name('users.reactivate');
 
         // --- Subscripciones ---
         Route::get('/subscriptions',                               [AdminSubscriptionController::class, 'index'])->name('subscriptions.index');

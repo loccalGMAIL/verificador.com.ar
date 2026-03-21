@@ -25,15 +25,27 @@
             @enderror
         </div>
 
-        <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Precio (USD) <span class="text-red-500">*</span></label>
-            <input type="number" name="price_usd" value="{{ old('price_usd', $plan->price_usd) }}"
-                   step="0.01" min="0" required
-                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none
-                          @error('price_usd') border-red-400 @enderror">
-            @error('price_usd')
-                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
-            @enderror
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Precio (USD) <span class="text-red-500">*</span></label>
+                <input type="number" name="price_usd" value="{{ old('price_usd', $plan->price_usd) }}"
+                       step="0.01" min="0" required
+                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none
+                              @error('price_usd') border-red-400 @enderror">
+                @error('price_usd')
+                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Precio (ARS) <span class="text-red-500">*</span></label>
+                <input type="number" name="price_ars" value="{{ old('price_ars', $plan->price_ars) }}"
+                       step="0.01" min="0" required
+                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none
+                              @error('price_ars') border-red-400 @enderror">
+                @error('price_ars')
+                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                @enderror
+            </div>
         </div>
 
         <div>
@@ -47,6 +59,33 @@
             @error('max_products')
                 <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
             @enderror
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">
+                    Máx. sucursales <span class="text-slate-400 font-normal">(vacío = ilimitadas)</span>
+                </label>
+                <input type="number" name="max_branches" value="{{ old('max_branches', $plan->max_branches) }}"
+                       min="1" placeholder="Sin límite"
+                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none
+                              @error('max_branches') border-red-400 @enderror">
+                @error('max_branches')
+                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">
+                    Máx. listas de precios <span class="text-slate-400 font-normal">(vacío = ilimitadas)</span>
+                </label>
+                <input type="number" name="max_price_lists" value="{{ old('max_price_lists', $plan->max_price_lists) }}"
+                       min="1" placeholder="Sin límite"
+                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none
+                              @error('max_price_lists') border-red-400 @enderror">
+                @error('max_price_lists')
+                    <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                @enderror
+            </div>
         </div>
 
         <div>

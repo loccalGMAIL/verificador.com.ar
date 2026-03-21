@@ -37,6 +37,7 @@ class Store extends Model
         'scan_show_store_name',
         'scan_show_branch_name',
         'scan_wholesale_card_color',
+        'invite_token',
     ];
 
     // --- Relaciones ---
@@ -84,6 +85,14 @@ class Store extends Model
     }
 
     // --- Helpers ---
+
+    public function generateInviteToken(): string
+    {
+        $token = \Illuminate\Support\Str::random(48);
+        $this->update(['invite_token' => $token]);
+
+        return $token;
+    }
 
     public function isActive(): bool
     {

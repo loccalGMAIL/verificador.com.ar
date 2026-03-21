@@ -97,10 +97,10 @@
                 </a> --}}
 
                 {{-- Configuración expandible --}}
-                <div x-data="{ open: {{ $seg === 'settings' ? 'true' : 'false' }} }">
+                <div x-data="{ open: {{ in_array($seg, ['settings', 'users']) ? 'true' : 'false' }} }">
                     <button @click="open = !open"
                             class="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition
-                                   {{ $seg === 'settings' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
+                                   {{ in_array($seg, ['settings', 'users']) ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
                         <i class="fa-solid fa-gear w-4 text-center"></i>
                         <span class="flex-1 text-left">Configuración</span>
                         <i class="fa-solid fa-chevron-down text-xs transition-transform"
@@ -123,6 +123,14 @@
                             {{ $tabLabel }}
                         </a>
                         @endforeach
+                        <a href="{{ route('dashboard.users.index') }}"
+                           class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition
+                                  {{ $seg === 'users'
+                                      ? 'bg-blue-700 text-white'
+                                      : 'text-blue-300 hover:bg-blue-900 hover:text-white' }}">
+                            <i class="fa-solid fa-minus w-3 text-center text-blue-500"></i>
+                            Usuarios
+                        </a>
                     </div>
                 </div>
             </nav>
