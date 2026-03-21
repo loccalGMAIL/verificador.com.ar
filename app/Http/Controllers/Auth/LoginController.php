@@ -23,6 +23,15 @@ class LoginController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            if (Auth::user()->isSuspended()) {
+                Auth::logout();
+                $request->session()->invalidate();
+
+                return back()
+                    ->withInput($request->only('email'))
+                    ->withErrors(['email' => 'Tu cuenta está suspendida. Contactá al administrador.']);
+            }
+
             $request->session()->regenerate();
 
             return $this->redirectAfterLogin();

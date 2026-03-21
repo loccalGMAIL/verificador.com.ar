@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Store;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class StoreController extends Controller
@@ -46,5 +47,22 @@ class StoreController extends Controller
         $store->update(['status' => 'active']);
 
         return back()->with('success', "Comercio \"{$store->name}\" reactivado.");
+    }
+
+    public function destroy(Store $store): RedirectResponse
+    {
+        $name = $store->name;
+
+        DB::transaction(function () use ($store) {
+            // Desasociar usuarios (no tienen cascade en FK)
+            $store->users()->update(['store_id' => null]);
+
+            // El resto (branches, products, subscriptions, price_lists,
+            // product_imports, import_profiles) se borra en cascada por la DB.
+            $store->delete();
+        });
+
+        return redirect()->route('admin.stores.index')
+            ->with('success', "Comercio \"{$name}\" eliminado.");
     }
 }

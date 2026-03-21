@@ -17,6 +17,7 @@ class User extends Authenticatable
         'email',
         'password',
         'google_id',
+        'status',
         'role',
         'store_id',
     ];
@@ -49,6 +50,11 @@ class User extends Authenticatable
     public function isEmployee(): bool
     {
         return $this->role === 'employee';
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status === 'suspended';
     }
 
     // --- Relaciones ---
