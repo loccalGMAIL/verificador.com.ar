@@ -123,5 +123,74 @@
     </script>
 
     @stack('scripts')
+
+    {{-- Botón flotante WhatsApp --}}
+    @php
+        $waUrl = 'https://wa.me/543541549674?text=' . rawurlencode('¡Hola! Quiero obtener más información sobre verificador.com.ar.');
+    @endphp
+    <a href="{{ $waUrl }}"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="whatsapp-fab group"
+       aria-label="Contactate por WhatsApp">
+        <span class="whatsapp-fab__tooltip">Contactate con nosotros</span>
+        <i class="fa-brands fa-whatsapp whatsapp-fab__icon"></i>
+    </a>
+
+    <style>
+        .whatsapp-fab {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 3.25rem;
+            height: 3.25rem;
+            background: #25D366;
+            border-radius: 50%;
+            box-shadow: 0 4px 16px rgba(37,211,102,.45);
+            text-decoration: none;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .whatsapp-fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 22px rgba(37,211,102,.55);
+        }
+        .whatsapp-fab__icon {
+            font-size: 1.75rem;
+            color: #fff;
+            line-height: 1;
+        }
+        .whatsapp-fab__tooltip {
+            position: absolute;
+            right: calc(100% + .75rem);
+            background: #1a1a2e;
+            color: #fff;
+            font-size: .75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            padding: .35rem .75rem;
+            border-radius: .5rem;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(6px);
+            transition: opacity .2s ease, transform .2s ease;
+        }
+        .whatsapp-fab__tooltip::after {
+            content: '';
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 5px solid transparent;
+            border-left-color: #1a1a2e;
+        }
+        .whatsapp-fab:hover .whatsapp-fab__tooltip {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    </style>
 </body>
 </html>
