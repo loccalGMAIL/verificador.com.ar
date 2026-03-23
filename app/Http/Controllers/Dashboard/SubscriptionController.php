@@ -20,6 +20,10 @@ class SubscriptionController extends Controller
         $sub    = $store->subscription;
         $plans  = Plan::where('active', true)->orderBy('sort_order')->get();
 
+        if ($sub) {
+            $sub->load(['payments' => fn ($q) => $q->latest('paid_at')]);
+        }
+
         return view('dashboard.subscription.index', compact('store', 'sub', 'plans'));
     }
 

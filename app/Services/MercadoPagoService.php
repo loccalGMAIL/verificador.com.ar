@@ -94,6 +94,23 @@ class MercadoPagoService
         }
     }
 
+    /**
+     * Obtiene los datos de un pago recurrente autorizado.
+     */
+    public function getAuthorizedPayment(string $mpPaymentId): array
+    {
+        $response = Http::withToken($this->token)
+            ->get(self::BASE_URL . "/authorized_payments/{$mpPaymentId}");
+
+        if (! $response->successful()) {
+            throw new \RuntimeException(
+                'MercadoPago getAuthorizedPayment falló: ' . $response->body()
+            );
+        }
+
+        return $response->json();
+    }
+
     // ── Seguridad de Webhooks ─────────────────────────────────────────────────
 
     /**

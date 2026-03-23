@@ -73,4 +73,11 @@ class SubscriptionController extends Controller
         $days = config('app.trial_days');
         return back()->with('success', "Período trial reiniciado por {$days} días.");
     }
+
+    public function show(Subscription $subscription): View
+    {
+        $subscription->load(['store', 'plan', 'payments' => fn ($q) => $q->latest('paid_at')]);
+
+        return view('admin.subscriptions.show', compact('subscription'));
+    }
 }

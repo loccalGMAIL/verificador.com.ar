@@ -161,6 +161,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/subscriptions/{subscription}/suspend',       [AdminSubscriptionController::class, 'suspend'])->name('subscriptions.suspend');
         Route::post('/subscriptions/{subscription}/reactivate',    [AdminSubscriptionController::class, 'reactivate'])->name('subscriptions.reactivate');
         Route::post('/subscriptions/{subscription}/reset-trial',   [AdminSubscriptionController::class, 'resetTrial'])->name('subscriptions.reset-trial');
+        Route::get('/subscriptions/{subscription}',                [AdminSubscriptionController::class, 'show'])->name('subscriptions.show');
 
         // --- Planes ---
         Route::resource('plans', AdminPlanController::class)

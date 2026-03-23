@@ -4,15 +4,25 @@ namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
 use App\Models\Subscription;
+use App\Models\SubscriptionPayment;
 use App\Services\MercadoPagoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class MercadoPagoController extends Controller
 {
     public function __invoke(Request $request, MercadoPagoService $mp): Response
     {
+        // 0. Log diagnóstico (quitar en producción)
+        Log::debug('MP webhook recibido', [
+            'type'    => $request->input('type') ?? $request->query('type') ?? $request->input('topic'),
+            'data_id' => $request->input('data.id') ?? $request->query('data.id'),
+            'query'   => $request->query(),
+            'body'    => $request->all(),
+        ]);
+
         // 1. Verificar firma
         if (! $mp->verifyWebhookSignature($request)) {
             Log::warning('MP webhook: firma inválida', ['ip' => $request->ip()]);
@@ -21,21 +31,30 @@ class MercadoPagoController extends Controller
         }
 
         // 2. Solo procesar eventos de suscripción
-        // MP puede enviar el type en el body o en el query string
         $type = $request->input('type') ?? $request->query('type') ?? $request->input('topic');
 
-        if ($type !== 'subscription_preapproval') {
+        if (! in_array($type, ['subscription_preapproval', 'subscription_authorized_payment'])) {
             return response('OK', 200);
         }
 
-        // 3. Extraer ID de la preaprobación (body o query string)
-        $mpSubscriptionId = $request->input('data.id') ?? $request->query('data.id');
+        // 3. Extraer ID del evento (body o query string)
+        $mpId = $request->input('data.id') ?? $request->query('data.id');
 
-        if (! $mpSubscriptionId) {
+        if (! $mpId) {
             return response('Bad Request', 400);
         }
 
-        // 4. Buscar suscripción local
+        // 4. Bifurcar según tipo
+        if ($type === 'subscription_authorized_payment') {
+            return $this->handleAuthorizedPayment($mp, $mpId);
+        }
+
+        return $this->handlePreapproval($mp, $mpId);
+    }
+
+    private function handlePreapproval(MercadoPagoService $mp, string $mpSubscriptionId): Response
+    {
+        // Buscar suscripción local
         $subscription = Subscription::where('mp_subscription_id', $mpSubscriptionId)->first();
 
         if (! $subscription) {
@@ -44,7 +63,7 @@ class MercadoPagoController extends Controller
             return response('OK', 200);
         }
 
-        // 5. Obtener estado actual desde MP (no confiar solo en el payload del webhook)
+        // Obtener estado actual desde MP
         try {
             $mpData = $mp->getPreapproval($mpSubscriptionId);
         } catch (\Exception $e) {
@@ -53,40 +72,94 @@ class MercadoPagoController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            // Retornar 500 para que MP reintente
             return response('Error', 500);
         }
 
-        // 6. Mapear status de MP al status local
-        $mpStatus    = $mpData['status'] ?? null;
-        $mpPayerId   = $mpData['payer_id'] ?? null;
+        $mpStatus  = $mpData['status'] ?? null;
+        $mpPayerId = $mpData['payer_id'] ?? null;
 
         $localStatus = match ($mpStatus) {
             'authorized' => 'active',
             'paused'     => 'suspended',
             'cancelled'  => 'cancelled',
-            default      => null, // 'pending' u otros: no cambiar
+            default      => null,
         };
 
-        // 7. Actualizar solo si cambió (idempotencia)
+        $updates = [];
+
         if ($localStatus && $subscription->status !== $localStatus) {
-            $updates = ['status' => $localStatus];
+            $updates['status'] = $localStatus;
 
             if ($localStatus === 'active' && ! $subscription->starts_at) {
                 $updates['starts_at'] = now();
             }
+        }
 
-            if ($mpPayerId && ! $subscription->mp_payer_id) {
-                $updates['mp_payer_id'] = $mpPayerId;
-            }
+        if ($mpPayerId && ! $subscription->mp_payer_id) {
+            $updates['mp_payer_id'] = $mpPayerId;
+        }
 
+        if (! empty($mpData['payer_email']) && ! $subscription->mp_payer_email) {
+            $updates['mp_payer_email'] = $mpData['payer_email'];
+        }
+
+        if (! empty($updates)) {
             $subscription->update($updates);
 
             Log::info('MP webhook: suscripción actualizada', [
                 'subscription_id' => $subscription->id,
-                'status'          => $localStatus,
+                'updates'         => array_keys($updates),
             ]);
         }
+
+        return response('OK', 200);
+    }
+
+    private function handleAuthorizedPayment(MercadoPagoService $mp, string $mpPaymentId): Response
+    {
+        // Obtener datos del pago desde MP
+        try {
+            $paymentData = $mp->getAuthorizedPayment($mpPaymentId);
+        } catch (\Exception $e) {
+            Log::error('MP webhook: falló al obtener authorized_payment', [
+                'mp_payment_id' => $mpPaymentId,
+                'error'         => $e->getMessage(),
+            ]);
+
+            return response('Error', 500);
+        }
+
+        // Encontrar la suscripción local via preapproval_id
+        $preapprovalId = $paymentData['preapproval_id'] ?? null;
+        $subscription  = Subscription::where('mp_subscription_id', $preapprovalId)->first();
+
+        if (! $subscription) {
+            Log::info('MP webhook: authorized_payment sin suscripción conocida', [
+                'mp_payment_id' => $mpPaymentId,
+                'preapproval_id' => $preapprovalId,
+            ]);
+
+            return response('OK', 200);
+        }
+
+        // Crear o actualizar (idempotencia por mp_payment_id único)
+        SubscriptionPayment::updateOrCreate(
+            ['mp_payment_id' => $mpPaymentId],
+            [
+                'subscription_id' => $subscription->id,
+                'amount'          => $paymentData['transaction_amount'] ?? 0,
+                'currency'        => $paymentData['currency_id'] ?? 'ARS',
+                'status'          => $paymentData['status'] ?? 'processed',
+                'paid_at'         => isset($paymentData['date_approved'])
+                                        ? Carbon::parse($paymentData['date_approved'])
+                                        : null,
+            ]
+        );
+
+        Log::info('MP webhook: pago registrado', [
+            'subscription_id' => $subscription->id,
+            'mp_payment_id'   => $mpPaymentId,
+        ]);
 
         return response('OK', 200);
     }
