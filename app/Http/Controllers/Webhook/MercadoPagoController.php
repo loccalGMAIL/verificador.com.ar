@@ -15,13 +15,15 @@ class MercadoPagoController extends Controller
 {
     public function __invoke(Request $request, MercadoPagoService $mp): Response
     {
-        // 0. Log diagnóstico (quitar en producción)
-        Log::debug('MP webhook recibido', [
-            'type'    => $request->input('type') ?? $request->query('type') ?? $request->input('topic'),
-            'data_id' => $request->input('data.id') ?? $request->query('data.id'),
-            'query'   => $request->query(),
-            'body'    => $request->all(),
-        ]);
+        // 0. Log diagnóstico (solo en modo debug local)
+        if (config('app.debug')) {
+            Log::debug('MP webhook recibido', [
+                'type'    => $request->input('type') ?? $request->query('type') ?? $request->input('topic'),
+                'data_id' => $request->input('data.id') ?? $request->query('data.id'),
+                'query'   => $request->query(),
+                'body'    => $request->all(),
+            ]);
+        }
 
         // 1. Verificar firma
         if (! $mp->verifyWebhookSignature($request)) {
