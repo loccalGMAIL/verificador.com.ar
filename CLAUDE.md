@@ -68,6 +68,13 @@ php artisan tinker
 - `ProductSearch` — logs each barcode lookup via the scan API (`branch_id`, `product_id`, `barcode`, `found`)
 - `User` — with roles (owner, employee, admin); a store can have multiple users
 
+### Anti-bot en registro
+- `POST /register` tiene tres capas de protección contra bots:
+  1. **Rate limiting** — 1 intento por minuto por IP (named limiter `register` en `AppServiceProvider`; middleware `throttle:register` en la ruta).
+  2. **Honeypot** — campo `website` off-screen en el formulario; si viene completado, `RegisterController::store()` redirige silenciosamente sin error.
+  3. **hCaptcha** — widget visible en el formulario; verificación server-side en `app/Rules/HCaptcha.php` contra `api.hcaptcha.com/siteverify`. Credenciales en `.env`: `HCAPTCHA_SITE_KEY` y `HCAPTCHA_SECRET`.
+- El flujo Google OAuth (`GoogleController`) no pasa por estas capas (Google ya garantiza que es un humano).
+
 ### Analytics & tracking
 - `LogPageView` middleware logs GET requests to `/` and `/v/*` paths into `page_views` (bot-filtered, no PII).
 - `Api\ScanController` logs every barcode scan into `product_searches` (found/not found).
