@@ -8,6 +8,7 @@ use App\Models\PriceList;
 use App\Models\Store;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Rules\HCaptcha;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,11 +26,19 @@ class RegisterController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // Honeypot: si el campo señuelo fue completado, es un bot
+        if ($request->filled('website')) {
+            return redirect()->route('register');
+        }
+
         $data = $request->validate([
-            'name'         => ['required', 'string', 'max:255'],
-            'store_name'   => ['required', 'string', 'max:255'],
-            'email'        => ['required', 'email', 'max:255', 'unique:users'],
-            'password'     => ['required', 'string', 'min:8', 'confirmed'],
+            'name'               => ['required', 'string', 'max:255'],
+            'store_name'         => ['required', 'string', 'max:255'],
+            'email'              => ['required', 'email', 'max:255', 'unique:users'],
+            'password'           => ['required', 'string', 'min:8', 'confirmed'],
+            'h-captcha-response' => ['required', new HCaptcha],
+        ], [
+            'h-captcha-response.required' => 'Por favor completá la verificación de seguridad.',
         ]);
 
         DB::transaction(function () use ($data) {

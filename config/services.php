@@ -41,4 +41,9 @@ return [
         'redirect'      => env('GOOGLE_REDIRECT_URL', '/auth/google/callback'),
     ],
 
+    'hcaptcha' => [
+        'site_key' => env('HCAPTCHA_SITE_KEY'),
+        'secret'   => env('HCAPTCHA_SECRET'),
+    ],
+
 ];

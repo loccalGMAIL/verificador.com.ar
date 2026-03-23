@@ -53,6 +53,12 @@
             <form method="POST" action="{{ route('register') }}" class="space-y-4">
                 @csrf
 
+                {{-- Honeypot: campo señuelo invisible para humanos, visible para bots --}}
+                <div style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+                    <label for="website">Sitio web (no completar)</label>
+                    <input type="text" id="website" name="website" value="" autocomplete="off" tabindex="-1">
+                </div>
+
                 <div>
                     <label for="store_name" class="block text-sm font-medium text-slate-700 mb-1">
                         Nombre del comercio
@@ -108,6 +114,14 @@
                                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
 
+                {{-- hCaptcha --}}
+                <div class="flex justify-center">
+                    <div class="h-captcha" data-sitekey="{{ config('services.hcaptcha.site_key') }}"></div>
+                </div>
+                @error('h-captcha-response')
+                    <p class="text-sm text-red-600 text-center -mt-2">{{ $message }}</p>
+                @enderror
+
                 <button type="submit"
                         class="w-full bg-emerald-500 text-white font-semibold py-2.5 rounded-lg
                                hover:bg-emerald-600 transition text-sm mt-2">
@@ -131,3 +145,7 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+@endpush

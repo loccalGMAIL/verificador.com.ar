@@ -47,7 +47,8 @@ Route::get('/invite/{token}', [InviteController::class, 'show'])->name('invite.s
 Route::middleware('guest')->group(function () {
 
     Route::get('/register', [RegisterController::class, 'show'])->name('register');
-    Route::post('/register', [RegisterController::class, 'store']);
+    Route::post('/register', [RegisterController::class, 'store'])
+        ->middleware('throttle:register');
 
     Route::get('/login', [LoginController::class, 'show'])->name('login');
     Route::post('/login', [LoginController::class, 'store']);
