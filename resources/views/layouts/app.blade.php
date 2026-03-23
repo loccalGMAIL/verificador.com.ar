@@ -89,6 +89,13 @@
                     <span>Sucursales</span>
                 </a>
 
+                <a href="{{ route('dashboard.statistics') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
+                          {{ $seg === 'estadisticas' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
+                    <i class="fa-solid fa-chart-bar w-4 text-center"></i>
+                    <span>Estadísticas Avanzadas</span>
+                </a>
+
                 {{-- <a href="{{ route('dashboard.subscription') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
                           {{ $seg === 'subscription' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
