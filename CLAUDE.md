@@ -71,7 +71,12 @@ php artisan tinker
 ### Analytics & tracking
 - `LogPageView` middleware logs GET requests to `/` and `/v/*` paths into `page_views` (bot-filtered, no PII).
 - `Api\ScanController` logs every barcode scan into `product_searches` (found/not found).
-- Dashboard home shows: plan usage, QR visits per branch, top 5 most searched products.
+- Dashboard home (merchant) shows: plan usage, QR visits per branch, top 5 most searched products.
+- Dashboard admin shows: store/subscription KPIs, scan activity, hit rate, trials por vencer, distribución por plan, top comercios activos, gráfico mixto visitas+búsquedas 14d.
+
+### Branding en vistas públicas
+- `resources/views/scan/index.blade.php` — vista móvil del QR; tiene barra fija en el fondo que publicita verificador.com.ar.
+- `resources/views/layouts/public.blade.php` — footer de la landing incluye crédito "Diseñado por pez.com.ar".
 
 ### Database
 - Uses MySQL in production/local (not SQLite).
