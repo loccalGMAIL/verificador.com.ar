@@ -103,6 +103,29 @@
             </div>
         </div>
 
+        {{-- Acordeón búsqueda manual --}}
+        <div class="w-full rounded-xl border border-white/10 overflow-hidden mb-6">
+            <button id="manual-toggle" onclick="toggleManual()"
+                    class="w-full flex items-center justify-between px-4 py-3 bg-white/5 text-sm font-medium text-slate-300">
+                <span><i class="fa-solid fa-keyboard mr-2 text-slate-400"></i>Buscar por código</span>
+                <i id="manual-chevron" class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform duration-300"></i>
+            </button>
+            <div id="manual-accordion" style="max-height:0; overflow:hidden; transition: max-height 0.4s ease;">
+                <div class="px-4 py-3 flex gap-2"
+                     style="background-color: {{ $cardBg }}; border-top: 1px solid {{ $cardBorder }};">
+                    <input id="manual-input" type="tel" inputmode="numeric" pattern="[0-9]*"
+                           placeholder="Ingresá el código de barras"
+                           class="flex-1 rounded-lg px-3 py-2 text-sm outline-none"
+                           style="background-color: {{ $bgColor }}; border: 1px solid {{ $cardBorder }}; color: {{ $cardText }};" />
+                    <button onclick="searchManual()"
+                            class="rounded-lg px-4 py-2 text-sm font-semibold text-white transition"
+                            style="background-color: {{ $accentColor }}; color: {{ $cardStyle === 'light' ? '#1e293b' : '#ffffff' }};">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         {{-- Nombre del producto --}}
         <div id="result-header" class="hidden w-full mb-4 text-center">
             <p id="result-store" class="text-xs text-slate-500 mb-0.5"></p>
@@ -153,13 +176,17 @@
         const TOKEN = "{{ $token }}";
         const API   = `/api/scan/${TOKEN}/`;
         let scanning = true;
+        let cameraOpen = true;
+        let manualOpen = false;
 
         // ── Acordeón cámara ───────────────────────────────────────────
         function toggleCamera() {
-            const acc     = document.getElementById('camera-accordion');
-            const chevron = document.getElementById('camera-chevron');
-            acc.classList.toggle('collapsed');
-            chevron.style.transform = acc.classList.contains('collapsed') ? 'rotate(180deg)' : '';
+            if (cameraOpen) {
+                collapseCamera();
+            } else {
+                if (manualOpen) collapseManual();
+                expandCamera();
+            }
         }
 
         function collapseCamera() {
@@ -167,6 +194,7 @@
             const chevron = document.getElementById('camera-chevron');
             acc.classList.add('collapsed');
             chevron.style.transform = 'rotate(180deg)';
+            cameraOpen = false;
         }
 
         function expandCamera() {
@@ -174,6 +202,34 @@
             const chevron = document.getElementById('camera-chevron');
             acc.classList.remove('collapsed');
             chevron.style.transform = '';
+            cameraOpen = true;
+        }
+
+        // ── Acordeón manual ───────────────────────────────────────────
+        function toggleManual() {
+            if (manualOpen) {
+                collapseManual();
+            } else {
+                if (cameraOpen) collapseCamera();
+                expandManual();
+            }
+        }
+
+        function collapseManual() {
+            const acc     = document.getElementById('manual-accordion');
+            const chevron = document.getElementById('manual-chevron');
+            acc.style.maxHeight = '0';
+            chevron.style.transform = '';
+            manualOpen = false;
+        }
+
+        function expandManual() {
+            const acc     = document.getElementById('manual-accordion');
+            const chevron = document.getElementById('manual-chevron');
+            acc.style.maxHeight = acc.scrollHeight + 'px';
+            chevron.style.transform = 'rotate(180deg)';
+            manualOpen = true;
+            document.getElementById('manual-input').focus();
         }
 
         // ── Scanner ──────────────────────────────────────────────────
@@ -189,23 +245,35 @@
             document.getElementById('scan-again').classList.remove('hidden');
         });
 
-        // ── Scan success ─────────────────────────────────────────────
+        // ── Scan handlers ─────────────────────────────────────────────
         async function onScanSuccess(barcode) {
             if (!scanning) return;
             scanning = false;
             clearResults();
+            collapseCamera();
+            await lookupBarcode(barcode);
+        }
 
+        async function searchManual() {
+            const barcode = document.getElementById('manual-input').value.trim();
+            if (!barcode) return;
+            clearResults();
+            collapseManual();
+            await lookupBarcode(barcode);
+            document.getElementById('manual-input').value = '';
+        }
+
+        // ── Lookup ────────────────────────────────────────────────────
+        async function lookupBarcode(barcode) {
             try {
                 const res  = await fetch(API + encodeURIComponent(barcode));
                 const data = await res.json();
 
                 if (!data.found) {
-                    collapseCamera();
                     showError(data.error || 'Producto no encontrado en este comercio.');
                     document.getElementById('scan-again').classList.remove('hidden');
                     return;
                 }
-
 
                 // Nombre del producto
                 if (data.name) {
@@ -237,11 +305,9 @@
                     wsBox.classList.remove('hidden');
                 }
 
-                collapseCamera();
                 document.getElementById('scan-again').classList.remove('hidden');
 
             } catch {
-                collapseCamera();
                 showError('Error de conexión. Intentá de nuevo.');
                 document.getElementById('scan-again').classList.remove('hidden');
             }
@@ -271,6 +337,10 @@
         function esc(str) {
             return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         }
+
+        // ── Enter en input manual ─────────────────────────────────────
+        document.getElementById('manual-input')
+            .addEventListener('keydown', e => { if (e.key === 'Enter') searchManual(); });
     </script>
 
     {{-- Publicidad fija en la parte inferior --}}

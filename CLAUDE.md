@@ -78,6 +78,13 @@ php artisan tinker
 - `resources/views/scan/index.blade.php` — vista móvil del QR; tiene barra fija en el fondo que publicita verificador.com.ar.
 - `resources/views/layouts/public.blade.php` — footer de la landing incluye crédito "Diseñado por pez.com.ar".
 
+### Vista de escaneo (`/v/{token}`)
+- Dos modos de búsqueda: **cámara** (acordeón superior, abierto por defecto) y **búsqueda manual** (acordeón inferior, colapsado por defecto).
+- Los acordeones son mutuamente excluyentes: abrir uno colapsa el otro.
+- La búsqueda manual acepta entrada numérica (`type="tel"`) y soporta Enter para confirmar.
+- Ambos modos comparten la misma función `lookupBarcode()` y la misma área de resultados.
+- El logging a `product_searches` ocurre igual para ambos modos (mismo endpoint API).
+
 ### Database
 - Uses MySQL in production/local (not SQLite).
 - `phpunit.xml` has SQLite in-memory commented out — tests run against the configured DB unless overridden.
