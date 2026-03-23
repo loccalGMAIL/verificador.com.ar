@@ -11,6 +11,7 @@
         "laravel/socialite": "^5.25",
         "laravel/tinker": "^2.9",
         "maatwebsite/excel": "^3.1",
+        "mercadopago/dx-php": "^3.8",
         "simplesoftwareio/simple-qrcode": "^4.2"
     },
     "require-dev": {

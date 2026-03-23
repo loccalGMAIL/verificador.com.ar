@@ -124,6 +124,13 @@
             </label>
         </div>
 
+        @if($plan->mp_preapproval_plan_id)
+        <div class="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2.5">
+            <p class="text-xs font-medium text-slate-500 mb-1">ID de plan en MercadoPago</p>
+            <p class="font-mono text-xs text-slate-700 break-all">{{ $plan->mp_preapproval_plan_id }}</p>
+        </div>
+        @endif
+
         <div class="flex gap-3 pt-2">
             <button type="submit"
                     class="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition shadow-sm">

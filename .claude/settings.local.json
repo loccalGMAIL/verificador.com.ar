@@ -20,7 +20,16 @@
       "Bash(php -l app/Http/Controllers/Api/ScanController.php)",
       "Bash(php -l app/Http/Controllers/Dashboard/HomeController.php)",
       "Bash(php -l app/Http/Controllers/Admin/HomeController.php)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(grep -r \"MercadoPago\\\\|mp_subscription\\\\|mp_payer\" /d/DESARROLLO/CoDiGo/verificador.com.ar/app --include=*.php)",
+      "Bash(grep -r \"TODO\\\\|FIXME\\\\|próximamente\" /d/DESARROLLO/CoDiGo/verificador.com.ar/resources/views --include=*.blade.php)",
+      "Bash(composer require:*)",
+      "Bash(claude mcp:*)",
+      "mcp__mercadopago__search_documentation",
+      "mcp__mercadopago__quality_checklist",
+      "Bash(php -r \":*)",
+      "mcp__mercadopago__application_list",
+      "mcp__mercadopago__create_test_user"
     ]
   }
 }

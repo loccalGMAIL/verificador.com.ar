@@ -5,6 +5,39 @@
 
 @section('content')
 
+{{-- ══ BANNER: retorno de MercadoPago ══ --}}
+@if(session('mp_return_status') === 'success')
+<div class="mb-6 bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-4 flex items-start gap-3">
+    <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5 text-lg"></i>
+    <div>
+        <p class="font-semibold text-emerald-800 text-sm">¡Suscripción procesada!</p>
+        <p class="text-emerald-700 text-sm mt-0.5">
+            Tu suscripción fue autorizada. Si no ves el cambio de estado todavía, esperá unos segundos y recargá la página.
+        </p>
+    </div>
+</div>
+@elseif(session('mp_return_status') === 'pending')
+<div class="mb-6 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex items-start gap-3">
+    <i class="fa-solid fa-clock text-amber-500 mt-0.5 text-lg"></i>
+    <div>
+        <p class="font-semibold text-amber-800 text-sm">Pago pendiente</p>
+        <p class="text-amber-700 text-sm mt-0.5">
+            Tu pago está siendo procesado. Te avisaremos cuando se acredite. Tu acceso actual sigue vigente.
+        </p>
+    </div>
+</div>
+@elseif(session('mp_return_status') === 'failure')
+<div class="mb-6 bg-red-50 border border-red-200 rounded-xl px-5 py-4 flex items-start gap-3">
+    <i class="fa-solid fa-circle-xmark text-red-500 mt-0.5 text-lg"></i>
+    <div>
+        <p class="font-semibold text-red-800 text-sm">El pago no pudo completarse</p>
+        <p class="text-red-700 text-sm mt-0.5">
+            Hubo un problema con el pago. Podés intentarlo de nuevo eligiendo tu plan.
+        </p>
+    </div>
+</div>
+@endif
+
 {{-- ══ BANNER: suscripción expirada ══ --}}
 @if(session('subscription_expired') || ($sub && $sub->isExpired()))
 <div class="mb-6 bg-red-50 border border-red-200 rounded-xl px-5 py-4 flex items-start gap-3">
@@ -118,22 +151,24 @@
                 <i class="fa-solid fa-circle-check mr-1"></i> Plan actual
             </div>
         @else
-            <button
-                class="w-full py-2.5 rounded-lg text-sm font-semibold transition
-                       {{ $plan->featured
-                           ? 'bg-blue-600 text-white hover:bg-blue-700'
-                           : 'bg-slate-800 text-white hover:bg-slate-900' }}"
-                onclick="alert('El pago con MercadoPago estará disponible próximamente.')">
-                @if($sub?->isExpired())
-                    Activar plan
-                @elseif($sub?->isActive() && $sub->plan && $plan->price_usd > $sub->plan->price_usd)
-                    Mejorar a {{ $plan->name }}
-                @elseif($sub?->isActive() && $sub->plan && $plan->price_usd < $sub->plan->price_usd)
-                    Cambiar a {{ $plan->name }}
-                @else
-                    Elegir {{ $plan->name }}
-                @endif
-            </button>
+            <form method="POST" action="{{ route('dashboard.subscription.subscribe', $plan) }}">
+                @csrf
+                <button type="submit"
+                        class="w-full py-2.5 rounded-lg text-sm font-semibold transition
+                               {{ $plan->featured
+                                   ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                   : 'bg-slate-800 text-white hover:bg-slate-900' }}">
+                    @if($sub?->isExpired())
+                        Activar plan
+                    @elseif($sub?->isActive() && $sub->plan && $plan->price_usd > $sub->plan->price_usd)
+                        Mejorar a {{ $plan->name }}
+                    @elseif($sub?->isActive() && $sub->plan && $plan->price_usd < $sub->plan->price_usd)
+                        Cambiar a {{ $plan->name }}
+                    @else
+                        Elegir {{ $plan->name }}
+                    @endif
+                </button>
+            </form>
         @endif
     </x-plan-card>
     @endforeach
@@ -142,7 +177,50 @@
 {{-- Nota de pago --}}
 <p class="text-xs text-slate-400 text-center">
     <i class="fa-solid fa-lock mr-1"></i>
-    El procesamiento de pagos con MercadoPago estará disponible próximamente. Tu plan actual seguirá activo.
+    Los pagos se procesan de forma segura a través de MercadoPago.
 </p>
+
+{{-- ══ HISTORIAL DE PAGOS ══ --}}
+@if($sub && $sub->payments->isNotEmpty())
+<div class="mt-8">
+    <h3 class="font-semibold text-slate-800 mb-3">Historial de pagos</h3>
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200">
+                <tr class="text-left">
+                    <th class="px-4 py-3 font-semibold text-slate-500">Fecha</th>
+                    <th class="px-4 py-3 font-semibold text-slate-500">Monto</th>
+                    <th class="px-4 py-3 font-semibold text-slate-500">Estado</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @foreach($sub->payments as $payment)
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="px-4 py-3 text-slate-600">
+                        {{ $payment->paid_at?->format('d/m/Y') ?? '—' }}
+                    </td>
+                    <td class="px-4 py-3 font-semibold text-slate-800">
+                        {{ $payment->currency }} {{ number_format($payment->amount, 2, ',', '.') }}
+                    </td>
+                    <td class="px-4 py-3">
+                        @php
+                            $badge = match($payment->status) {
+                                'processed' => ['bg-emerald-100 text-emerald-700', 'Acreditado'],
+                                'recycling' => ['bg-amber-100 text-amber-700', 'Reintentando'],
+                                'cancelled' => ['bg-red-100 text-red-700', 'Cancelado'],
+                                default     => ['bg-slate-100 text-slate-500', $payment->status],
+                            };
+                        @endphp
+                        <span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full {{ $badge[0] }}">
+                            {{ $badge[1] }}
+                        </span>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
 
 @endsection

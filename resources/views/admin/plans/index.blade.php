@@ -25,6 +25,7 @@
                     <th class="text-center px-4 py-3 font-semibold text-slate-600 hidden md:table-cell">Subscripciones</th>
                     <th class="text-center px-4 py-3 font-semibold text-slate-600">Estado</th>
                     <th class="text-center px-4 py-3 font-semibold text-slate-600">Destacado</th>
+                    <th class="text-center px-4 py-3 font-semibold text-slate-600 hidden lg:table-cell">MP Plan ID</th>
                     <th class="text-right px-4 py-3 font-semibold text-slate-600">Acciones</th>
                 </tr>
             </thead>
@@ -63,6 +64,15 @@
                     <td class="px-4 py-3 text-center">
                         @if($plan->featured)
                             <i class="fa-solid fa-star text-amber-400"></i>
+                        @else
+                            <span class="text-slate-300">—</span>
+                        @endif
+                    </td>
+                    <td class="px-4 py-3 text-center hidden lg:table-cell">
+                        @if($plan->mp_preapproval_plan_id)
+                            <span class="inline-block font-mono text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded max-w-[120px] truncate" title="{{ $plan->mp_preapproval_plan_id }}">
+                                {{ $plan->mp_preapproval_plan_id }}
+                            </span>
                         @else
                             <span class="text-slate-300">—</span>
                         @endif

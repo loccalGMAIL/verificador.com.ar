@@ -18,7 +18,8 @@
                     <th class="text-left px-4 py-3 font-semibold text-slate-600">Plan</th>
                     <th class="text-left px-4 py-3 font-semibold text-slate-600">Estado</th>
                     <th class="text-left px-4 py-3 font-semibold text-slate-600 hidden md:table-cell">Trial hasta</th>
-                    <th class="text-left px-4 py-3 font-semibold text-slate-600 hidden lg:table-cell">Desde</th>
+                    <th class="text-left px-4 py-3 font-semibold text-slate-600 hidden lg:table-cell">Activa desde</th>
+                    <th class="text-left px-4 py-3 font-semibold text-slate-600 hidden xl:table-cell">MP</th>
                     <th class="text-right px-4 py-3 font-semibold text-slate-600">Acciones</th>
                 </tr>
             </thead>
@@ -59,10 +60,25 @@
                         {{ $sub->trial_ends_at?->format('d/m/Y') ?? '—' }}
                     </td>
                     <td class="px-4 py-3 hidden lg:table-cell text-slate-500 text-xs">
-                        {{ $sub->created_at->format('d/m/Y') }}
+                        {{ $sub->starts_at?->format('d/m/Y') ?? '—' }}
+                    </td>
+                    <td class="px-4 py-3 hidden xl:table-cell text-slate-500 text-xs font-mono">
+                        @if($sub->mp_subscription_id)
+                            <span title="{{ $sub->mp_subscription_id }}">
+                                {{ substr($sub->mp_subscription_id, 0, 8) }}…
+                            </span>
+                        @else
+                            —
+                        @endif
                     </td>
                     <td class="px-4 py-3 text-right">
                         <div class="flex items-center justify-end gap-3">
+                            {{-- Detalle --}}
+                            <a href="{{ route('admin.subscriptions.show', $sub) }}"
+                               class="text-slate-400 hover:text-slate-600" title="Ver detalle">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+
                             {{-- Change plan inline --}}
                             <form method="POST" action="{{ route('admin.subscriptions.change-plan', $sub) }}"
                                   class="flex items-center gap-1">
@@ -106,7 +122,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-4 py-10 text-center text-slate-400">
+                    <td colspan="8" class="px-4 py-10 text-center text-slate-400">
                         No hay subscripciones registradas.
                     </td>
                 </tr>

@@ -14,6 +14,8 @@ class CheckSubscription
      */
     private const ALLOWED_ROUTES = [
         'dashboard.subscription',
+        'dashboard.subscription.subscribe',
+        'dashboard.subscription.return',
         'logout',
     ];
 
