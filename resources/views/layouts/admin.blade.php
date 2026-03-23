@@ -117,9 +117,70 @@
                     </h1>
                 </div>
                 @auth
-                <span class="text-sm text-slate-500 hidden sm:inline">
-                    {{ auth()->user()->name }}
-                </span>
+                <div x-data="{ open: {{ $errors->hasAny(['current_password', 'password']) ? 'true' : 'false' }} }">
+                    <button @click="open = true"
+                            class="text-sm text-slate-500 hover:text-slate-800 hidden sm:flex items-center gap-1.5 transition"
+                            title="Cambiar mi contraseña">
+                        {{ auth()->user()->name }}
+                        <i class="fa-solid fa-lock text-[11px] text-slate-400"></i>
+                    </button>
+
+                    <div x-show="open" x-cloak
+                         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+                         @keydown.escape.window="open = false">
+                        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6" @click.stop>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-base font-semibold text-slate-800">Cambiar mi contraseña</h3>
+                                <button @click="open = false" class="text-slate-400 hover:text-slate-600">
+                                    <i class="fa-solid fa-xmark text-lg"></i>
+                                </button>
+                            </div>
+                            <form method="POST" action="{{ route('admin.profile.password') }}">
+                                @csrf @method('PUT')
+                                <div class="space-y-4">
+                                    @if(auth()->user()->password !== null)
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Contraseña actual</label>
+                                        <input type="password" name="current_password" required autocomplete="current-password"
+                                               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                        @error('current_password')
+                                            <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    @else
+                                    <div class="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700">
+                                        <i class="fa-brands fa-google mr-1"></i>
+                                        Tu cuenta usa Google OAuth. Podés establecer una contraseña local ahora.
+                                    </div>
+                                    @endif
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Nueva contraseña</label>
+                                        <input type="password" name="password" required minlength="8" autocomplete="new-password"
+                                               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                        @error('password')
+                                            <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Confirmar nueva contraseña</label>
+                                        <input type="password" name="password_confirmation" required minlength="8" autocomplete="new-password"
+                                               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                    </div>
+                                </div>
+                                <div class="flex justify-end gap-2 mt-5">
+                                    <button type="button" @click="open = false"
+                                            class="text-sm text-slate-600 px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 transition">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit"
+                                            class="text-sm bg-blue-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                                        Guardar contraseña
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
                 @endauth
             </header>
 
