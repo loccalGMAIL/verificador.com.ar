@@ -67,7 +67,12 @@
 
     {{-- Footer --}}
     <footer class="py-12 border-t border-slate-100 text-center text-slate-400 text-sm">
-        &copy; {{ date('Y') }} Verificador.com.ar &mdash; Todos los derechos reservados.
+        <p>&copy; {{ date('Y') }} Verificador.com.ar &mdash; Todos los derechos reservados.</p>
+        <p class="mt-2 text-xs text-slate-300">
+            Diseñado por
+            <a href="https://pez.com.ar" target="_blank" rel="noopener"
+               class="text-slate-400 hover:text-blue-500 transition font-medium">pez.com.ar</a>
+        </p>
     </footer>
 
     <script>

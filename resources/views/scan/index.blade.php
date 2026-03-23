@@ -272,5 +272,20 @@
             return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         }
     </script>
+
+    {{-- Publicidad fija en la parte inferior --}}
+    <div style="position:fixed;bottom:0;left:0;right:0;z-index:50;text-align:center;padding:6px 12px;background:rgba(15,23,42,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);">
+        <a href="https://verificador.com.ar" target="_blank" rel="noopener"
+           style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;">
+            <svg viewBox="0 0 36 36" style="width:14px;height:14px;flex-shrink:0" aria-hidden="true">
+                <circle cx="18" cy="18" r="14" fill="none" stroke="#2563eb" stroke-width="3"></circle>
+                <path d="M11 19 L16 24 L33 8" fill="none" stroke="#10b981" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <span style="font-size:11px;font-weight:600;color:#94a3b8;letter-spacing:.02em;">
+                Precios en tiempo real con
+                <span style="color:#60a5fa;">verificador</span><span style="color:#64748b;">.com.ar</span>
+            </span>
+        </a>
+    </div>
 </body>
 </html>
