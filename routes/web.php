@@ -148,6 +148,10 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/users/{user}/suspend',          [AdminUserController::class, 'suspend'])->name('users.suspend');
         Route::post('/users/{user}/reactivate',       [AdminUserController::class, 'reactivate'])->name('users.reactivate');
 
+        // --- Contraseñas ---
+        Route::put('/profile/password',            [AdminUserController::class, 'updateOwnPassword'])->name('profile.password');
+        Route::put('/users/{user}/reset-password', [AdminUserController::class, 'resetUserPassword'])->name('users.reset-password');
+
         // --- Subscripciones ---
         Route::get('/subscriptions',                               [AdminSubscriptionController::class, 'index'])->name('subscriptions.index');
         Route::post('/subscriptions/{subscription}/change-plan',   [AdminSubscriptionController::class, 'changePlan'])->name('subscriptions.change-plan');

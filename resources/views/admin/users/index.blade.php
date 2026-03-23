@@ -26,7 +26,7 @@
             <tbody class="divide-y divide-slate-100">
                 @forelse($users as $user)
                 <tr class="hover:bg-slate-50 transition"
-                    x-data="{ editOpen: false, reassignOpen: false }">
+                    x-data="{ editOpen: false, reassignOpen: false, resetPasswordOpen: false }">
 
                     <td class="px-4 py-3">
                         <div class="font-medium text-slate-800">{{ $user->name }}</div>
@@ -79,6 +79,13 @@
                                     class="text-xs text-slate-600 hover:text-slate-900 font-medium bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition"
                                     title="Editar nombre / email / rol">
                                 <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+
+                            {{-- Resetear contraseña --}}
+                            <button @click="resetPasswordOpen = true"
+                                    class="text-xs text-indigo-700 hover:text-indigo-900 font-medium bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition"
+                                    title="Resetear contraseña">
+                                <i class="fa-solid fa-key"></i>
                             </button>
 
                             {{-- Reasignar comercio --}}
@@ -233,6 +240,58 @@
                                         <button type="submit"
                                                 class="text-sm bg-amber-500 text-white font-medium px-4 py-2 rounded-lg hover:bg-amber-600 transition">
                                             Reasignar
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        {{-- ===== MODAL: Resetear contraseña ===== --}}
+                        <div x-show="resetPasswordOpen"
+                             x-cloak
+                             class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+                             @keydown.escape.window="resetPasswordOpen = false">
+                            <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6" @click.stop>
+                                <div class="flex items-center justify-between mb-1">
+                                    <h3 class="text-base font-semibold text-slate-800">Resetear contraseña</h3>
+                                    <button @click="resetPasswordOpen = false" class="text-slate-400 hover:text-slate-600">
+                                        <i class="fa-solid fa-xmark text-lg"></i>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-slate-500 mb-4">
+                                    Usuario: <strong class="text-slate-700">{{ $user->name }}</strong>
+                                    @if($user->google_id)
+                                        &mdash; <span class="text-blue-500"><i class="fa-brands fa-google text-[10px]"></i> Google OAuth</span>
+                                    @endif
+                                </p>
+                                @if($user->google_id && $user->password === null)
+                                <div class="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700 mb-4">
+                                    No tiene contraseña local. Al establecer una, podrá iniciar sesión también con email y contraseña.
+                                </div>
+                                @endif
+                                <form method="POST" action="{{ route('admin.users.reset-password', $user) }}">
+                                    @csrf
+                                    @method('PUT')
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-600 mb-1">Nueva contraseña</label>
+                                            <input type="password" name="new_password" required minlength="8" autocomplete="new-password"
+                                                   class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-600 mb-1">Confirmar nueva contraseña</label>
+                                            <input type="password" name="new_password_confirmation" required minlength="8" autocomplete="new-password"
+                                                   class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-end gap-2 mt-5">
+                                        <button type="button" @click="resetPasswordOpen = false"
+                                                class="text-sm text-slate-600 hover:text-slate-800 px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 transition">
+                                            Cancelar
+                                        </button>
+                                        <button type="submit"
+                                                class="text-sm bg-indigo-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+                                            Establecer contraseña
                                         </button>
                                     </div>
                                 </form>

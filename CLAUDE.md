@@ -57,6 +57,7 @@ php artisan tinker
 ### Blade layout system
 - `resources/views/layouts/public.blade.php` — public layout (landing/scan pages)
 - `resources/views/layouts/app.blade.php` — dashboard layout; uses `@yield('title')`, `@yield('page-title')`, `@yield('content')`, `@stack('styles')`, `@stack('scripts')`.
+- `resources/views/layouts/admin.blade.php` — admin layout; sidebar oscuro, mismo sistema de yields. El header muestra el nombre del admin como botón que abre el modal de cambio de contraseña propia.
 - Views extend `layouts.app` and fill `@section('content')`.
 
 ### Key models
@@ -67,6 +68,11 @@ php artisan tinker
 - `PageView` — anonymous tracking of public page visits (`/`, `/v/{token}`, etc.)
 - `ProductSearch` — logs each barcode lookup via the scan API (`branch_id`, `product_id`, `barcode`, `found`)
 - `User` — with roles (owner, employee, admin); a store can have multiple users
+
+### Gestión de contraseñas en el panel admin
+- **Admin cambia su propia contraseña** — modal accesible desde el nombre en el header de `layouts/admin.blade.php`. Requiere contraseña actual + nueva + confirmación. Si el admin usa Google OAuth (`password === null`), no se pide contraseña actual. El modal se reabre automáticamente si la validación falla (Alpine inicializado con `open: true` cuando `$errors` contiene claves de contraseña).
+- **Admin resetea contraseña de usuarios** — botón de llave (indigo) por fila en `/admin/users`. Modal con nueva contraseña + confirmación, sin requerir contraseña actual. Funciona también para usuarios Google OAuth con `password = null`. Ruta: `PUT /admin/users/{user}/reset-password` → `Admin\UserController@resetUserPassword`.
+- Rutas: `admin.profile.password` y `admin.users.reset-password`. Ambas en `Admin\UserController`.
 
 ### Anti-bot en registro
 - `POST /register` tiene tres capas de protección contra bots:

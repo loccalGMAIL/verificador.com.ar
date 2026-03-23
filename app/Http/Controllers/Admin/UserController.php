@@ -71,4 +71,34 @@ class UserController extends Controller
 
         return back()->with('success', "Usuario \"{$user->name}\" reactivado.");
     }
+
+    public function updateOwnPassword(Request $request): RedirectResponse
+    {
+        $admin = auth()->user();
+
+        $rules = [
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ];
+
+        if ($admin->password !== null) {
+            $rules['current_password'] = ['required', 'current_password'];
+        }
+
+        $request->validate($rules);
+
+        $admin->update(['password' => $request->password]);
+
+        return back()->with('success', 'Tu contraseña fue actualizada.');
+    }
+
+    public function resetUserPassword(Request $request, User $user): RedirectResponse
+    {
+        $request->validate([
+            'new_password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user->update(['password' => $request->new_password]);
+
+        return back()->with('success', "Contraseña de \"{$user->name}\" restablecida.");
+    }
 }
