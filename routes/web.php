@@ -13,6 +13,7 @@ use App\Http\Controllers\Dashboard\PriceListController;
 use App\Http\Controllers\Dashboard\ImportProfileController;
 use App\Http\Controllers\Dashboard\SettingsController;
 use App\Http\Controllers\Dashboard\StoreUserController;
+use App\Http\Controllers\Dashboard\StatisticsController;
 use App\Http\Controllers\Dashboard\SubscriptionController as DashboardSubscription;
 use App\Http\Controllers\Admin\HomeController as AdminHome;
 use App\Http\Controllers\Admin\StoreController as AdminStoreController;
@@ -100,6 +101,9 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         Route::get('/branches/{branch}/qr',           [BranchController::class, 'qr'])->name('branches.qr');
         Route::get('/branches/{branch}/qr/configure', [BranchController::class, 'qrConfigure'])->name('branches.qr.configure');
         Route::post('/branches/{branch}/qr/save',     [BranchController::class, 'qrSave'])->name('branches.qr.save');
+
+        // --- Estadísticas avanzadas ---
+        Route::get('/estadisticas', StatisticsController::class)->name('statistics');
 
         // --- Subscripción ---
         Route::get('/subscription', [DashboardSubscription::class, 'index'])->name('subscription');

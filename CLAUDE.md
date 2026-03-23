@@ -73,6 +73,7 @@ php artisan tinker
 - `Api\ScanController` logs every barcode scan into `product_searches` (found/not found).
 - Dashboard home (merchant) shows: plan usage, QR visits per branch, top 5 most searched products.
 - Dashboard admin shows: store/subscription KPIs, scan activity, hit rate, trials por vencer, distribución por plan, top comercios activos, gráfico mixto visitas+búsquedas 14d.
+- `/dashboard/estadisticas` (`StatisticsController`) — página de estadísticas avanzadas para el comerciante; selector de período 7d/30d/90d; muestra: gráfico mixto tendencias (visitas + búsquedas), tabla comparativa por sucursal con tasa de éxito, gráfico de horas pico (CONVERT_TZ a UTC-3), y top 20 barcodes no encontrados.
 
 ### Branding en vistas públicas
 - `resources/views/scan/index.blade.php` — vista móvil del QR; tiene barra fija en el fondo que publicita verificador.com.ar.
