@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
 use App\Http\Controllers\Admin\PlanController as AdminPlanController;
 use App\Http\Controllers\Admin\ImpersonateController;
+use App\Http\Controllers\Webhook\MercadoPagoController as MercadoPagoWebhook;
 use Illuminate\Support\Facades\Route;
 
 // ============================================================
@@ -107,7 +108,9 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         Route::get('/estadisticas', StatisticsController::class)->name('statistics');
 
         // --- Subscripción ---
-        Route::get('/subscription', [DashboardSubscription::class, 'index'])->name('subscription');
+        Route::get('/subscription',                              [DashboardSubscription::class, 'index'])->name('subscription');
+        Route::post('/subscription/subscribe/{plan}',            [DashboardSubscription::class, 'subscribe'])->name('subscription.subscribe');
+        Route::get('/subscription/return',                       [DashboardSubscription::class, 'returnFromMp'])->name('subscription.return');
 
         // --- Usuarios del comercio ---
         Route::get('/users',              [StoreUserController::class, 'index'])->name('users.index');
@@ -167,3 +170,9 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/users/{user}/impersonate', [ImpersonateController::class, 'impersonate'])
             ->name('users.impersonate');
     });
+
+// ============================================================
+// WEBHOOKS — MercadoPago (sin CSRF, sin auth)
+// ============================================================
+Route::post('/webhooks/mercadopago', MercadoPagoWebhook::class)
+    ->name('webhooks.mercadopago');

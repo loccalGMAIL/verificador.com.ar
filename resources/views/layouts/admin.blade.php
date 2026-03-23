@@ -197,6 +197,12 @@
                         {{ session('error') }}
                     </div>
                 @endif
+                @if(session('warning'))
+                    <div class="mb-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-lg flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                        {{ session('warning') }}
+                    </div>
+                @endif
 
                 @yield('content')
             </main>

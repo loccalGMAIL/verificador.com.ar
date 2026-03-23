@@ -21,6 +21,7 @@ class Plan extends Model
         'featured',
         'active',
         'sort_order',
+        'mp_preapproval_plan_id',
     ];
 
     protected function casts(): array
@@ -76,6 +77,11 @@ class Plan extends Model
         return $this->max_price_lists
             ? number_format($this->max_price_lists)
             : 'Ilimitadas';
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->price_ars !== null && (float) $this->price_ars > 0;
     }
 
     public function formattedPriceArs(): string
