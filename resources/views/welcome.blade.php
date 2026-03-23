@@ -159,7 +159,7 @@
     <section id="costos" class="py-10 px-6 bg-white reveal">
         <div class="max-w-4xl mx-auto">
             <h2 class="text-xl md:text-2xl font-bold text-center mb-3">Comparación de Costos</h2>
-            <p class="text-center text-slate-500 text-sm md:text-base mb-7">La competencia cobra más de U$S 850 por un verificador físico. Nosotros, mucho menos.</p>
+            <p class="text-center text-slate-500 text-sm md:text-base mb-7">La competencia cobra más de $900.000 por un verificador físico. Nosotros, mucho menos.</p>
 
             <div class="grid md:grid-cols-2 gap-5 items-center">
 
@@ -188,7 +188,7 @@
                     <div class="absolute inset-0 flex items-center justify-center">
                         <div class="bg-red-500/90 text-white font-bold text-base px-5 py-3 rounded-2xl shadow-xl rotate-[-3deg]">
                             Verificador físico
-                            = U$S 850
+                            + de $900.000
                         </div>
                     </div>
                 </div>
@@ -200,7 +200,7 @@
                     </div>
                     <h3 class="text-xl font-extrabold text-blue-700 mb-2">verificador.com.ar</h3>
                     <p class="text-slate-500 text-sm mb-5">Sin hardware. Sin instalación. Desde cualquier dispositivo.</p>
-                    <div class="text-4xl font-extrabold text-blue-700 mb-1">$5 <span class="text-base font-normal text-slate-400">USD / mes</span></div>
+                    <div class="text-4xl font-extrabold text-blue-700 mb-1">$7.800 <span class="text-base font-normal text-slate-400"> / mes</span></div>
                     <p class="text-xs text-slate-400 mb-5">≈ menos de lo que cuesta un café por día</p>
                     <ul class="text-sm text-slate-600 space-y-2 text-left mb-5">
                         <li><i class="fas fa-check text-emerald-500 mr-2"></i>QR ilimitados</li>
