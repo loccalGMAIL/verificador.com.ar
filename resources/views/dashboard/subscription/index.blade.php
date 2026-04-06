@@ -180,47 +180,14 @@
     Los pagos se procesan de forma segura a través de MercadoPago.
 </p>
 
-{{-- ══ HISTORIAL DE PAGOS ══ --}}
-@if($sub && $sub->payments->isNotEmpty())
-<div class="mt-8">
-    <h3 class="font-semibold text-slate-800 mb-3">Historial de pagos</h3>
-    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table class="w-full text-sm">
-            <thead class="bg-slate-50 border-b border-slate-200">
-                <tr class="text-left">
-                    <th class="px-4 py-3 font-semibold text-slate-500">Fecha</th>
-                    <th class="px-4 py-3 font-semibold text-slate-500">Monto</th>
-                    <th class="px-4 py-3 font-semibold text-slate-500">Estado</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-                @foreach($sub->payments as $payment)
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="px-4 py-3 text-slate-600">
-                        {{ $payment->paid_at?->format('d/m/Y') ?? '—' }}
-                    </td>
-                    <td class="px-4 py-3 font-semibold text-slate-800">
-                        {{ $payment->currency }} {{ number_format($payment->amount, 2, ',', '.') }}
-                    </td>
-                    <td class="px-4 py-3">
-                        @php
-                            $badge = match($payment->status) {
-                                'processed' => ['bg-emerald-100 text-emerald-700', 'Acreditado'],
-                                'recycling' => ['bg-amber-100 text-amber-700', 'Reintentando'],
-                                'cancelled' => ['bg-red-100 text-red-700', 'Cancelado'],
-                                default     => ['bg-slate-100 text-slate-500', $payment->status],
-                            };
-                        @endphp
-                        <span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full {{ $badge[0] }}">
-                            {{ $badge[1] }}
-                        </span>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-</div>
+{{-- Link a estado de cuenta --}}
+@if($sub)
+<p class="mt-6 text-center text-sm text-slate-500">
+    <a href="{{ route('dashboard.billing') }}" class="text-blue-600 hover:underline font-medium">
+        <i class="fa-solid fa-file-invoice-dollar mr-1"></i>
+        Ver estado de cuenta e historial de pagos
+    </a>
+</p>
 @endif
 
 @endsection

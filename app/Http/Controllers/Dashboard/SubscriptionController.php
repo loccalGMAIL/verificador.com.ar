@@ -83,6 +83,33 @@ class SubscriptionController extends Controller
         return redirect()->away($result['init_point']);
     }
 
+    public function billing(): View
+    {
+        $store = auth()->user()->store;
+        $sub   = $store->subscription;
+
+        if ($sub) {
+            $sub->load(['plan', 'payments' => fn ($q) => $q->latest('paid_at')]);
+        }
+
+        // Calcular próximo vencimiento
+        $nextDue = null;
+        if ($sub) {
+            if ($sub->isOnTrial()) {
+                $nextDue = $sub->trial_ends_at;
+            } elseif ($sub->isActive()) {
+                $lastPayment = $sub->payments->where('status', 'processed')->first();
+                if ($lastPayment?->paid_at) {
+                    $nextDue = $lastPayment->paid_at->addMonth();
+                } elseif ($sub->starts_at) {
+                    $nextDue = $sub->starts_at->addMonth();
+                }
+            }
+        }
+
+        return view('dashboard.billing.index', compact('sub', 'nextDue'));
+    }
+
     public function returnFromMp(Request $request): RedirectResponse
     {
         $preapprovalId = $request->query('preapproval_id');

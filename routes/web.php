@@ -111,6 +111,7 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         Route::get('/subscription',                              [DashboardSubscription::class, 'index'])->name('subscription');
         Route::post('/subscription/subscribe/{plan}',            [DashboardSubscription::class, 'subscribe'])->name('subscription.subscribe');
         Route::get('/subscription/return',                       [DashboardSubscription::class, 'returnFromMp'])->name('subscription.return');
+        Route::get('/billing',                                   [DashboardSubscription::class, 'billing'])->name('billing');
 
         // --- Usuarios del comercio ---
         Route::get('/users',              [StoreUserController::class, 'index'])->name('users.index');
@@ -162,6 +163,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/subscriptions/{subscription}/reactivate',    [AdminSubscriptionController::class, 'reactivate'])->name('subscriptions.reactivate');
         Route::post('/subscriptions/{subscription}/reset-trial',   [AdminSubscriptionController::class, 'resetTrial'])->name('subscriptions.reset-trial');
         Route::get('/subscriptions/{subscription}',                [AdminSubscriptionController::class, 'show'])->name('subscriptions.show');
+        Route::post('/subscriptions/{subscription}/payments',      [AdminSubscriptionController::class, 'storePayment'])->name('subscriptions.payments.store');
 
         // --- Planes ---
         Route::resource('plans', AdminPlanController::class)

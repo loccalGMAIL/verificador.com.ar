@@ -14,7 +14,13 @@ class SubscriptionPayment extends Model
         'currency',
         'status',
         'paid_at',
+        'notes',
     ];
+
+    public function isManual(): bool
+    {
+        return $this->mp_payment_id === null;
+    }
 
     protected $casts = [
         'paid_at' => 'datetime',

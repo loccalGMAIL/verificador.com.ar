@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Models\SubscriptionPayment;
 use App\Services\MercadoPagoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -79,5 +80,31 @@ class SubscriptionController extends Controller
         $subscription->load(['store', 'plan', 'payments' => fn ($q) => $q->latest('paid_at')]);
 
         return view('admin.subscriptions.show', compact('subscription'));
+    }
+
+    public function storePayment(Request $request, Subscription $subscription): RedirectResponse
+    {
+        $request->validate([
+            'amount'   => ['required', 'numeric', 'min:0.01'],
+            'currency' => ['required', 'string', 'size:3'],
+            'paid_at'  => ['required', 'date'],
+            'notes'    => ['nullable', 'string', 'max:500'],
+        ]);
+
+        SubscriptionPayment::create([
+            'subscription_id' => $subscription->id,
+            'mp_payment_id'   => null,
+            'amount'          => $request->amount,
+            'currency'        => strtoupper($request->currency),
+            'status'          => 'processed',
+            'paid_at'         => $request->paid_at,
+            'notes'           => $request->notes,
+        ]);
+
+        if ($subscription->status !== 'active') {
+            $subscription->update(['status' => 'active']);
+        }
+
+        return back()->with('success', 'Pago registrado correctamente.');
     }
 }
