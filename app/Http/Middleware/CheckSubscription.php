@@ -16,6 +16,7 @@ class CheckSubscription
         'dashboard.subscription',
         'dashboard.subscription.subscribe',
         'dashboard.subscription.return',
+        'dashboard.billing',
         'logout',
     ];
 

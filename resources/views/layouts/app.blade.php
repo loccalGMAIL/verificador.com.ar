@@ -103,6 +103,13 @@
                     <span>Subscripción</span>
                 </a> --}}
 
+                <a href="{{ route('dashboard.billing') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
+                          {{ $seg === 'billing' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
+                    <i class="fa-solid fa-file-invoice-dollar w-4 text-center"></i>
+                    <span>Estado de Cuenta</span>
+                </a>
+
                 {{-- Configuración expandible --}}
                 <div x-data="{ open: {{ in_array($seg, ['settings', 'users']) ? 'true' : 'false' }} }">
                     <button @click="open = !open"
