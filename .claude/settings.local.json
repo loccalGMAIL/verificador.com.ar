@@ -33,7 +33,8 @@
       "mcp__mercadopago__notifications_history",
       "Bash(curl -s http://localhost:4040/api/requests/http)",
       "Bash(where gh:*)",
-      "Bash(winget list:*)"
+      "Bash(winget list:*)",
+      "Bash(gh pr:*)"
     ]
   }
 }
