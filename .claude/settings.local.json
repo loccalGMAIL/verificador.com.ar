@@ -34,7 +34,11 @@
       "Bash(curl -s http://localhost:4040/api/requests/http)",
       "Bash(where gh:*)",
       "Bash(winget list:*)",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Bash(./vendor/bin/pint app/Http/Controllers/Dashboard/LabelController.php --format agent)",
+      "Bash(php -r ' *)",
+      "Bash(./vendor/bin/pint app/Http/Controllers/Dashboard/ProductController.php app/Http/Controllers/Dashboard/LabelController.php tests/Feature/LabelControllerTest.php --format agent)",
+      "Bash(cd /d D:\\\\DESARROLLO\\\\CoDiGo\\\\verificador.com.ar)"
     ]
   }
 }
