@@ -5,7 +5,10 @@
 
 @section('content')
 
-<div x-data="labelManager()" x-init="init()">
+<div x-data="labelManager()" x-init="init()"
+     data-generate-url="{{ route('dashboard.labels.generate') }}"
+     data-check-url="{{ route('dashboard.labels.check') }}"
+     data-print-url="{{ route('dashboard.labels.print') }}">
 
     <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,280px)_260px_280px] gap-4 items-start">
 
@@ -260,7 +263,7 @@
             <div>
                 <button @click="openPersonalize = !openPersonalize"
                         class="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-50 transition">
-                    <span class="font-semibold text-slate-500 uppercase tracking-wide">Personal.</span>
+                    <span class="font-semibold text-slate-500 uppercase tracking-wide">Personalizar</span>
                     <i class="fa-solid text-slate-400" :class="openPersonalize ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                 </button>
                 <div x-show="openPersonalize" x-transition class="px-3 pb-2.5 space-y-2">
@@ -302,6 +305,7 @@
                             Total: <span class="font-semibold" x-text="selectedLabels.length"></span> etiqueta(s)
                         </p>
                     </div>
+
                 </div>
             </div>
 
@@ -336,66 +340,25 @@
 
             <template x-if="selectedProductsWithBarcode.length > 0">
                 <div>
-                    {{-- Tabs A4 --}}
-                    <template x-if="printMode === 'a4'">
-                        <div class="flex gap-1 mb-2">
-                            <button @click="previewTab = 'label'"
-                                    :class="previewTab === 'label' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                                    class="flex-1 py-0.5 text-xs font-medium rounded transition">
-                                Etiqueta
-                            </button>
-                            <button @click="previewTab = 'page'"
-                                    :class="previewTab === 'page' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                                    class="flex-1 py-0.5 text-xs font-medium rounded transition">
-                                Página
-                            </button>
-                        </div>
-                    </template>
-
                     {{-- Preview etiqueta individual --}}
-                    <template x-if="printMode !== 'a4' || previewTab === 'label'">
-                        <div class="flex justify-center mb-2">
-                            <div class="border border-slate-200 rounded-lg p-2 bg-slate-50 inline-flex flex-col items-center gap-1"
-                                 :style="previewStyle()">
-                                <p class="font-medium text-slate-800 leading-tight truncate w-full text-center text-xs"
-                                   :style="'font-size:' + (fontSizeMap[nameFontSize] * 0.8) + 'px'"
-                                   x-text="selectedLabels[0]?.name"></p>
-                                <template x-if="showBarcodeNumber">
-                                    <p class="font-mono text-slate-700 text-center text-xs" x-text="selectedLabels[0]?.barcode"></p>
-                                </template>
-                            </div>
-                        </div>
-                    </template>
+                    <div class="flex justify-center mb-2">
+                        <div class="border border-slate-200 rounded-lg p-2 bg-slate-50 inline-flex flex-col items-center gap-1"
+                             :style="previewStyle()">
+                            <p class="font-medium text-slate-800 leading-tight truncate w-full text-center text-xs"
+                               :style="'font-size:' + (fontSizeMap[nameFontSize] * 0.8) + 'px'"
+                               x-text="selectedLabels[0]?.name"></p>
 
-                    {{-- Preview página A4 completa --}}
-                    <template x-if="printMode === 'a4' && previewTab === 'page'">
-                        <div class="border-2 border-slate-300 bg-white rounded overflow-hidden" style="aspect-ratio: 210/297">
-                            <div :style="'width: 100%; height: 100%; display: grid; overflow: hidden; align-content: start; grid-template-columns: repeat(' + columns + ', 1fr); grid-auto-rows: ' + Math.max(10, labelHeightMm * 0.8) + 'px; gap: ' + (spacingMm * 0.8) + 'px; padding: ' + (marginMm * 0.8) + 'px'">
-                                <template x-for="slot in pageCompositionCount" :key="slot">
-                                    <div class="flex flex-col items-center justify-center border border-slate-200 rounded bg-white p-0.5 overflow-hidden text-xs" style="min-height: 0; min-width: 0; height: 100%">
-                                        <template x-if="selectedLabels[slot - 1]">
-                                            <div class="w-full h-full flex flex-col items-center justify-center">
-                                                <p class="font-medium text-slate-800 text-center line-clamp-2 w-full leading-tight"
-                                                   :style="'font-size: ' + Math.max(5, fontSizeMap[nameFontSize] * 0.5) + 'px'"
-                                                   x-text="selectedLabels[slot - 1].name"></p>
-                                                <template x-if="showBarcodeNumber">
-                                                    <p class="font-mono text-slate-600 text-center w-full line-clamp-1 leading-tight"
-                                                        :style="'font-size: ' + Math.max(4, 5 * 0.8) + 'px'"
-                                                        x-text="selectedLabels[slot - 1].barcode"></p>
-                                                </template>
-                                            </div>
-                                        </template>
-                                        <template x-if="!selectedLabels[slot - 1]">
-                                            <div class="w-full h-full rounded bg-slate-50 border border-dashed border-slate-200"></div>
-                                        </template>
-                                    </div>
-                                </template>
+                            <div class="w-full flex items-center justify-center">
+                                <svg x-ref="previewBarcode"
+                                     class="max-w-full"
+                                     aria-label="Barcode preview"></svg>
                             </div>
+
+                            <template x-if="showBarcodeNumber">
+                                <p class="font-mono text-slate-700 text-center text-xs" x-text="selectedLabels[0]?.barcode"></p>
+                            </template>
                         </div>
-                        <p class="text-xs text-slate-500 text-center mt-2">
-                            <span x-text="columns"></span> col · <span x-text="pageCompositionCount"></span>/pág · <span x-text="Math.min(selectedLabels.length, pageCompositionCount)"></span>/<span x-text="selectedLabels.length"></span>
-                        </p>
-                    </template>
+                    </div>
 
                     {{-- Preview etiqueta adhesiva --}}
                     <template x-if="printMode === 'label'">
@@ -429,10 +392,12 @@
 @endsection
 
 @push('scripts')
+<script type="application/json" id="labels-products-data">{!! json_encode($productsData) !!}</script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <script>
 function labelManager() {
     return {
-        allProducts: @json($productsData),
+        allProducts: JSON.parse(document.getElementById('labels-products-data').textContent),
         search: '',
         filter: 'all',
         selected: [],
@@ -452,10 +417,9 @@ function labelManager() {
         showBarcodeNumber: true,
         copies: 1,
 
-        openConfig: true,
+        openConfig: false,
         openPersonalize: true,
         openPreview: true,
-        previewTab: 'label',
 
         labelSizes: [
             { value: '40x25', label: '40 × 25 mm  (pequeña)' },
@@ -466,6 +430,8 @@ function labelManager() {
         barcodeHeights:[{ value: 'sm', label: 'Bajo'  }, { value: 'md', label: 'Normal'}, { value: 'lg', label: 'Alto'   }],
         fontSizeMap:   { sm: 10, md: 13, lg: 16 },
         bcHeightMap:   { sm: 22, md: 34, lg: 48 },
+
+        previewBarcodeTimer: null,
 
         get filteredProducts() {
             const s = this.search.toLowerCase();
@@ -551,7 +517,7 @@ function labelManager() {
             this.ensureEditing(id);
             this.editing[id].status = 'loading';
             try {
-                const r = await fetch('{{ route('dashboard.labels.generate') }}', {
+                const r = await fetch(this.$root.dataset.generateUrl, {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
                 });
@@ -580,7 +546,7 @@ function labelManager() {
             if (!e || !e.value.trim()) { return; }
             e.status = 'checking';
             try {
-                const r = await fetch('{{ route('dashboard.labels.check') }}', {
+                const r = await fetch(this.$root.dataset.checkUrl, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
@@ -633,13 +599,45 @@ function labelManager() {
             return `width:${Math.min(labelW, 200)}px; min-height:60px;`;
         },
 
+        schedulePreviewBarcodeRender() {
+            clearTimeout(this.previewBarcodeTimer);
+            this.previewBarcodeTimer = setTimeout(() => this.renderPreviewBarcode(), 80);
+        },
+
+        renderPreviewBarcode() {
+            if (!this.$refs.previewBarcode || !window.JsBarcode) {
+                return;
+            }
+
+            const barcode = this.selectedLabels[0]?.barcode || '';
+            if (!barcode) {
+                this.$refs.previewBarcode.innerHTML = '';
+                return;
+            }
+
+            const height = Math.max(12, Math.round((this.bcHeightMap[this.barcodeHeight] || 34) * 0.8));
+
+            try {
+                window.JsBarcode(this.$refs.previewBarcode, barcode, {
+                    format: 'CODE128',
+                    height,
+                    displayValue: false,
+                    margin: 0,
+                    width: 1.4,
+                    lineColor: '#0f172a',
+                });
+            } catch (e) {
+                this.$refs.previewBarcode.innerHTML = '';
+            }
+        },
+
         submitPrint() {
             const items = this.selectedProductsWithBarcode;
             if (!items.length) { return; }
 
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '{{ route('dashboard.labels.print') }}';
+            form.action = this.$root.dataset.printUrl;
             form.target = '_blank';
 
             const addInput = (name, value) => {
@@ -676,6 +674,16 @@ function labelManager() {
 
             this.$watch('search',            () => { this.page = 1; });
             this.$watch('filter',            () => { this.page = 1; });
+            this.$watch('selected',          () => this.schedulePreviewBarcodeRender());
+            this.$watch('copies',            () => this.schedulePreviewBarcodeRender());
+            this.$watch('barcodeHeight',     () => this.schedulePreviewBarcodeRender());
+            this.$watch('printMode',         () => this.schedulePreviewBarcodeRender());
+            this.$watch('labelSize',         () => this.schedulePreviewBarcodeRender());
+            this.$watch('marginMm',          () => this.schedulePreviewBarcodeRender());
+            this.$watch('spacingMm',         () => this.schedulePreviewBarcodeRender());
+            this.$watch('columns',           () => this.schedulePreviewBarcodeRender());
+
+            this.schedulePreviewBarcodeRender();
         },
     };
 }
