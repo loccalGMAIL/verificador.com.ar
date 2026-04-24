@@ -41,7 +41,7 @@
                 </svg>
                 <div>
                     <span class="font-bold text-sm leading-none block">verificador.com.ar</span>
-                    <span class="text-xs text-slate-400">Panel Admin</span>
+                    <span class="text-[11px] text-slate-500 font-medium tracking-wide block mt-0.5">v{{ config('app.version') }}</span>
                 </div>
             </div>
 
