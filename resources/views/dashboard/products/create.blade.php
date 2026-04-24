@@ -25,15 +25,40 @@
             </div>
 
             {{-- Código de barras --}}
-            <div>
+            <div x-data="barcodeGenerator()">
                 <label class="block text-sm font-medium text-slate-700 mb-1">
-                    Código de barras <span class="text-red-500">*</span>
+                    Código de barras
                 </label>
-                <input type="text" name="barcode" value="{{ old('barcode') }}" required
-                       class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-mono
-                              focus:outline-none focus:ring-2 focus:ring-blue-500
-                              @error('barcode') border-red-400 @enderror"
-                       placeholder="7790001234567">
+                <div class="flex gap-2">
+                    <div class="flex-1 relative">
+                        <input type="text" name="barcode" id="barcode" x-model="barcode"
+                               value="{{ old('barcode') }}"
+                               class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-mono
+                                      focus:outline-none focus:ring-2 focus:ring-blue-500
+                                      @error('barcode') border-red-400 @enderror"
+                               placeholder="7790001234567 (opcional)">
+                        {{-- Estado de verificación --}}
+                        <template x-if="checking">
+                            <i class="fa-solid fa-circle-notch fa-spin absolute right-3 top-3 text-slate-400 text-sm"></i>
+                        </template>
+                        <template x-if="!checking && barcode && status === 'available'">
+                            <i class="fa-solid fa-circle-check absolute right-3 top-3 text-emerald-500 text-sm" title="Disponible"></i>
+                        </template>
+                        <template x-if="!checking && barcode && status === 'taken'">
+                            <i class="fa-solid fa-circle-xmark absolute right-3 top-3 text-red-500 text-sm" :title="statusMessage"></i>
+                        </template>
+                    </div>
+                    <button type="button" @click="generate()"
+                            :disabled="loading"
+                            class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-lg text-sm font-medium transition
+                                   disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shrink-0">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span class="hidden sm:inline">Generar</span>
+                    </button>
+                </div>
+                <template x-if="statusMessage && status === 'taken'">
+                    <p class="text-red-500 text-xs mt-1" x-text="statusMessage"></p>
+                </template>
                 @error('barcode')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
 
@@ -100,3 +125,74 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function barcodeGenerator() {
+    return {
+        barcode: '',
+        loading: false,
+        checking: false,
+        status: '',
+        statusMessage: '',
+        checkTimer: null,
+
+        async generate() {
+            this.loading = true;
+            try {
+                const response = await fetch('{{ route('dashboard.labels.generate') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                    },
+                });
+                const data = await response.json();
+                this.barcode = data.barcode;
+                await this.check();
+            } catch (e) {
+                console.error('Error generating barcode:', e);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async check() {
+            if (!this.barcode.trim()) {
+                this.status = '';
+                this.statusMessage = '';
+                return;
+            }
+
+            this.checking = true;
+            try {
+                const response = await fetch('{{ route('dashboard.labels.check') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ barcode: this.barcode }),
+                });
+                const data = await response.json();
+                this.status = data.exists ? 'taken' : 'available';
+                this.statusMessage = data.exists ? `En uso: ${data.product_name}` : 'Disponible';
+            } catch (e) {
+                console.error('Error checking barcode:', e);
+                this.status = '';
+            } finally {
+                this.checking = false;
+            }
+        },
+
+        init() {
+            this.$watch('barcode', () => {
+                clearTimeout(this.checkTimer);
+                if (this.barcode.trim()) {
+                    this.checkTimer = setTimeout(() => this.check(), 450);
+                }
+            });
+        },
+    };
+}
+</script>
+@endpush

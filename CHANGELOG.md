@@ -11,6 +11,20 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.12.0] - 2026-04-24
+
+### Agregado
+
+- **Etiquetas** (`/dashboard/etiquetas`)
+  - Nuevo control `Copias por producto` para repetir etiquetas en la vista previa A4 y en la impresion.
+
+### Modificado
+
+- **Etiquetas** (`/dashboard/etiquetas`)
+  - Vista previa simplificada (solo texto, sin codigos de barras) para mejorar rendimiento; los codigos de barras quedan solo en la impresion.
+
+---
+
 ## [1.2.0] — 2026-03-16
 
 ### Agregado
@@ -152,7 +166,8 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
-[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.12.0...HEAD
+[1.12.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.2.0...v1.12.0
 [1.2.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v0.2.0...v1.1.0
 [0.2.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v0.1.0...v0.2.0

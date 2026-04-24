@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,7 +14,7 @@ class ProductController extends Controller
 {
     public function index(Request $request): View
     {
-        $store  = auth()->user()->store;
+        $store = auth()->user()->store;
         $search = $request->get('q');
         $status = $request->get('status');
 
@@ -37,6 +38,7 @@ class ProductController extends Controller
     public function create(): View
     {
         $this->checkProductLimit();
+
         return view('dashboard.products.create');
     }
 
@@ -45,24 +47,26 @@ class ProductController extends Controller
         $this->checkProductLimit();
 
         $data = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
-            'barcode'     => ['required', 'string', 'max:50'],
+            'name' => ['required', 'string', 'max:255'],
+            'barcode' => ['nullable', 'string', 'max:50'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'price'       => ['nullable', 'numeric', 'min:0', 'max:99999999'],
-            'active'      => ['sometimes', 'boolean'],
-            'image'       => ['nullable', 'image', 'max:2048'],
+            'price' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
+            'active' => ['sometimes', 'boolean'],
+            'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
         $storeId = auth()->user()->store_id;
 
-        // Verificar barcode único en este comercio
-        $exists = Product::where('store_id', $storeId)->where('barcode', $data['barcode'])->exists();
-        if ($exists) {
-            return back()->withInput()->withErrors(['barcode' => 'Ya existe un producto con ese código de barras.']);
+        // Verificar barcode único en este comercio (solo si se proporcionó)
+        if (! empty($data['barcode'])) {
+            $exists = Product::where('store_id', $storeId)->where('barcode', $data['barcode'])->exists();
+            if ($exists) {
+                return back()->withInput()->withErrors(['barcode' => 'Ya existe un producto con ese código de barras.']);
+            }
         }
 
         $data['store_id'] = $storeId;
-        $data['active']   = $request->boolean('active', true);
+        $data['active'] = $request->boolean('active', true);
 
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')
@@ -78,6 +82,7 @@ class ProductController extends Controller
     public function edit(Product $product): View
     {
         $this->authorizeProduct($product);
+
         return view('dashboard.products.edit', compact('product'));
     }
 
@@ -88,21 +93,23 @@ class ProductController extends Controller
         $storeId = auth()->user()->store_id;
 
         $data = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
-            'barcode'     => ['required', 'string', 'max:50'],
+            'name' => ['required', 'string', 'max:255'],
+            'barcode' => ['nullable', 'string', 'max:50'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'price'       => ['nullable', 'numeric', 'min:0', 'max:99999999'],
-            'active'      => ['sometimes', 'boolean'],
-            'image'       => ['nullable', 'image', 'max:2048'],
+            'price' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
+            'active' => ['sometimes', 'boolean'],
+            'image' => ['nullable', 'image', 'max:2048'],
         ]);
 
-        // Verificar barcode único (excluyendo este producto)
-        $exists = Product::where('store_id', $storeId)
-            ->where('barcode', $data['barcode'])
-            ->where('id', '!=', $product->id)
-            ->exists();
-        if ($exists) {
-            return back()->withInput()->withErrors(['barcode' => 'Ya existe otro producto con ese código de barras.']);
+        // Verificar barcode único (excluyendo este producto, solo si se proporcionó)
+        if (! empty($data['barcode'])) {
+            $exists = Product::where('store_id', $storeId)
+                ->where('barcode', $data['barcode'])
+                ->where('id', '!=', $product->id)
+                ->exists();
+            if ($exists) {
+                return back()->withInput()->withErrors(['barcode' => 'Ya existe otro producto con ese código de barras.']);
+            }
         }
 
         $data['active'] = $request->boolean('active', true);
@@ -146,7 +153,7 @@ class ProductController extends Controller
     private function checkProductLimit(): void
     {
         $store = auth()->user()->store;
-        $sub   = $store->subscription;
+        $sub = $store->subscription;
 
         // Trial = acceso total sin límites
         if ($sub?->hasFullAccess()) {
@@ -156,7 +163,7 @@ class ProductController extends Controller
         if ($sub && $sub->plan && $sub->plan->max_products !== null) {
             $count = $store->products()->where('active', true)->count();
             if ($count >= $sub->plan->max_products) {
-                throw new \Illuminate\Http\Exceptions\HttpResponseException(
+                throw new HttpResponseException(
                     redirect()->route('dashboard.products.index')
                         ->with('limit_reached', "Alcanzaste el límite de {$sub->plan->max_products} productos de tu plan. Actualizá tu plan para agregar más.")
                 );

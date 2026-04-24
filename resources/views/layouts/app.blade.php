@@ -9,6 +9,8 @@
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     {{-- Tailwind CSS CDN --}}
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -39,15 +41,20 @@
 
             {{-- Logo --}}
             <div class="flex items-center gap-2 px-5 py-5 border-b border-blue-900">
-                <svg viewBox="0 0 36 36" class="w-7 h-7 flex-none" aria-hidden="true">
-                    <circle cx="18" cy="18" r="14" fill="white" stroke="#2563eb" stroke-width="2.5"/>
-                    <path d="M11 19 L16 24 L33 8" fill="none" stroke="#10b981" stroke-width="4"
-                          stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span class="font-bold text-lg leading-none">
-                    verificador<span class="text-blue-400">.com.ar</span>
-                </span>
-            </div>
+                 <svg viewBox="0 0 36 36" class="w-7 h-7 flex-none" aria-hidden="true">
+                     <circle cx="18" cy="18" r="14" fill="white" stroke="#2563eb" stroke-width="2.5"/>
+                     <path d="M11 19 L16 24 L33 8" fill="none" stroke="#10b981" stroke-width="4"
+                           stroke-linecap="round" stroke-linejoin="round"/>
+                 </svg>
+                <div class="leading-none">
+                    <span class="font-bold text-lg block">
+                        verificador<span class="text-blue-400">.com.ar</span>
+                    </span>
+                    <span class="text-[11px] text-blue-200/70 font-medium tracking-wide block mt-0.5">
+                        v{{ config('app.version') }}
+                    </span>
+                </div>
+             </div>
 
             {{-- Nombre del comercio --}}
             @auth
@@ -81,6 +88,13 @@
                     <i class="fa-solid fa-tags w-4 text-center"></i>
                     <span>Listas de precios</span>
                 </a> --}}
+
+                <a href="{{ route('dashboard.labels.index') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
+                          {{ $seg === 'etiquetas' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
+                    <i class="fa-solid fa-barcode w-4 text-center"></i>
+                    <span>Etiquetas</span>
+                </a>
 
                 <a href="{{ route('dashboard.branches.index') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
