@@ -83,6 +83,13 @@
                     <i class="fa-solid fa-list w-4 text-center"></i>
                     <span>Planes</span>
                 </a>
+
+                <a href="{{ route('admin.activity.index') }}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
+                          {{ $seg === 'activity' ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                    <i class="fa-solid fa-history w-4 text-center"></i>
+                    <span>Actividad</span>
+                </a>
             </nav>
 
             {{-- Logout --}}
