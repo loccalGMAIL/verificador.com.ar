@@ -11,6 +11,45 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.13.0] - 2026-05-01
+
+### Agregado
+
+- **Registro de eventos (Activity Log)** en BD (`activity_log`)
+  - Nueva tabla polimórfica que registra eventos críticos: auth (login/logout), creación de comercios, cambios de suscripción, impersonación, etc.
+  - `ActivityLogger` service con API fluida para loggear eventos desde cualquier controller.
+  - Vista admin global en `/admin/activity` con filtros por comercio, tipo de evento, fecha y usuario.
+
+- **Capabilities por plan** — modelo de permisos booleanos en `plans`
+  - 8 nuevas columnas: `has_import_history`, `has_basic_stats`, `has_advanced_stats`, `has_price_lists`, `has_customization`, `has_manual_search`, `has_branches`, `has_api`.
+  - Mapeo actualizado en `PlansSeeder`: Basic (2K productos), Standard (5K + stats), Pro (10K + listas + customización), Business (ilimitado + API).
+  - `Subscription::hasFeature()` — chequea si el plan tiene la capacidad (trial bypassea todo).
+  - Middleware `EnsurePlanFeature` — protege rutas; redirige a `/dashboard/subscription` si falta el feature.
+
+- **Enforcement de capabilities en rutas**
+  - Listas de precios: `feature:has_price_lists`
+  - Estadísticas avanzadas: `feature:has_advanced_stats`
+  - Sucursales (CRUD): `feature:has_branches`
+  - Historial de importaciones: `feature:has_import_history`
+  - Configuración de apariencia/QR: `feature:has_customization`
+
+- **Instrumentación de events** en controllers clave
+  - `auth.login` — login por form o Google (captura provider)
+  - `auth.logout` — logout
+  - `store.created` — nueva tienda en register/Google
+  - `auth.impersonation.start/stop` — impersonación de usuarios
+
+### Modificado
+
+- **Plans** (`app/Models/Plan.php`)
+  - Método `hasFeature(string $feature): bool`
+  - Fillable y casts con 8 nuevas columnas booleanas
+
+- **Subscriptions** (`app/Models/Subscription.php`)
+  - Método `hasFeature()` que valida trial, status activo y delega al plan
+
+---
+
 ## [1.12.0] - 2026-04-24
 
 ### Agregado

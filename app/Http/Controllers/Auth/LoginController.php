@@ -18,7 +18,7 @@ class LoginController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email'    => ['required', 'email'],
+            'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
@@ -34,6 +34,8 @@ class LoginController extends Controller
 
             $request->session()->regenerate();
 
+            activity()->log('auth.login', Auth::user(), ['provider' => 'form']);
+
             return $this->redirectAfterLogin();
         }
 
@@ -44,6 +46,8 @@ class LoginController extends Controller
 
     public function destroy(Request $request): RedirectResponse
     {
+        activity()->log('auth.logout', Auth::user());
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

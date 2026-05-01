@@ -17,6 +17,8 @@ class ImpersonateController extends Controller
             return back()->with('error', 'No podés impersonar a otro administrador.');
         }
 
+        activity()->log('auth.impersonation.start', $user);
+
         $request->session()->put('impersonating_admin_id', Auth::id());
 
         Auth::loginUsingId($user->id);
@@ -32,6 +34,9 @@ class ImpersonateController extends Controller
         if (! $adminId) {
             return redirect()->route('dashboard.home');
         }
+
+        $targetUser = Auth::user();
+        activity()->log('auth.impersonation.stop', $targetUser);
 
         Auth::loginUsingId($adminId);
 

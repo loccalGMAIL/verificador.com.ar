@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\ProductPrice;
 use App\Observers\ProductPriceObserver;
+use App\Services\ActivityLogger;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -13,7 +14,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->singleton(ActivityLogger::class);
     }
 
     public function boot(): void

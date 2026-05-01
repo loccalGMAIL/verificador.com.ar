@@ -63,38 +63,38 @@ class GoogleController extends Controller
             if ($store) {
                 // Nuevo usuario invitado → solo User como employee, sin Store ni Subscription
                 $user = User::create([
-                    'name'      => $googleUser->getName(),
-                    'email'     => $googleUser->getEmail(),
+                    'name' => $googleUser->getName(),
+                    'email' => $googleUser->getEmail(),
                     'google_id' => $googleUser->getId(),
-                    'password'  => null,
-                    'role'      => 'employee',
-                    'store_id'  => $store->id,
+                    'password' => null,
+                    'role' => 'employee',
+                    'store_id' => $store->id,
                 ]);
             } else {
                 // Primer acceso normal → crear comercio + usuario + trial
                 DB::transaction(function () use ($googleUser, &$user) {
-                    $storeName = $googleUser->getName() . "'s Store";
+                    $storeName = $googleUser->getName()."'s Store";
 
                     $store = Store::create([
-                        'name'   => $storeName,
-                        'slug'   => Str::slug($storeName) . '-' . Str::random(6),
+                        'name' => $storeName,
+                        'slug' => Str::slug($storeName).'-'.Str::random(6),
                         'status' => 'active',
                     ]);
 
                     $user = User::create([
-                        'name'      => $googleUser->getName(),
-                        'email'     => $googleUser->getEmail(),
+                        'name' => $googleUser->getName(),
+                        'email' => $googleUser->getEmail(),
                         'google_id' => $googleUser->getId(),
-                        'password'  => null,
-                        'role'      => 'owner',
-                        'store_id'  => $store->id,
+                        'password' => null,
+                        'role' => 'owner',
+                        'store_id' => $store->id,
                     ]);
 
                     $basicPlan = Plan::where('name', 'Basic')->first();
                     Subscription::create([
-                        'store_id'      => $store->id,
-                        'plan_id'       => $basicPlan->id,
-                        'status'        => 'trial',
+                        'store_id' => $store->id,
+                        'plan_id' => $basicPlan->id,
+                        'status' => 'trial',
                         'trial_ends_at' => now()->addDays(config('app.trial_days')),
                     ]);
                 });
@@ -107,6 +107,8 @@ class GoogleController extends Controller
         }
 
         Auth::login($user);
+
+        activity()->log('auth.login', $user, ['provider' => 'google']);
 
         return $user->isAdmin()
             ? redirect()->route('admin.home')
