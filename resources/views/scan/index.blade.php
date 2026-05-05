@@ -107,22 +107,14 @@
                     <span>En iPhone, alejá el celular ~15 cm del código hasta que se vea nítido</span>
                 </div>
                 <div id="reader"></div>
-                {{-- Barra inferior: indicador + fallback foto --}}
-                <div class="flex items-center justify-between px-4 py-2.5"
+                {{-- Barra inferior: indicador de estado --}}
+                <div class="flex items-center justify-center px-4 py-2.5"
                      style="border-top: 1px solid rgba(255,255,255,0.06); background-color: rgba(255,255,255,0.02);">
                     <div class="flex items-center gap-1.5 text-xs text-slate-500">
                         <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
                         Escaneando...
                     </div>
-                    <label for="file-input"
-                           class="cursor-pointer inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition px-2.5 py-1 rounded-lg hover:bg-white/5">
-                        <i class="fa-solid fa-camera text-slate-500"></i>
-                        Sacar foto
-                    </label>
                 </div>
-                <input type="file" id="file-input" accept="image/*" capture="environment"
-                       class="hidden" onchange="processFile(this)">
-                <div id="reader-file-temp" class="hidden"></div>
             </div>
         </div>
 
@@ -293,25 +285,6 @@
             clearResults();
             collapseCamera();
             await lookupBarcode(barcode);
-        }
-
-        // ── Captura de foto (abre cámara nativa con soporte Macro en iOS) ────
-        async function processFile(input) {
-            if (!input.files || !input.files[0]) return;
-            const file = input.files[0];
-            clearResults();
-            const tempScanner = new Html5Qrcode("reader-file-temp");
-            try {
-                const barcode = await tempScanner.scanFile(file, false);
-                scanning = false;
-                collapseCamera();
-                await lookupBarcode(barcode);
-            } catch {
-                showError('No se encontró ningún código en la imagen. Intentá de nuevo.');
-                document.getElementById('scan-again').classList.remove('hidden');
-            } finally {
-                input.value = '';
-            }
         }
 
         async function searchManual() {
