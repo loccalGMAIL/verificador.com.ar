@@ -12,6 +12,7 @@
         body { font-family: 'Inter', sans-serif; }
         #reader { width: 100%; }
         #reader video { border-radius: 0 0 12px 12px; width: 100% !important; }
+        #reader__dashboard, #reader__header_message { display: none !important; }
         #camera-accordion { overflow: hidden; transition: max-height 0.4s ease; max-height: 600px; }
         #camera-accordion.collapsed { max-height: 0; }
     </style>
@@ -99,7 +100,29 @@
                 <i id="camera-chevron" class="fa-solid fa-chevron-up text-xs text-slate-400 transition-transform duration-300"></i>
             </button>
             <div id="camera-accordion">
+                {{-- Aviso para iPhone: distancia mínima de enfoque --}}
+                <div id="ios-hint" class="hidden px-4 py-2 text-xs text-amber-200 flex items-start gap-2"
+                     style="background-color: rgba(120,53,15,0.3); border-bottom: 1px solid rgba(180,83,9,0.3);">
+                    <i class="fa-solid fa-lightbulb mt-0.5 flex-shrink-0" style="color:#fbbf24;"></i>
+                    <span>En iPhone, alejá el celular ~15 cm del código hasta que se vea nítido</span>
+                </div>
                 <div id="reader"></div>
+                {{-- Barra inferior: indicador + fallback foto --}}
+                <div class="flex items-center justify-between px-4 py-2.5"
+                     style="border-top: 1px solid rgba(255,255,255,0.06); background-color: rgba(255,255,255,0.02);">
+                    <div class="flex items-center gap-1.5 text-xs text-slate-500">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                        Escaneando...
+                    </div>
+                    <label for="file-input"
+                           class="cursor-pointer inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition px-2.5 py-1 rounded-lg hover:bg-white/5">
+                        <i class="fa-solid fa-camera text-slate-500"></i>
+                        Sacar foto
+                    </label>
+                </div>
+                <input type="file" id="file-input" accept="image/*" capture="environment"
+                       class="hidden" onchange="processFile(this)">
+                <div id="reader-file-temp" class="hidden"></div>
             </div>
         </div>
 
@@ -179,6 +202,12 @@
         let cameraOpen = true;
         let manualOpen = false;
 
+        // Detectar iOS para mostrar aviso de distancia de enfoque
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+            document.getElementById('ios-hint').classList.remove('hidden');
+        }
+
         // ── Acordeón cámara ───────────────────────────────────────────
         function toggleCamera() {
             if (cameraOpen) {
@@ -235,9 +264,20 @@
         // ── Scanner ──────────────────────────────────────────────────
         const scanner = new Html5Qrcode("reader");
 
+        function qrBoxSize(viewfinderWidth, viewfinderHeight) {
+            return {
+                width: Math.floor(viewfinderWidth * 0.85),
+                height: Math.floor(viewfinderHeight * 0.35),
+            };
+        }
+
         scanner.start(
             { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 140, height: 60 } },
+            {
+                fps: 15,
+                qrbox: qrBoxSize,
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+            },
             onScanSuccess,
             () => {}
         ).catch(() => {
@@ -249,9 +289,29 @@
         async function onScanSuccess(barcode) {
             if (!scanning) return;
             scanning = false;
+            if (navigator.vibrate) navigator.vibrate(150);
             clearResults();
             collapseCamera();
             await lookupBarcode(barcode);
+        }
+
+        // ── Captura de foto (abre cámara nativa con soporte Macro en iOS) ────
+        async function processFile(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            clearResults();
+            const tempScanner = new Html5Qrcode("reader-file-temp");
+            try {
+                const barcode = await tempScanner.scanFile(file, false);
+                scanning = false;
+                collapseCamera();
+                await lookupBarcode(barcode);
+            } catch {
+                showError('No se encontró ningún código en la imagen. Intentá de nuevo.');
+                document.getElementById('scan-again').classList.remove('hidden');
+            } finally {
+                input.value = '';
+            }
         }
 
         async function searchManual() {
