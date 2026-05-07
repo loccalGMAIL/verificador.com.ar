@@ -11,6 +11,21 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.15.0] - 2026-05-07
+
+### Mejorado
+
+- **Escáner QR** (`/v/{token}`) — serie de mejoras de rendimiento y UX en la vista de escaneo:
+  - `qrbox` dinámico: se adapta al tamaño real del visor (85% del ancho, 35% del alto) en lugar de píxeles fijos.
+  - FPS subido de 10 a 15 para detección más rápida.
+  - Activado `BarcodeDetector` nativo en browsers compatibles (Chrome/Android) para mayor velocidad de lectura.
+  - Indicador pulsante verde "Escaneando..." en la barra de cámara como feedback visual de estado activo.
+  - Vibración de 150 ms al escanear exitosamente en Android.
+  - Hint en amber para iPhone/iPad explicando la distancia mínima de enfoque (~15 cm).
+  - UI interna de html5-qrcode ocultada para una interfaz más limpia.
+
+---
+
 ## [1.14.0] - 2026-05-07
 
 ### Agregado
