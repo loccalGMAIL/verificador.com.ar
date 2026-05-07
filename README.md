@@ -34,6 +34,11 @@ composer run dev
 - Vista matriz: `/dashboard/products/campos` — todos los productos vs. todos los campos.
 - En el escaneo (`/v/{token}`) se muestran los campos marcados como visibles que tengan valor.
 
+## Escáner QR — mejoras de cámara (v1.15.0)
+
+- `qrbox` dinámico (85% ancho × 35% alto del visor), FPS 15, `BarcodeDetector` nativo habilitado.
+- Indicador pulsante "Escaneando...", vibración en Android al escanear, hint de distancia para iOS.
+
 ## Precio secundario (mayorista)
 
 - Activar en `/dashboard/settings` → pestaña "Importacion y precios" → checkbox "Mostrar precio secundario".
