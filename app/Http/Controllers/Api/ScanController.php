@@ -18,7 +18,7 @@ class ScanController extends Controller
     {
         $branch = Branch::where('qr_token', $token)
             ->where('active', true)
-            ->with('store')
+            ->with(['store', 'store.customFieldDefinitions'])
             ->first();
 
         if (! $branch) {
@@ -39,33 +39,35 @@ class ScanController extends Controller
         if (! $product) {
             try {
                 ProductSearch::create([
-                    'branch_id'  => $branch->id,
+                    'branch_id' => $branch->id,
                     'product_id' => null,
-                    'barcode'    => $barcode,
-                    'found'      => false,
+                    'barcode' => $barcode,
+                    'found' => false,
                 ]);
-            } catch (\Throwable) {}
+            } catch (\Throwable) {
+            }
 
             return response()->json(['found' => false]);
         }
 
         try {
             ProductSearch::create([
-                'branch_id'  => $branch->id,
+                'branch_id' => $branch->id,
                 'product_id' => $product->id,
-                'barcode'    => $barcode,
-                'found'      => true,
+                'barcode' => $barcode,
+                'found' => true,
             ]);
-        } catch (\Throwable) {}
+        } catch (\Throwable) {
+        }
 
         $retailPrice = (float) $product->price;
 
         $response = [
-            'found'          => true,
-            'name'           => $product->name,
-            'store_name'     => $store->name,
-            'retail_label'   => $store->retail_label  ?? 'Precio',
-            'retail_price'   => $retailPrice,
+            'found' => true,
+            'name' => $product->name,
+            'store_name' => $store->name,
+            'retail_label' => $store->retail_label ?? 'Precio',
+            'retail_price' => $retailPrice,
             'show_wholesale' => (bool) $store->show_wholesale,
         ];
 
@@ -73,6 +75,19 @@ class ScanController extends Controller
             $discount = (float) ($store->wholesale_discount ?? 0);
             $response['wholesale_label'] = $store->wholesale_label ?? 'Mayorista';
             $response['wholesale_price'] = round($retailPrice * (1 - $discount / 100), 2);
+        }
+
+        $customFields = $store->customFieldDefinitions
+            ->where('visible_on_scan', true)
+            ->map(fn ($def) => [
+                'label' => $def->label,
+                'value' => $product->custom_fields[$def->excel_column] ?? null,
+            ])
+            ->filter(fn ($f) => ! empty($f['value']))
+            ->values();
+
+        if ($customFields->isNotEmpty()) {
+            $response['custom_fields'] = $customFields;
         }
 
         return response()->json($response);

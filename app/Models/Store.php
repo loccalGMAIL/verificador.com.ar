@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 class Store extends Model
 {
@@ -84,11 +85,17 @@ class Store extends Model
         return $this->hasMany(ImportProfile::class);
     }
 
+    /** Definiciones de campos personalizados del comercio */
+    public function customFieldDefinitions(): HasMany
+    {
+        return $this->hasMany(ProductCustomFieldDefinition::class)->orderBy('sort_order');
+    }
+
     // --- Helpers ---
 
     public function generateInviteToken(): string
     {
-        $token = \Illuminate\Support\Str::random(48);
+        $token = Str::random(48);
         $this->update(['invite_token' => $token]);
 
         return $token;

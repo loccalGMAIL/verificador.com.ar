@@ -15,7 +15,8 @@ class ProcessProductImport implements ShouldQueue
 {
     use Queueable;
 
-    public int $tries   = 1;
+    public int $tries = 1;
+
     public int $timeout = 300;
 
     public function __construct(
@@ -30,6 +31,7 @@ class ProcessProductImport implements ShouldQueue
         $this->import->refresh();
         if ($this->import->status === 'cancelled') {
             Storage::delete($this->import->file_name);
+
             return;
         }
 
@@ -39,12 +41,15 @@ class ProcessProductImport implements ShouldQueue
             $store = Store::find($this->import->store_id);
 
             $colBarcode = $this->normalizeHeader($store->excel_col_barcode ?? 'codigo');
-            $colName    = $this->normalizeHeader($store->excel_col_name    ?? 'nombre');
-            $colPrice   = $this->normalizeHeader($store->excel_col_price   ?? 'precio');
+            $colName = $this->normalizeHeader($store->excel_col_name ?? 'nombre');
+            $colPrice = $this->normalizeHeader($store->excel_col_price ?? 'precio');
+
+            // Cargar campos personalizados del comercio
+            $customFieldDefs = $store->customFieldDefinitions()->get();
 
             $absolutePath = Storage::disk('local')->path($this->import->file_name);
-            $spreadsheet  = IOFactory::load($absolutePath);
-            $sheet        = $spreadsheet->getActiveSheet();
+            $spreadsheet = IOFactory::load($absolutePath);
+            $sheet = $spreadsheet->getActiveSheet();
             // formatData = false: evita que PhpSpreadsheet transforme los valores de celda
             $rows = $sheet->toArray(null, true, false, false);
 
@@ -54,29 +59,40 @@ class ProcessProductImport implements ShouldQueue
 
             // Resolver índices de columnas por nombre
             $idxBarcode = array_search($colBarcode, $headers, true);
-            $idxName    = array_search($colName, $headers, true);
-            $idxPrice   = array_search($colPrice, $headers, true);
+            $idxName = array_search($colName, $headers, true);
+            $idxPrice = array_search($colPrice, $headers, true);
+
+            // Mapear índices de campos personalizados
+            $customFieldIndexes = [];
+            foreach ($customFieldDefs as $def) {
+                $normalized = $this->normalizeHeader($def->excel_column);
+                $idx = array_search($normalized, $headers, true);
+                if ($idx !== false) {
+                    $customFieldIndexes[$def->excel_column] = $idx;
+                }
+            }
 
             if ($idxBarcode === false || $idxName === false) {
                 $found = implode(', ', array_filter($headers));
                 $this->import->update([
-                    'status'    => 'failed',
+                    'status' => 'failed',
                     'error_log' => [['row' => 0, 'error' => "No se encontraron las columnas '{$colBarcode}' y/o '{$colName}' en el archivo. Columnas detectadas: {$found}"]],
                 ]);
+
                 return;
             }
 
             $rowsTotal = count($rows);
-            $rowsOk    = 0;
+            $rowsOk = 0;
             $rowsError = 0;
-            $errorLog  = [];
+            $errorLog = [];
             $processed = 0;
 
             // Advertencia si la columna de precio no se encontró
             if ($idxPrice === false) {
-                $detected = implode(' | ', array_filter($headers, fn($h) => $h !== ''));
+                $detected = implode(' | ', array_filter($headers, fn ($h) => $h !== ''));
                 $errorLog[] = [
-                    'row'   => 0,
+                    'row' => 0,
                     'error' => "⚠ Columna de precio '{$colPrice}' no encontrada. Encabezados detectados: {$detected}",
                 ];
             }
@@ -88,12 +104,13 @@ class ProcessProductImport implements ShouldQueue
                 $filled = array_filter($row, fn ($v) => $v !== null && $v !== '');
                 if (empty($filled)) {
                     $rowsTotal--;
+
                     continue;
                 }
 
                 $barcode = trim((string) ($row[$idxBarcode] ?? ''));
-                $name    = trim((string) ($row[$idxName]    ?? ''));
-                $price   = $idxPrice !== false ? $this->parseDecimal($row[$idxPrice] ?? null) : null;
+                $name = trim((string) ($row[$idxName] ?? ''));
+                $price = $idxPrice !== false ? $this->parseDecimal($row[$idxPrice] ?? null) : null;
 
                 if ($barcode === '') {
                     $errorLog[] = ['row' => $rowNum, 'error' => 'Código de barras vacío'];
@@ -102,6 +119,7 @@ class ProcessProductImport implements ShouldQueue
                     if ($processed % 10 === 0) {
                         $this->import->update(['rows_processed' => $processed]);
                     }
+
                     continue;
                 }
                 if ($name === '') {
@@ -111,17 +129,32 @@ class ProcessProductImport implements ShouldQueue
                     if ($processed % 10 === 0) {
                         $this->import->update(['rows_processed' => $processed]);
                     }
+
                     continue;
                 }
 
-                Product::updateOrCreate(
+                $product = Product::updateOrCreate(
                     ['store_id' => $this->import->store_id, 'barcode' => $barcode],
                     [
-                        'name'   => $name,
-                        'price'  => $price,
+                        'name' => $name,
+                        'price' => $price,
                         'active' => true,
                     ]
                 );
+
+                if (! empty($customFieldIndexes)) {
+                    $newValues = [];
+                    foreach ($customFieldIndexes as $colKey => $colIdx) {
+                        $val = trim((string) ($row[$colIdx] ?? ''));
+                        if ($val !== '') {
+                            $newValues[$colKey] = $val;
+                        }
+                    }
+                    if (! empty($newValues)) {
+                        $merged = array_merge($product->custom_fields ?? [], $newValues);
+                        $product->update(['custom_fields' => $merged]);
+                    }
+                }
 
                 $rowsOk++;
                 $processed++;
@@ -131,17 +164,17 @@ class ProcessProductImport implements ShouldQueue
             }
 
             $this->import->update([
-                'status'         => 'completed',
-                'rows_total'     => $rowsTotal,
+                'status' => 'completed',
+                'rows_total' => $rowsTotal,
                 'rows_processed' => $processed,
-                'rows_ok'        => $rowsOk,
-                'rows_error'     => $rowsError,
-                'error_log'      => empty($errorLog) ? null : $errorLog,
+                'rows_ok' => $rowsOk,
+                'rows_error' => $rowsError,
+                'error_log' => empty($errorLog) ? null : $errorLog,
             ]);
 
         } catch (Throwable $e) {
             $this->import->update([
-                'status'    => 'failed',
+                'status' => 'failed',
                 'error_log' => [['row' => 0, 'error' => $e->getMessage()]],
             ]);
         }
@@ -157,6 +190,7 @@ class ProcessProductImport implements ShouldQueue
     {
         // Eliminar caracteres de control y no imprimibles (incluye BOM y zero-width spaces)
         $clean = preg_replace('/[\x00-\x1F\x7F\xC2\xA0\x{200B}-\x{200D}\x{FEFF}]/u', '', $value);
+
         return mb_strtolower(trim($clean ?? $value));
     }
 
@@ -168,6 +202,7 @@ class ProcessProductImport implements ShouldQueue
         $clean = preg_replace('/[^\d,.]/', '', (string) $value);
         $clean = str_replace(',', '.', $clean);
         $float = (float) $clean;
+
         return $float > 0 ? $float : null;
     }
 }

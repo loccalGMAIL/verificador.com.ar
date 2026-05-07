@@ -56,14 +56,6 @@
                 </div>
              </div>
 
-            {{-- Nombre del comercio --}}
-            @auth
-            <div class="px-5 py-3 border-b border-blue-900 text-sm text-blue-300 truncate">
-                <span class="block text-xs text-blue-500 uppercase tracking-wide mb-0.5">Comercio</span>
-                {{ auth()->user()->store->name ?? auth()->user()->name }}
-            </div>
-            @endauth
-
             {{-- Navegación principal --}}
             <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
                 @php
@@ -172,13 +164,21 @@
                         ] as $tabKey => $tabLabel)
                         <a href="{{ route('dashboard.settings', ['tab' => $tabKey]) }}"
                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition
-                                  {{ $seg === 'settings' && $currentTab === $tabKey
+                                  {{ request()->routeIs('dashboard.settings') && $currentTab === $tabKey
                                       ? 'bg-blue-700 text-white'
                                       : 'text-blue-300 hover:bg-blue-900 hover:text-white' }}">
                             <i class="fa-solid fa-minus w-3 text-center text-blue-500"></i>
                             {{ $tabLabel }}
                         </a>
                         @endforeach
+                        <a href="{{ route('dashboard.settings.custom-fields.index') }}"
+                           class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition
+                                  {{ request()->routeIs('dashboard.settings.custom-fields.*')
+                                      ? 'bg-blue-700 text-white'
+                                      : 'text-blue-300 hover:bg-blue-900 hover:text-white' }}">
+                            <i class="fa-solid fa-minus w-3 text-center text-blue-500"></i>
+                            Campos extra
+                        </a>
                         <a href="{{ route('dashboard.users.index') }}"
                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition
                                   {{ $seg === 'users'
@@ -235,8 +235,9 @@
                             Trial: {{ $sub->trialDaysRemaining() }} día(s)
                         </span>
                     @endif
-                    <span class="text-sm text-slate-600 font-medium hidden sm:inline">
-                        {{ auth()->user()->name }}
+                    <span class="hidden sm:inline text-right leading-tight">
+                        <span class="block text-sm text-slate-700 font-semibold">{{ auth()->user()->store->name ?? '' }}</span>
+                        <span class="block text-xs text-slate-400 font-normal">{{ auth()->user()->name }}</span>
                     </span>
                 </div>
                 @endauth
@@ -325,6 +326,14 @@
     </div>
 
     <script>
+        // Scroll the active sidebar item into view on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            var active = document.querySelector('aside nav a.bg-blue-800, aside nav a.bg-blue-700');
+            if (active) {
+                active.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+            }
+        });
+
         function toggleSidebar() {
             var sidebar = document.getElementById('sidebar');
             var overlay = document.getElementById('sidebar-overlay');
