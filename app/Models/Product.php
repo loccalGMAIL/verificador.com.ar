@@ -18,14 +18,16 @@ class Product extends Model
         'description',
         'price',
         'image_path',
+        'custom_fields',
         'active',
     ];
 
     protected function casts(): array
     {
         return [
-            'price'  => 'decimal:2',
+            'price' => 'decimal:2',
             'active' => 'boolean',
+            'custom_fields' => 'array',
         ];
     }
 
@@ -51,6 +53,6 @@ class Product extends Model
 
     public function formattedPrice(): string
     {
-        return '$ ' . number_format((float) $this->price, 2, ',', '.');
+        return '$ '.number_format((float) $this->price, 2, ',', '.');
     }
 }

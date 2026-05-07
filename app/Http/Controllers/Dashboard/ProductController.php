@@ -35,6 +35,23 @@ class ProductController extends Controller
         ));
     }
 
+    public function campos(Request $request): View
+    {
+        $store = auth()->user()->store;
+        $definitions = $store->customFieldDefinitions()->get();
+        $search = $request->get('q');
+
+        $products = $store->products()
+            ->when($search, fn ($q) => $q
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('barcode', 'like', "%{$search}%"))
+            ->orderBy('name')
+            ->paginate(25)
+            ->withQueryString();
+
+        return view('dashboard.products.campos', compact('definitions', 'products', 'search'));
+    }
+
     public function create(): View
     {
         $this->checkProductLimit();

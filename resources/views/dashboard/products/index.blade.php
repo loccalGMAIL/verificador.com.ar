@@ -30,6 +30,11 @@
             <i class="fa-solid fa-file-arrow-up"></i>
             <span class="hidden sm:inline">Importar</span>
         </a>
+        <a href="{{ route('dashboard.products.campos') }}"
+           class="flex items-center gap-2 border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm hover:bg-slate-50 transition">
+            <i class="fa-solid fa-table-columns"></i>
+            <span class="hidden sm:inline">Campos</span>
+        </a>
         <a href="{{ route('dashboard.products.create') }}"
            class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
             <i class="fa-solid fa-plus"></i>

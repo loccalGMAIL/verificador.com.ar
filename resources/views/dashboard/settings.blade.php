@@ -7,26 +7,10 @@
 
 @php
     $activeTab = request('tab', 'general');
+    $settingsActiveTab = $activeTab;
 @endphp
 
-{{-- ── Pestañas ─────────────────────────────────────────── --}}
-<div class="flex gap-1 mb-6 border-b border-slate-200 overflow-x-auto">
-    @foreach([
-        'general'      => ['icon' => 'fa-store',         'label' => 'General'],
-        'excel-import' => ['icon' => 'fa-file-excel',    'label' => 'Importación Excel'],
-        'print'        => ['icon' => 'fa-print',         'label' => 'Impresión QR'],
-        'appearance'   => ['icon' => 'fa-palette',       'label' => 'Apariencia'],
-    ] as $tab => $meta)
-    <a href="{{ route('dashboard.settings', ['tab' => $tab]) }}"
-       class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition
-              {{ $activeTab === $tab
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }}">
-        <i class="fa-solid {{ $meta['icon'] }} text-xs"></i>
-        {{ $meta['label'] }}
-    </a>
-    @endforeach
-</div>
+@include('dashboard.settings._tabs')
 
 @if(session('success'))
 <div class="mb-5 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700">
@@ -119,7 +103,10 @@
 {{-- ════════════════════════════════════════════════════════ --}}
 @if($activeTab === 'excel-import')
 <div class="max-w-2xl space-y-6"
-     x-data="{ showWholesale: {{ (old('show_wholesale') !== null ? old('show_wholesale') : ($store->show_wholesale ?? false)) ? 'true' : 'false' }} }">
+     x-data="{
+         showWholesale: {{ (old('show_wholesale') !== null ? old('show_wholesale') : ($store->show_wholesale ?? false)) ? 'true' : 'false' }},
+         wholesaleSource: '{{ old('wholesale_source', $store->wholesale_source ?? 'percentage') }}'
+     }">
 
     <form method="POST" action="{{ route('dashboard.settings.update') }}" class="space-y-6">
         @csrf @method('PUT')
@@ -170,7 +157,7 @@
         <div class="bg-white rounded-xl border border-slate-200 p-6">
             <h3 class="font-semibold text-slate-800 mb-1">Visualización en el escáner</h3>
             <p class="text-xs text-slate-400 mb-5">
-                El precio secundario se calcula aplicando el descuento al precio principal.
+                El precio secundario puede calcularse como descuento porcentual o tomarse directamente de un campo personalizado del producto.
             </p>
 
             <div class="space-y-4">
@@ -193,8 +180,10 @@
                     <span class="text-sm text-slate-700">Mostrar precio secundario (mayorista)</span>
                 </label>
 
-                <div x-show="showWholesale" class="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-7">
-                    <div>
+                <div x-show="showWholesale" class="space-y-4 pl-7">
+
+                    {{-- Etiqueta (siempre visible) --}}
+                    <div class="max-w-xs">
                         <label class="block text-xs font-medium text-slate-600 mb-1">Etiqueta precio secundario</label>
                         <input type="text" name="wholesale_label"
                                value="{{ old('wholesale_label', $store->wholesale_label ?? 'Mayorista') }}"
@@ -202,13 +191,60 @@
                                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
                                       focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
+
+                    {{-- Fuente del precio --}}
                     <div>
+                        <p class="text-xs font-medium text-slate-600 mb-2">Fuente del precio secundario</p>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="wholesale_source" value="percentage"
+                                       x-model="wholesaleSource"
+                                       class="text-blue-600 border-slate-300">
+                                <span class="text-sm text-slate-700">Descuento porcentual sobre el precio principal</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="wholesale_source" value="custom_field"
+                                       x-model="wholesaleSource"
+                                       {{ $allCustomFieldDefinitions->isEmpty() ? 'disabled' : '' }}
+                                       class="text-blue-600 border-slate-300 disabled:opacity-40">
+                                <span class="text-sm text-slate-700 {{ $allCustomFieldDefinitions->isEmpty() ? 'opacity-40' : '' }}">
+                                    Campo personalizado
+                                </span>
+                                @if($allCustomFieldDefinitions->isEmpty())
+                                    <span class="text-xs text-slate-400">
+                                        — <a href="{{ route('dashboard.settings.custom-fields.index') }}" class="text-blue-500 underline">Configurá campos primero</a>
+                                    </span>
+                                @endif
+                            </label>
+                        </div>
+                    </div>
+
+                    {{-- Panel: descuento porcentual --}}
+                    <div x-show="wholesaleSource === 'percentage'" class="max-w-xs">
                         <label class="block text-xs font-medium text-slate-600 mb-1">Descuento % sobre precio principal</label>
                         <input type="number" name="wholesale_discount" step="0.01" min="0" max="100"
                                value="{{ old('wholesale_discount', $store->wholesale_discount ?? 0) }}"
                                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
                                       focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
+
+                    {{-- Panel: campo personalizado --}}
+                    <div x-show="wholesaleSource === 'custom_field'" class="max-w-xs">
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Campo a usar como precio mayorista</label>
+                        <select name="wholesale_custom_field_id"
+                                class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                            <option value="">— Seleccioná un campo —</option>
+                            @foreach($allCustomFieldDefinitions as $def)
+                                <option value="{{ $def->id }}"
+                                    {{ (int) old('wholesale_custom_field_id', $store->wholesale_custom_field_id) === $def->id ? 'selected' : '' }}>
+                                    {{ $def->label }} <span class="text-slate-400">({{ $def->excel_column }})</span>
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-slate-400 mt-1">El valor del campo debe ser numérico (ej: 1500 o 1500,50).</p>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -623,6 +659,22 @@
                                }"
                                :style="{ color: secondaryColor }">$ 1.000,00</p>
                         </div>
+
+                        {{-- Campos extra visibles --}}
+                        @if($visibleCustomFields->isNotEmpty())
+                            <div class="mx-3 mt-1.5 rounded-xl px-3 py-2"
+                                 :style="{ backgroundColor: cardBg, border: '1px solid ' + cardBorder }">
+                                @foreach($visibleCustomFields as $field)
+                                    <div class="{{ !$loop->last ? 'pb-1.5 mb-1.5 border-b' : '' }}"
+                                         :style="{{ !$loop->last ? '{ borderColor: cardBorder }' : '{}' }}">
+                                        <p class="text-[7px] font-semibold uppercase tracking-wide mb-0.5"
+                                           :style="{ color: cardText, opacity: 0.6 }">{{ $field->label }}</p>
+                                        <p class="text-[8px] font-medium"
+                                           :style="{ color: cardText }">Valor de ejemplo</p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
 
                     </div>
                 </div>

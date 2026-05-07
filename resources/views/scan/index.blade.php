@@ -150,6 +150,12 @@
             <p id="wholesale-price" class="{{ $priceClass }} font-black" style="color: {{ $secondaryColor }};"></p>
         </div>
 
+        {{-- Campos personalizados --}}
+        <div id="custom-fields-box" class="hidden w-full rounded-xl px-5 py-3 mb-3"
+             style="background-color: {{ $cardBg }}; border: 1px solid {{ $cardBorder }};">
+            <div id="custom-fields-list" class="divide-y" style="border-color: {{ $cardBorder }};"></div>
+        </div>
+
         {{-- Sin precio --}}
         <div id="no-price-box"
              class="hidden w-full rounded-xl p-4 text-center mb-4"
@@ -305,6 +311,19 @@
                     wsBox.classList.remove('hidden');
                 }
 
+                // Campos personalizados
+                if (data.custom_fields && data.custom_fields.length > 0) {
+                    const cfBox  = document.getElementById('custom-fields-box');
+                    const cfList = document.getElementById('custom-fields-list');
+                    cfList.innerHTML = data.custom_fields.map(f =>
+                        `<div class="py-2 first:pt-0 last:pb-0">
+                            <p class="text-xs font-semibold uppercase tracking-wide mb-0.5" style="color:{{ $cardText }};opacity:0.6;">${esc(f.label)}</p>
+                            <p class="text-sm font-medium" style="color:{{ $cardText }};">${esc(f.value)}</p>
+                        </div>`
+                    ).join('');
+                    cfBox.classList.remove('hidden');
+                }
+
                 document.getElementById('scan-again').classList.remove('hidden');
 
             } catch {
@@ -319,8 +338,9 @@
         }
 
         function clearResults() {
-            ['result-header','retail-box','wholesale-box','no-price-box','error-box','scan-again']
+            ['result-header','retail-box','wholesale-box','custom-fields-box','no-price-box','error-box','scan-again']
                 .forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById('custom-fields-list').innerHTML = '';
         }
 
         function showError(msg) {

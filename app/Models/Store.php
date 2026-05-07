@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 class Store extends Model
 {
@@ -37,6 +39,8 @@ class Store extends Model
         'scan_show_store_name',
         'scan_show_branch_name',
         'scan_wholesale_card_color',
+        'wholesale_source',
+        'wholesale_custom_field_id',
         'invite_token',
     ];
 
@@ -84,11 +88,23 @@ class Store extends Model
         return $this->hasMany(ImportProfile::class);
     }
 
+    /** Definiciones de campos personalizados del comercio */
+    public function customFieldDefinitions(): HasMany
+    {
+        return $this->hasMany(ProductCustomFieldDefinition::class)->orderBy('sort_order');
+    }
+
+    /** Campo personalizado usado como fuente del precio mayorista */
+    public function wholesaleCustomFieldDefinition(): BelongsTo
+    {
+        return $this->belongsTo(ProductCustomFieldDefinition::class, 'wholesale_custom_field_id');
+    }
+
     // --- Helpers ---
 
     public function generateInviteToken(): string
     {
-        $token = \Illuminate\Support\Str::random(48);
+        $token = Str::random(48);
         $this->update(['invite_token' => $token]);
 
         return $token;

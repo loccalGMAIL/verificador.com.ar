@@ -12,6 +12,7 @@ use App\Http\Controllers\Auth\InviteController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Dashboard\BranchController;
+use App\Http\Controllers\Dashboard\CustomFieldController;
 use App\Http\Controllers\Dashboard\HomeController as DashboardHome;
 use App\Http\Controllers\Dashboard\ImportProfileController;
 use App\Http\Controllers\Dashboard\LabelController;
@@ -92,6 +93,9 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
                 Route::get('/products/import/{import}/progress', [ProductImportController::class, 'progress'])->name('products.import.progress');
             });
 
+        Route::get('/products/campos', [ProductController::class, 'campos'])
+            ->name('products.campos');
+
         Route::resource('products', ProductController::class)
             ->except(['show'])
             ->parameters(['products' => 'product']);
@@ -153,6 +157,12 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         Route::post('/settings/import-profiles', [ImportProfileController::class, 'store'])->name('settings.import-profiles.store');
         Route::put('/settings/import-profiles/{importProfile}', [ImportProfileController::class, 'update'])->name('settings.import-profiles.update');
         Route::delete('/settings/import-profiles/{importProfile}', [ImportProfileController::class, 'destroy'])->name('settings.import-profiles.destroy');
+
+        // --- Campos personalizados de producto ---
+        Route::get('/settings/custom-fields', [CustomFieldController::class, 'index'])->name('settings.custom-fields.index');
+        Route::post('/settings/custom-fields', [CustomFieldController::class, 'store'])->name('settings.custom-fields.store');
+        Route::put('/settings/custom-fields/{customField}', [CustomFieldController::class, 'update'])->name('settings.custom-fields.update');
+        Route::delete('/settings/custom-fields/{customField}', [CustomFieldController::class, 'destroy'])->name('settings.custom-fields.destroy');
     });
 
 // ============================================================

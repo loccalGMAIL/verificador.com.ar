@@ -13,9 +13,11 @@ class SettingsController extends Controller
 {
     public function show(): View
     {
-        $store          = auth()->user()->store;
+        $store = auth()->user()->store;
         $importProfiles = $store->importProfiles()->latest()->get();
-        $branches       = $store->branches()->where('active', true)->orderBy('name')->get();
+        $branches = $store->branches()->where('active', true)->orderBy('name')->get();
+        $visibleCustomFields = $store->customFieldDefinitions()->where('visible_on_scan', true)->get();
+        $allCustomFieldDefinitions = $store->customFieldDefinitions()->get();
 
         // Pre-cargar store en cada branch (necesario para el partial de configuración QR)
         $branches->each(fn ($b) => $b->setRelation('store', $store));
@@ -23,38 +25,44 @@ class SettingsController extends Controller
         // Generar data URI del logo (evita depender del symlink storage:link)
         $logoDataUri = null;
         if ($store->logo_path && Storage::disk('public')->exists($store->logo_path)) {
-            $ext         = strtolower(pathinfo($store->logo_path, PATHINFO_EXTENSION));
-            $mime        = match ($ext) {
-                'png'  => 'image/png',
-                'gif'  => 'image/gif',
+            $ext = strtolower(pathinfo($store->logo_path, PATHINFO_EXTENSION));
+            $mime = match ($ext) {
+                'png' => 'image/png',
+                'gif' => 'image/gif',
                 'webp' => 'image/webp',
                 default => 'image/jpeg',
             };
-            $logoDataUri = 'data:' . $mime . ';base64,' . base64_encode(
+            $logoDataUri = 'data:'.$mime.';base64,'.base64_encode(
                 Storage::disk('public')->get($store->logo_path)
             );
         }
 
-        return view('dashboard.settings', compact('store', 'importProfiles', 'branches', 'logoDataUri'));
+        return view('dashboard.settings', compact('store', 'importProfiles', 'branches', 'logoDataUri', 'visibleCustomFields', 'allCustomFieldDefinitions'));
     }
 
     public function update(Request $request): RedirectResponse
     {
         $store = auth()->user()->store;
-        $tab   = $request->input('_tab', 'general');
+        $tab = $request->input('_tab', 'general');
 
         if ($tab === 'excel-import') {
             $data = $request->validate([
-                'excel_col_barcode'  => ['required', 'string', 'max:100'],
-                'excel_col_name'     => ['required', 'string', 'max:100'],
-                'excel_col_price'    => ['required', 'string', 'max:100'],
-                'retail_label'       => ['required', 'string', 'max:100'],
-                'show_wholesale'     => ['boolean'],
-                'wholesale_label'    => ['nullable', 'string', 'max:100'],
+                'excel_col_barcode' => ['required', 'string', 'max:100'],
+                'excel_col_name' => ['required', 'string', 'max:100'],
+                'excel_col_price' => ['required', 'string', 'max:100'],
+                'retail_label' => ['required', 'string', 'max:100'],
+                'show_wholesale' => ['boolean'],
+                'wholesale_label' => ['nullable', 'string', 'max:100'],
                 'wholesale_discount' => ['nullable', 'numeric', 'min:0', 'max:100'],
+                'wholesale_source' => ['required', 'in:percentage,custom_field'],
+                'wholesale_custom_field_id' => ['nullable', 'integer', 'exists:product_custom_field_definitions,id'],
             ]);
 
             $data['show_wholesale'] = $request->boolean('show_wholesale');
+
+            if ($data['wholesale_source'] === 'percentage') {
+                $data['wholesale_custom_field_id'] = null;
+            }
 
             $store->update($data);
 
@@ -64,24 +72,24 @@ class SettingsController extends Controller
 
         if ($tab === 'appearance') {
             $data = $request->validate([
-                'scan_bg_color'        => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
-                'scan_accent_color'    => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+                'scan_bg_color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+                'scan_accent_color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
                 'scan_secondary_color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
-                'scan_card_style'      => ['required', 'in:dark,light'],
-                'scan_font_size'       => ['required', 'in:sm,md,lg,xl'],
-                'scan_show_logo'          => ['boolean'],
-                'scan_logo_size'          => ['required', 'in:sm,md,lg,xl'],
-                'scan_header_font_size'   => ['required', 'in:xs,sm,md,lg'],
-                'scan_header_text'        => ['nullable', 'string', 'max:100'],
-                'scan_show_store_name'       => ['boolean'],
-                'scan_show_branch_name'      => ['boolean'],
-                'scan_wholesale_card_color'  => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+                'scan_card_style' => ['required', 'in:dark,light'],
+                'scan_font_size' => ['required', 'in:sm,md,lg,xl'],
+                'scan_show_logo' => ['boolean'],
+                'scan_logo_size' => ['required', 'in:sm,md,lg,xl'],
+                'scan_header_font_size' => ['required', 'in:xs,sm,md,lg'],
+                'scan_header_text' => ['nullable', 'string', 'max:100'],
+                'scan_show_store_name' => ['boolean'],
+                'scan_show_branch_name' => ['boolean'],
+                'scan_wholesale_card_color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             ]);
 
-            $data['scan_show_logo']           = $request->boolean('scan_show_logo');
-            $data['scan_show_store_name']       = $request->boolean('scan_show_store_name');
-            $data['scan_show_branch_name']      = $request->boolean('scan_show_branch_name');
-            $data['scan_header_text']           = $data['scan_header_text'] ?? 'Consultá el precio';
+            $data['scan_show_logo'] = $request->boolean('scan_show_logo');
+            $data['scan_show_store_name'] = $request->boolean('scan_show_store_name');
+            $data['scan_show_branch_name'] = $request->boolean('scan_show_branch_name');
+            $data['scan_header_text'] = $data['scan_header_text'] ?? 'Consultá el precio';
 
             $store->update($data);
 
@@ -91,14 +99,14 @@ class SettingsController extends Controller
 
         // Tab: general (default)
         $data = $request->validate([
-            'name'    => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:500'],
-            'phone'   => ['nullable', 'string', 'max:50'],
-            'logo'    => ['nullable', 'image', 'max:2048'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'logo' => ['nullable', 'image', 'max:2048'],
         ]);
 
         if ($data['name'] !== $store->name) {
-            $data['slug'] = Str::slug($data['name']) . '-' . Str::random(6);
+            $data['slug'] = Str::slug($data['name']).'-'.Str::random(6);
         }
 
         if ($request->hasFile('logo')) {

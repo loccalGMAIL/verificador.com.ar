@@ -1,9 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Usuarios')
-@section('page-title', 'Usuarios del comercio')
+@section('title', 'Configuración')
+@section('page-title', 'Configuración')
 
 @section('content')
+
+@php $settingsActiveTab = 'users'; @endphp
+@include('dashboard.settings._tabs')
 
 {{-- Banner: link recién generado --}}
 @if(session('invite_link'))

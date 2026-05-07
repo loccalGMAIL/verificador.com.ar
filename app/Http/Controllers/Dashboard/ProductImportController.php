@@ -17,6 +17,8 @@ class ProductImportController extends Controller
     public function index(): View
     {
         $store = auth()->user()->store;
+        $store->load('customFieldDefinitions');
+
         $imports = $store->productImports()
             ->with(['user'])
             ->latest()
@@ -127,10 +129,19 @@ class ProductImportController extends Controller
         $colName = $store->excel_col_name ?? 'nombre';
         $colPrice = $store->excel_col_price ?? 'precio';
 
+        $customFields = $store->customFieldDefinitions()->get();
+        $customHeaders = $customFields->pluck('excel_column')->implode(',');
+        $customExamples1 = $customFields->map(fn () => '')->implode(',');
+        $customExamples2 = $customFields->map(fn () => '')->implode(',');
+
+        $headerRow = $customHeaders ? "{$colBarcode},{$colName},{$colPrice},{$customHeaders}" : "{$colBarcode},{$colName},{$colPrice}";
+        $example1 = $customExamples1 ? "7790001234567,Leche La Serenísima 1L,1250.50,{$customExamples1}" : '7790001234567,Leche La Serenísima 1L,1250.50';
+        $example2 = $customExamples2 ? "7790009876543,Aceite Cocinero 900ml,980.00,{$customExamples2}" : '7790009876543,Aceite Cocinero 900ml,980.00';
+
         $csv = "\xEF\xBB\xBF";
-        $csv .= "{$colBarcode},{$colName},{$colPrice}\n";
-        $csv .= "7790001234567,Leche La Serenísima 1L,1250.50\n";
-        $csv .= "7790009876543,Aceite Cocinero 900ml,980.00\n";
+        $csv .= "{$headerRow}\n";
+        $csv .= "{$example1}\n";
+        $csv .= "{$example2}\n";
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv; charset=UTF-8',
