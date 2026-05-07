@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 
     @stack('styles')
+    @vite([])
 </head>
 <body class="text-slate-800 bg-white">
 

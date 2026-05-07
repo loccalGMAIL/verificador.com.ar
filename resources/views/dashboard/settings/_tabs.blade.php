@@ -7,9 +7,9 @@
     @foreach([
         'general'      => ['icon' => 'fa-store',         'label' => 'General',            'href' => route('dashboard.settings', ['tab' => 'general'])],
         'excel-import' => ['icon' => 'fa-file-excel',    'label' => 'Importación Excel',   'href' => route('dashboard.settings', ['tab' => 'excel-import'])],
+        'custom-fields'=> ['icon' => 'fa-table-columns', 'label' => 'Campos extra',        'href' => route('dashboard.settings.custom-fields.index')],
         'print'        => ['icon' => 'fa-print',         'label' => 'Impresión QR',        'href' => route('dashboard.settings', ['tab' => 'print'])],
         'appearance'   => ['icon' => 'fa-palette',       'label' => 'Apariencia',          'href' => route('dashboard.settings', ['tab' => 'appearance'])],
-        'custom-fields'=> ['icon' => 'fa-table-columns', 'label' => 'Campos extra',        'href' => route('dashboard.settings.custom-fields.index')],
         'users'        => ['icon' => 'fa-users',         'label' => 'Usuarios',            'href' => route('dashboard.users.index')],
     ] as $key => $tab)
     <a href="{{ $tab['href'] }}"

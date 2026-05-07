@@ -28,6 +28,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     @stack('styles')
+    @vite([])
 </head>
 <body class="bg-slate-50 text-slate-800 overflow-hidden" style="font-family: 'Inter', sans-serif;">
 
@@ -159,8 +160,6 @@
                         @foreach([
                             'general'      => 'General',
                             'excel-import' => 'Importación Excel',
-                            'print'        => 'Impresión QR',
-                            'appearance'   => 'Apariencia',
                         ] as $tabKey => $tabLabel)
                         <a href="{{ route('dashboard.settings', ['tab' => $tabKey]) }}"
                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition
@@ -179,6 +178,19 @@
                             <i class="fa-solid fa-minus w-3 text-center text-blue-500"></i>
                             Campos extra
                         </a>
+                        @foreach([
+                            'print'      => 'Impresión QR',
+                            'appearance' => 'Apariencia',
+                        ] as $tabKey => $tabLabel)
+                        <a href="{{ route('dashboard.settings', ['tab' => $tabKey]) }}"
+                           class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition
+                                  {{ request()->routeIs('dashboard.settings') && $currentTab === $tabKey
+                                      ? 'bg-blue-700 text-white'
+                                      : 'text-blue-300 hover:bg-blue-900 hover:text-white' }}">
+                            <i class="fa-solid fa-minus w-3 text-center text-blue-500"></i>
+                            {{ $tabLabel }}
+                        </a>
+                        @endforeach
                         <a href="{{ route('dashboard.users.index') }}"
                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition
                                   {{ $seg === 'users'

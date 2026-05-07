@@ -608,6 +608,22 @@
                                :style="{ color: secondaryColor }">$ 1.000,00</p>
                         </div>
 
+                        {{-- Campos extra visibles --}}
+                        @if($visibleCustomFields->isNotEmpty())
+                            <div class="mx-3 mt-1.5 rounded-xl px-3 py-2"
+                                 :style="{ backgroundColor: cardBg, border: '1px solid ' + cardBorder }">
+                                @foreach($visibleCustomFields as $field)
+                                    <div class="{{ !$loop->last ? 'pb-1.5 mb-1.5 border-b' : '' }}"
+                                         :style="{{ !$loop->last ? '{ borderColor: cardBorder }' : '{}' }}">
+                                        <p class="text-[7px] font-semibold uppercase tracking-wide mb-0.5"
+                                           :style="{ color: cardText, opacity: 0.6 }">{{ $field->label }}</p>
+                                        <p class="text-[8px] font-medium"
+                                           :style="{ color: cardText }">Valor de ejemplo</p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
                     </div>
                 </div>
                 {{-- Notch decorativo --}}

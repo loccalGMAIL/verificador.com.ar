@@ -21,6 +21,7 @@
     <style>[x-cloak] { display: none !important; }</style>
 
     @stack('styles')
+    @vite([])
 </head>
 <body class="bg-slate-100 text-slate-800" style="font-family: 'Inter', sans-serif;">
 
