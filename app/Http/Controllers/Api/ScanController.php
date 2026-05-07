@@ -72,9 +72,20 @@ class ScanController extends Controller
         ];
 
         if ($store->show_wholesale) {
-            $discount = (float) ($store->wholesale_discount ?? 0);
             $response['wholesale_label'] = $store->wholesale_label ?? 'Mayorista';
-            $response['wholesale_price'] = round($retailPrice * (1 - $discount / 100), 2);
+
+            if ($store->wholesale_source === 'custom_field' && $store->wholesale_custom_field_id) {
+                $def = $store->customFieldDefinitions->firstWhere('id', $store->wholesale_custom_field_id);
+                if ($def) {
+                    $raw = $product->custom_fields[$def->excel_column] ?? null;
+                    if ($raw !== null && $raw !== '') {
+                        $response['wholesale_price'] = (float) str_replace(',', '.', $raw);
+                    }
+                }
+            } else {
+                $discount = (float) ($store->wholesale_discount ?? 0);
+                $response['wholesale_price'] = round($retailPrice * (1 - $discount / 100), 2);
+            }
         }
 
         $customFields = $store->customFieldDefinitions

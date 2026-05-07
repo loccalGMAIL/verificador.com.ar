@@ -11,6 +11,29 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.14.0] - 2026-05-07
+
+### Agregado
+
+- **Campos personalizados de producto** — los comercios pueden definir atributos extra por tienda (`product_custom_field_definitions`): etiqueta visible, columna Excel para importación, visibilidad en el escáner y orden de aparición.
+  - Los valores se almacenan como JSON en `products.custom_fields`, indexados por `excel_column`.
+  - La importación por Excel/CSV soporta las columnas de campos personalizados; los valores se fusionan sin sobrescribir datos existentes.
+  - El escáner (`/v/{token}`) muestra los campos marcados como visibles, filtrando los vacíos.
+  - Preview de apariencia en `/dashboard/settings` refleja los campos visibles en tiempo real.
+
+- **Vista matriz de campos personalizados** (`/dashboard/products/campos`) — tabla con productos como filas y campos personalizados como columnas; las celdas vacías se destacan en ámbar. Soporta búsqueda y paginación.
+
+- **Precio secundario desde campo personalizado** — nueva modalidad para el precio mayorista: en lugar de un descuento porcentual fijo, el precio puede tomarse directamente del valor de un campo personalizado del producto.
+  - Configuración en `/dashboard/settings` (tab "Importación y precios"): radio button para elegir entre "Descuento porcentual" o "Campo personalizado".
+  - Si el producto no tiene valor en el campo seleccionado, el bloque mayorista no se muestra en el escáner.
+  - La FK `wholesale_custom_field_id` usa `nullOnDelete`: si se elimina la definición de campo, el precio mayorista queda inactivo silenciosamente.
+
+### Modificado
+
+- **Apariencia del escáner** — preview en vivo con Vite refleja los campos personalizados visibles configurados por la tienda.
+
+---
+
 ## [1.13.1] - 2026-05-07
 
 ### Agregado
@@ -231,7 +254,8 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
-[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.13.1...HEAD
+[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.13.1...v1.14.0
 [1.13.1]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.13.0...v1.13.1
 [1.13.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.2.0...v1.12.0

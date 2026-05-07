@@ -17,6 +17,7 @@ class SettingsController extends Controller
         $importProfiles = $store->importProfiles()->latest()->get();
         $branches = $store->branches()->where('active', true)->orderBy('name')->get();
         $visibleCustomFields = $store->customFieldDefinitions()->where('visible_on_scan', true)->get();
+        $allCustomFieldDefinitions = $store->customFieldDefinitions()->get();
 
         // Pre-cargar store en cada branch (necesario para el partial de configuración QR)
         $branches->each(fn ($b) => $b->setRelation('store', $store));
@@ -36,7 +37,7 @@ class SettingsController extends Controller
             );
         }
 
-        return view('dashboard.settings', compact('store', 'importProfiles', 'branches', 'logoDataUri', 'visibleCustomFields'));
+        return view('dashboard.settings', compact('store', 'importProfiles', 'branches', 'logoDataUri', 'visibleCustomFields', 'allCustomFieldDefinitions'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -53,9 +54,15 @@ class SettingsController extends Controller
                 'show_wholesale' => ['boolean'],
                 'wholesale_label' => ['nullable', 'string', 'max:100'],
                 'wholesale_discount' => ['nullable', 'numeric', 'min:0', 'max:100'],
+                'wholesale_source' => ['required', 'in:percentage,custom_field'],
+                'wholesale_custom_field_id' => ['nullable', 'integer', 'exists:product_custom_field_definitions,id'],
             ]);
 
             $data['show_wholesale'] = $request->boolean('show_wholesale');
+
+            if ($data['wholesale_source'] === 'percentage') {
+                $data['wholesale_custom_field_id'] = null;
+            }
 
             $store->update($data);
 
