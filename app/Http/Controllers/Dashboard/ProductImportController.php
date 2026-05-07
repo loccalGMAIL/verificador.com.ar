@@ -17,6 +17,8 @@ class ProductImportController extends Controller
     public function index(): View
     {
         $store = auth()->user()->store;
+        $store->load('customFieldDefinitions');
+
         $imports = $store->productImports()
             ->with(['user'])
             ->latest()

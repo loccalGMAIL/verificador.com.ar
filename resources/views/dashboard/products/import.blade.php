@@ -53,6 +53,8 @@
 
     {{-- Configuración activa (1/3) --}}
     <div class="bg-slate-50 rounded-xl border border-slate-200 p-5 flex flex-col gap-4">
+
+        {{-- Columnas estándar --}}
         <div>
             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
                 <i class="fa-solid fa-file-excel text-emerald-600 mr-1.5"></i>Columnas configuradas
@@ -72,13 +74,45 @@
                 </div>
             </dl>
         </div>
-        <a href="{{ route('dashboard.settings', ['tab' => 'excel-import']) }}"
-           class="flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600
-                  hover:text-blue-800 border border-blue-200 bg-white hover:bg-blue-50
-                  px-3 py-2 rounded-lg transition">
-            <i class="fa-solid fa-gear"></i>
-            Cambiar configuración
-        </a>
+
+        @if($store->customFieldDefinitions->isNotEmpty())
+        <hr class="border-slate-200">
+
+        {{-- Campos personalizados --}}
+        <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+                <i class="fa-solid fa-table-columns text-indigo-500 mr-1.5"></i>Campos personalizados
+            </p>
+            <dl class="space-y-2 text-sm">
+                @foreach($store->customFieldDefinitions as $field)
+                <div class="flex justify-between gap-2">
+                    <dt class="text-slate-500">{{ $field->label }}</dt>
+                    <dd class="font-mono font-semibold text-slate-700">{{ $field->excel_column }}</dd>
+                </div>
+                @endforeach
+            </dl>
+        </div>
+        @endif
+
+        {{-- Acciones --}}
+        <div class="flex flex-col gap-2">
+            @if($store->customFieldDefinitions->isNotEmpty())
+            <a href="{{ route('dashboard.products.campos') }}"
+               class="flex items-center justify-center gap-1.5 text-xs font-medium text-indigo-600
+                      hover:text-indigo-800 border border-indigo-200 bg-white hover:bg-indigo-50
+                      px-3 py-2 rounded-lg transition">
+                <i class="fa-solid fa-table-columns"></i>
+                Ver datos de campos
+            </a>
+            @endif
+            <a href="{{ route('dashboard.settings', ['tab' => 'excel-import']) }}"
+               class="flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600
+                      hover:text-blue-800 border border-blue-200 bg-white hover:bg-blue-50
+                      px-3 py-2 rounded-lg transition">
+                <i class="fa-solid fa-gear"></i>
+                Cambiar configuración
+            </a>
+        </div>
     </div>
 
     </div>{{-- /grid --}}

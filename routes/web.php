@@ -93,6 +93,9 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
                 Route::get('/products/import/{import}/progress', [ProductImportController::class, 'progress'])->name('products.import.progress');
             });
 
+        Route::get('/products/campos', [ProductController::class, 'campos'])
+            ->name('products.campos');
+
         Route::resource('products', ProductController::class)
             ->except(['show'])
             ->parameters(['products' => 'product']);

@@ -19,7 +19,16 @@
                     La columna Excel debe coincidir exactamente con el encabezado en tu archivo (sin importar mayúsculas).
                 </p>
             </div>
-            <span class="text-xs text-slate-400">{{ $fields->count() }} {{ $fields->count() === 1 ? 'campo' : 'campos' }}</span>
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-slate-400">{{ $fields->count() }} {{ $fields->count() === 1 ? 'campo' : 'campos' }}</span>
+                @if($fields->isNotEmpty())
+                <a href="{{ route('dashboard.products.campos') }}"
+                   class="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 transition">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    Ver datos
+                </a>
+                @endif
+            </div>
         </div>
 
         @if($fields->isEmpty())
