@@ -39,6 +39,8 @@ class StoreController extends Controller
     {
         $store->update(['status' => 'suspended']);
 
+        activity()->log('store.suspended', $store);
+
         return back()->with('success', "Comercio \"{$store->name}\" suspendido.");
     }
 
@@ -46,12 +48,17 @@ class StoreController extends Controller
     {
         $store->update(['status' => 'active']);
 
+        activity()->log('store.reactivated', $store);
+
         return back()->with('success', "Comercio \"{$store->name}\" reactivado.");
     }
 
     public function destroy(Store $store): RedirectResponse
     {
         $name = $store->name;
+
+        // Log before delete; subject=null to avoid cascade deletion of the log entry
+        activity()->log('store.deleted', null, ['store_id' => $store->id, 'name' => $name]);
 
         DB::transaction(function () use ($store) {
             // Desasociar usuarios (no tienen cascade en FK)

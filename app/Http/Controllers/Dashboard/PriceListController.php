@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\PriceList;
 use App\Models\ProductPrice;
 use App\Services\PriceCalculationService;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\View\View;
 
 class PriceListController extends Controller
@@ -19,12 +19,12 @@ class PriceListController extends Controller
 
     public function index(): View
     {
-        $store      = auth()->user()->store;
+        $store = auth()->user()->store;
         $priceLists = $store->priceLists()
             ->withCount('productPrices')
             ->with('baseList')
             ->get();
-        $sub        = $store->subscription;
+        $sub = $store->subscription;
 
         $limit = $sub?->hasFullAccess() ? null : $sub?->plan?->max_price_lists;
 
@@ -49,10 +49,10 @@ class PriceListController extends Controller
         $this->checkPriceListLimit();
 
         $data = $request->validate([
-            'name'               => ['required', 'string', 'max:100'],
-            'description'        => ['nullable', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:100'],
+            'description' => ['nullable', 'string', 'max:255'],
             'base_price_list_id' => ['nullable', 'integer', 'exists:price_lists,id'],
-            'adjustment_pct'     => ['nullable', 'numeric', 'min:-99.99', 'max:999.99'],
+            'adjustment_pct' => ['nullable', 'numeric', 'min:-99.99', 'max:999.99'],
         ]);
 
         $storeId = auth()->user()->store_id;
@@ -63,10 +63,10 @@ class PriceListController extends Controller
             abort_if($base?->store_id !== $storeId, 403);
         } else {
             $data['base_price_list_id'] = null;
-            $data['adjustment_pct']     = null;
+            $data['adjustment_pct'] = null;
         }
 
-        $data['store_id']   = $storeId;
+        $data['store_id'] = $storeId;
         $data['is_default'] = false;
         $data['sort_order'] = PriceList::where('store_id', $storeId)->count();
 
@@ -77,6 +77,8 @@ class PriceListController extends Controller
             $this->calculator->recalculateForList($priceList);
         }
 
+        activity()->log('price_list.created', $priceList);
+
         return redirect()->route('dashboard.price-lists.index')
             ->with('success', "Lista \"{$priceList->name}\" creada correctamente.");
     }
@@ -85,7 +87,7 @@ class PriceListController extends Controller
     {
         $this->authorizePriceList($priceList);
 
-        $store       = auth()->user()->store;
+        $store = auth()->user()->store;
         $priceList->load('baseList');
 
         // Listas manuales disponibles como base (excluyendo esta misma lista)
@@ -110,11 +112,11 @@ class PriceListController extends Controller
         $storeId = auth()->user()->store_id;
 
         $data = $request->validate([
-            'name'               => ['required', 'string', 'max:100'],
-            'description'        => ['nullable', 'string', 'max:255'],
-            'active'             => ['sometimes', 'boolean'],
+            'name' => ['required', 'string', 'max:100'],
+            'description' => ['nullable', 'string', 'max:255'],
+            'active' => ['sometimes', 'boolean'],
             'base_price_list_id' => ['nullable', 'integer', 'exists:price_lists,id'],
-            'adjustment_pct'     => ['nullable', 'numeric', 'min:-99.99', 'max:999.99'],
+            'adjustment_pct' => ['nullable', 'numeric', 'min:-99.99', 'max:999.99'],
         ]);
 
         // La lista por defecto no puede desactivarse
@@ -131,7 +133,7 @@ class PriceListController extends Controller
             abort_if($base?->id === $priceList->id, 422);
         } else {
             $data['base_price_list_id'] = null;
-            $data['adjustment_pct']     = null;
+            $data['adjustment_pct'] = null;
         }
 
         $pctChanged = (float) $data['adjustment_pct'] !== (float) $priceList->adjustment_pct
@@ -156,6 +158,8 @@ class PriceListController extends Controller
             return redirect()->route('dashboard.price-lists.index')
                 ->with('error', 'No podés eliminar la lista de precios por defecto.');
         }
+
+        activity()->log('price_list.deleted', null, ['price_list_id' => $priceList->id, 'name' => $priceList->name]);
 
         $priceList->delete();
 
@@ -197,10 +201,10 @@ class PriceListController extends Controller
         }
 
         $request->validate([
-            'prices'                    => ['array'],
-            'prices.*.product_id'       => ['required', 'integer'],
-            'prices.*.price_ars'        => ['nullable', 'numeric', 'min:0'],
-            'prices.*.price_usd'        => ['nullable', 'numeric', 'min:0'],
+            'prices' => ['array'],
+            'prices.*.product_id' => ['required', 'integer'],
+            'prices.*.price_ars' => ['nullable', 'numeric', 'min:0'],
+            'prices.*.price_usd' => ['nullable', 'numeric', 'min:0'],
             'prices.*.currency_default' => ['required', 'in:ARS,USD'],
         ]);
 
@@ -211,14 +215,15 @@ class PriceListController extends Controller
                 ProductPrice::where('product_id', $productId)
                     ->where('price_list_id', $priceList->id)
                     ->delete();
+
                 continue;
             }
 
             ProductPrice::updateOrCreate(
                 ['product_id' => $productId, 'price_list_id' => $priceList->id],
                 [
-                    'price_ars'        => $row['price_ars'] ?: null,
-                    'price_usd'        => $row['price_usd'] ?: null,
+                    'price_ars' => $row['price_ars'] ?: null,
+                    'price_usd' => $row['price_usd'] ?: null,
                     'currency_default' => $row['currency_default'],
                 ]
             );
@@ -238,7 +243,7 @@ class PriceListController extends Controller
     private function checkPriceListLimit(): void
     {
         $store = auth()->user()->store;
-        $sub   = $store->subscription;
+        $sub = $store->subscription;
 
         if ($sub?->hasFullAccess()) {
             return;

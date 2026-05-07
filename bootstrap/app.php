@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Middleware\CheckSubscription;
+use App\Http\Middleware\EnsurePlanFeature;
+use App\Http\Middleware\EnsureRole;
+use App\Http\Middleware\LogPageView;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,13 +21,14 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'role'         => \App\Http\Middleware\EnsureRole::class,
-            'subscription' => \App\Http\Middleware\CheckSubscription::class,
+            'role' => EnsureRole::class,
+            'subscription' => CheckSubscription::class,
+            'feature' => EnsurePlanFeature::class,
         ]);
 
         // Registrar visitas a las páginas públicas (landing, login, register, QR scanner)
         $middleware->web(append: [
-            \App\Http\Middleware\LogPageView::class,
+            LogPageView::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

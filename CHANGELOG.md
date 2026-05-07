@@ -11,6 +11,71 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.13.1] - 2026-05-07
+
+### Agregado
+
+- **Sidebar condicional** — ítems bloqueados (candado + tooltip) para features no incluidas en el plan actual: Listas de precios (Pro), Sucursales (Business), Estadísticas avanzadas (Pro). El ítem "Listas de precios" fue descomentado y ahora se muestra condicionalmente.
+- **Widget de capabilities** en `/dashboard/subscription` — grilla de features habilitadas/deshabilitadas para el plan actual, con indicador de upgrade si corresponde.
+- **Instrumentación de activity log** — 13 nuevos tipos de eventos en controllers admin y dashboard:
+  - Admin: `store.suspended`, `store.reactivated`, `store.deleted`
+  - Admin: `subscription.plan_changed` (incluye old/new plan), `subscription.suspended`, `subscription.reactivated`, `subscription.trial_reset`
+  - Admin: `user.suspended`, `user.reactivated`, `user.reassigned`, `user.password_reset`
+  - Dashboard: `product.created`, `product.deleted`, `branch.created`, `branch.deleted`, `branch.qr_updated`, `price_list.created`, `price_list.deleted`, `import.started`, `import.cancelled`
+- **Tests** — 17 nuevos casos de prueba:
+  - `PlanHasFeatureTest` (6 casos unitarios, incluyendo validación del fix de ltrim)
+  - `SubscriptionHasFeatureTest` (6 casos: trial, active, suspended, cancelled, expired trial)
+  - `EnsurePlanFeatureTest` (5 casos feature: trial bypass, con/sin feature, impersonación, activity log)
+
+### Corregido
+
+- **`Plan::hasFeature()`** — reemplaza `ltrim($feature, 'has_')` (máscara de caracteres) por `str_starts_with()`, que corrompía `has_advanced_stats` → `dvanced_stats` y `has_api` → `pi`.
+
+### Infraestructura
+
+- Tests migrados de SQLite in-memory a MySQL (`verificador_testing`) para alinear con el entorno de producción y evitar incompatibilidades de sintaxis SQL.
+
+---
+
+## [1.13.0] - 2026-05-01
+
+### Agregado
+
+- **Registro de eventos (Activity Log)** en BD (`activity_log`)
+  - Nueva tabla polimórfica que registra eventos críticos: auth (login/logout), creación de comercios, cambios de suscripción, impersonación, etc.
+  - `ActivityLogger` service con API fluida para loggear eventos desde cualquier controller.
+  - Vista admin global en `/admin/activity` con filtros por comercio, tipo de evento, fecha y usuario.
+
+- **Capabilities por plan** — modelo de permisos booleanos en `plans`
+  - 8 nuevas columnas: `has_import_history`, `has_basic_stats`, `has_advanced_stats`, `has_price_lists`, `has_customization`, `has_manual_search`, `has_branches`, `has_api`.
+  - Mapeo actualizado en `PlansSeeder`: Basic (2K productos), Standard (5K + stats), Pro (10K + listas + customización), Business (ilimitado + API).
+  - `Subscription::hasFeature()` — chequea si el plan tiene la capacidad (trial bypassea todo).
+  - Middleware `EnsurePlanFeature` — protege rutas; redirige a `/dashboard/subscription` si falta el feature.
+
+- **Enforcement de capabilities en rutas**
+  - Listas de precios: `feature:has_price_lists`
+  - Estadísticas avanzadas: `feature:has_advanced_stats`
+  - Sucursales (CRUD): `feature:has_branches`
+  - Historial de importaciones: `feature:has_import_history`
+  - Configuración de apariencia/QR: `feature:has_customization`
+
+- **Instrumentación de events** en controllers clave
+  - `auth.login` — login por form o Google (captura provider)
+  - `auth.logout` — logout
+  - `store.created` — nueva tienda en register/Google
+  - `auth.impersonation.start/stop` — impersonación de usuarios
+
+### Modificado
+
+- **Plans** (`app/Models/Plan.php`)
+  - Método `hasFeature(string $feature): bool`
+  - Fillable y casts con 8 nuevas columnas booleanas
+
+- **Subscriptions** (`app/Models/Subscription.php`)
+  - Método `hasFeature()` que valida trial, status activo y delega al plan
+
+---
+
 ## [1.12.0] - 2026-04-24
 
 ### Agregado
@@ -166,7 +231,9 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
-[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.13.1...HEAD
+[1.13.1]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.13.0...v1.13.1
+[1.13.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.2.0...v1.12.0
 [1.2.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v0.2.0...v1.1.0

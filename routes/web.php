@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\HomeController as AdminHome;
 use App\Http\Controllers\Admin\ImpersonateController;
 use App\Http\Controllers\Admin\PlanController as AdminPlanController;
@@ -80,31 +81,46 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         Route::get('/', DashboardHome::class)->name('home');
 
         // --- Productos: import primero para evitar conflicto con {product} ---
-        Route::get('/products/import', [ProductImportController::class, 'index'])->name('products.import.index');
-        Route::post('/products/import', [ProductImportController::class, 'store'])->name('products.import.store');
-        Route::get('/products/import/template', [ProductImportController::class, 'template'])->name('products.import.template');
-        Route::get('/products/import/{import}', [ProductImportController::class, 'show'])->name('products.import.show');
-        Route::post('/products/import/{import}/cancel', [ProductImportController::class, 'cancel'])->name('products.import.cancel');
-        Route::post('/products/import/{import}/process', [ProductImportController::class, 'process'])->name('products.import.process');
-        Route::get('/products/import/{import}/progress', [ProductImportController::class, 'progress'])->name('products.import.progress');
+        Route::middleware('feature:has_import_history')
+            ->group(function () {
+                Route::get('/products/import', [ProductImportController::class, 'index'])->name('products.import.index');
+                Route::post('/products/import', [ProductImportController::class, 'store'])->name('products.import.store');
+                Route::get('/products/import/template', [ProductImportController::class, 'template'])->name('products.import.template');
+                Route::get('/products/import/{import}', [ProductImportController::class, 'show'])->name('products.import.show');
+                Route::post('/products/import/{import}/cancel', [ProductImportController::class, 'cancel'])->name('products.import.cancel');
+                Route::post('/products/import/{import}/process', [ProductImportController::class, 'process'])->name('products.import.process');
+                Route::get('/products/import/{import}/progress', [ProductImportController::class, 'progress'])->name('products.import.progress');
+            });
 
         Route::resource('products', ProductController::class)
             ->except(['show'])
             ->parameters(['products' => 'product']);
 
         // --- Listas de precios ---
-        Route::resource('price-lists', PriceListController::class)
-            ->except(['show'])
-            ->parameters(['price-lists' => 'priceList']);
-        Route::post('/price-lists/{priceList}/prices', [PriceListController::class, 'savePrices'])->name('price-lists.prices');
-        Route::post('/price-lists/{priceList}/recalculate', [PriceListController::class, 'recalculate'])->name('price-lists.recalculate');
+        Route::middleware('feature:has_price_lists')
+            ->group(function () {
+                Route::resource('price-lists', PriceListController::class)
+                    ->except(['show'])
+                    ->parameters(['price-lists' => 'priceList']);
+                Route::post('/price-lists/{priceList}/prices', [PriceListController::class, 'savePrices'])->name('price-lists.prices');
+                Route::post('/price-lists/{priceList}/recalculate', [PriceListController::class, 'recalculate'])->name('price-lists.recalculate');
+            });
 
         // --- Sucursales ---
-        Route::resource('branches', BranchController::class)
-            ->except(['show']);
+        Route::get('/branches', [BranchController::class, 'index'])->name('branches.index');
+        Route::get('/branches/{branch}', [BranchController::class, 'show'])->name('branches.show');
         Route::get('/branches/{branch}/qr', [BranchController::class, 'qr'])->name('branches.qr');
-        Route::get('/branches/{branch}/qr/configure', [BranchController::class, 'qrConfigure'])->name('branches.qr.configure');
-        Route::post('/branches/{branch}/qr/save', [BranchController::class, 'qrSave'])->name('branches.qr.save');
+
+        Route::middleware('feature:has_branches')
+            ->group(function () {
+                Route::get('/branches/create', [BranchController::class, 'create'])->name('branches.create');
+                Route::post('/branches', [BranchController::class, 'store'])->name('branches.store');
+                Route::get('/branches/{branch}/edit', [BranchController::class, 'edit'])->name('branches.edit');
+                Route::put('/branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
+                Route::delete('/branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
+                Route::get('/branches/{branch}/qr/configure', [BranchController::class, 'qrConfigure'])->name('branches.qr.configure');
+                Route::post('/branches/{branch}/qr/save', [BranchController::class, 'qrSave'])->name('branches.qr.save');
+            });
 
         // --- Etiquetas y códigos de barras ---
         Route::get('/etiquetas', [LabelController::class, 'index'])->name('labels.index');
@@ -114,7 +130,8 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         Route::post('/etiquetas/print', [LabelController::class, 'print'])->name('labels.print');
 
         // --- Estadísticas avanzadas ---
-        Route::get('/estadisticas', StatisticsController::class)->name('statistics');
+        Route::middleware('feature:has_advanced_stats')
+            ->get('/estadisticas', StatisticsController::class)->name('statistics');
 
         // --- Subscripción ---
         Route::get('/subscription', [DashboardSubscription::class, 'index'])->name('subscription');
@@ -129,7 +146,8 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
 
         // --- Configuración ---
         Route::get('/settings', [SettingsController::class, 'show'])->name('settings');
-        Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+        Route::middleware('feature:has_customization')
+            ->put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
         // --- Perfiles de importación (gestionados desde Settings) ---
         Route::post('/settings/import-profiles', [ImportProfileController::class, 'store'])->name('settings.import-profiles.store');
@@ -146,6 +164,9 @@ Route::middleware(['auth', 'role:admin'])
     ->group(function () {
 
         Route::get('/', AdminHome::class)->name('home');
+
+        // --- Activity log ---
+        Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
 
         // --- Comercios ---
         Route::get('/stores', [AdminStoreController::class, 'index'])->name('stores.index');

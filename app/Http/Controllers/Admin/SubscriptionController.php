@@ -31,9 +31,17 @@ class SubscriptionController extends Controller
             'plan_id' => ['required', 'exists:plans,id'],
         ]);
 
+        $oldPlan = $subscription->plan->name;
+        $newPlan = Plan::find($request->plan_id)->name;
+
         $subscription->update([
             'plan_id' => $request->plan_id,
-            'status'  => 'active',
+            'status' => 'active',
+        ]);
+
+        activity()->log('subscription.plan_changed', $subscription, [
+            'old_plan' => $oldPlan,
+            'new_plan' => $newPlan,
         ]);
 
         return back()->with('success', 'Plan actualizado correctamente.');
@@ -47,12 +55,14 @@ class SubscriptionController extends Controller
             } catch (\Exception $e) {
                 Log::error('MP cancelPreapproval falló al suspender', [
                     'subscription' => $subscription->id,
-                    'error'        => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
 
         $subscription->update(['status' => 'suspended']);
+
+        activity()->log('subscription.suspended', $subscription);
 
         return back()->with('success', 'Subscripción suspendida.');
     }
@@ -61,17 +71,22 @@ class SubscriptionController extends Controller
     {
         $subscription->update(['status' => 'active']);
 
+        activity()->log('subscription.reactivated', $subscription);
+
         return back()->with('success', 'Subscripción reactivada.');
     }
 
     public function resetTrial(Subscription $subscription): RedirectResponse
     {
         $subscription->update([
-            'status'        => 'trial',
+            'status' => 'trial',
             'trial_ends_at' => now()->addDays(config('app.trial_days')),
         ]);
 
+        activity()->log('subscription.trial_reset', $subscription);
+
         $days = config('app.trial_days');
+
         return back()->with('success', "Período trial reiniciado por {$days} días.");
     }
 
@@ -85,20 +100,20 @@ class SubscriptionController extends Controller
     public function storePayment(Request $request, Subscription $subscription): RedirectResponse
     {
         $request->validate([
-            'amount'   => ['required', 'numeric', 'min:0.01'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
             'currency' => ['required', 'string', 'size:3'],
-            'paid_at'  => ['required', 'date'],
-            'notes'    => ['nullable', 'string', 'max:500'],
+            'paid_at' => ['required', 'date'],
+            'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
         SubscriptionPayment::create([
             'subscription_id' => $subscription->id,
-            'mp_payment_id'   => null,
-            'amount'          => $request->amount,
-            'currency'        => strtoupper($request->currency),
-            'status'          => 'processed',
-            'paid_at'         => $request->paid_at,
-            'notes'           => $request->notes,
+            'mp_payment_id' => null,
+            'amount' => $request->amount,
+            'currency' => strtoupper($request->currency),
+            'status' => 'processed',
+            'paid_at' => $request->paid_at,
+            'notes' => $request->notes,
         ]);
 
         if ($subscription->status !== 'active') {

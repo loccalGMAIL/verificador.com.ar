@@ -66,7 +66,11 @@
 
             {{-- Navegación principal --}}
             <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-                @php $seg = request()->segment(2); @endphp
+                @php
+                    $seg = request()->segment(2);
+                    $sidebarSub = auth()->user()?->store?->subscription;
+                    $canFeature = fn(string $f) => $sidebarSub?->hasFeature($f) ?? false;
+                @endphp
 
                 <a href="{{ route('dashboard.home') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
@@ -82,12 +86,20 @@
                     <span>Productos</span>
                 </a>
 
-                {{-- <a href="{{ route('dashboard.price-lists.index') }}"
+                @if($canFeature('has_price_lists'))
+                <a href="{{ route('dashboard.price-lists.index') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
                           {{ $seg === 'price-lists' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
                     <i class="fa-solid fa-tags w-4 text-center"></i>
                     <span>Listas de precios</span>
-                </a> --}}
+                </a>
+                @else
+                <span title="Disponible en plan Pro"
+                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-blue-200/40 cursor-not-allowed">
+                    <i class="fa-solid fa-lock w-4 text-center text-amber-500/50"></i>
+                    <span>Listas de precios</span>
+                </span>
+                @endif
 
                 <a href="{{ route('dashboard.labels.index') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
@@ -96,19 +108,35 @@
                     <span>Etiquetas</span>
                 </a>
 
+                @if($canFeature('has_branches'))
                 <a href="{{ route('dashboard.branches.index') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
                           {{ $seg === 'branches' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
                     <i class="fa-solid fa-store w-4 text-center"></i>
                     <span>Sucursales</span>
                 </a>
+                @else
+                <span title="Disponible en plan Business"
+                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-blue-200/40 cursor-not-allowed">
+                    <i class="fa-solid fa-lock w-4 text-center text-amber-500/50"></i>
+                    <span>Sucursales</span>
+                </span>
+                @endif
 
+                @if($canFeature('has_advanced_stats'))
                 <a href="{{ route('dashboard.statistics') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
                           {{ $seg === 'estadisticas' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
                     <i class="fa-solid fa-chart-bar w-4 text-center"></i>
                     <span>Estadísticas Avanzadas</span>
                 </a>
+                @else
+                <span title="Disponible en plan Pro"
+                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-blue-200/40 cursor-not-allowed">
+                    <i class="fa-solid fa-lock w-4 text-center text-amber-500/50"></i>
+                    <span>Estadísticas Avanzadas</span>
+                </span>
+                @endif
 
                 {{-- <a href="{{ route('dashboard.subscription') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition

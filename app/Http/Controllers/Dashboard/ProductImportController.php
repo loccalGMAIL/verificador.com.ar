@@ -9,7 +9,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ProductImportController extends Controller
@@ -17,7 +16,7 @@ class ProductImportController extends Controller
     /** Historial de imports + formulario de carga */
     public function index(): View
     {
-        $store   = auth()->user()->store;
+        $store = auth()->user()->store;
         $imports = $store->productImports()
             ->with(['user'])
             ->latest()
@@ -36,7 +35,7 @@ class ProductImportController extends Controller
         ]);
 
         $store = auth()->user()->store;
-        $sub   = $store->subscription;
+        $sub = $store->subscription;
 
         // Verificar límite de productos
         if (! $sub?->hasFullAccess() && $sub?->plan?->max_products !== null) {
@@ -47,15 +46,17 @@ class ProductImportController extends Controller
             }
         }
 
-        $file   = $request->file('file');
+        $file = $request->file('file');
         $stored = $file->store("imports/{$store->id}", 'local');
 
         $import = ProductImport::create([
-            'store_id'  => $store->id,
-            'user_id'   => auth()->id(),
+            'store_id' => $store->id,
+            'user_id' => auth()->id(),
             'file_name' => $stored,
-            'status'    => 'pending',
+            'status' => 'pending',
         ]);
+
+        activity()->log('import.started', $import);
 
         return redirect()->route('dashboard.products.import.show', $import);
     }
@@ -63,6 +64,7 @@ class ProductImportController extends Controller
     public function show(ProductImport $import): View
     {
         abort_if($import->store_id !== auth()->user()->store_id, 403);
+
         return view('dashboard.products.import-show', compact('import'));
     }
 
@@ -92,12 +94,12 @@ class ProductImportController extends Controller
             : 0;
 
         return response()->json([
-            'status'      => $import->status,
-            'total'       => $import->rows_total,
-            'processed'   => $import->rows_processed,
-            'ok'          => $import->rows_ok,
-            'errors'      => $import->rows_error,
-            'percentage'  => $pct,
+            'status' => $import->status,
+            'total' => $import->rows_total,
+            'processed' => $import->rows_processed,
+            'ok' => $import->rows_ok,
+            'errors' => $import->rows_error,
+            'percentage' => $pct,
             'is_complete' => in_array($import->status, ['completed', 'failed', 'cancelled']),
         ]);
     }
@@ -112,6 +114,8 @@ class ProductImportController extends Controller
 
         $import->update(['status' => 'cancelled']);
 
+        activity()->log('import.cancelled', $import);
+
         return back()->with('success', 'Importación cancelada.');
     }
 
@@ -120,16 +124,16 @@ class ProductImportController extends Controller
     {
         $store = auth()->user()->store;
         $colBarcode = $store->excel_col_barcode ?? 'codigo';
-        $colName    = $store->excel_col_name    ?? 'nombre';
-        $colPrice   = $store->excel_col_price   ?? 'precio';
+        $colName = $store->excel_col_name ?? 'nombre';
+        $colPrice = $store->excel_col_price ?? 'precio';
 
-        $csv  = "\xEF\xBB\xBF";
+        $csv = "\xEF\xBB\xBF";
         $csv .= "{$colBarcode},{$colName},{$colPrice}\n";
         $csv .= "7790001234567,Leche La Serenísima 1L,1250.50\n";
         $csv .= "7790009876543,Aceite Cocinero 900ml,980.00\n";
 
         return response($csv, 200, [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="plantilla_productos.csv"',
         ]);
     }

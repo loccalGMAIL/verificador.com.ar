@@ -22,15 +22,31 @@ class Plan extends Model
         'active',
         'sort_order',
         'mp_preapproval_plan_id',
+        'has_import_history',
+        'has_basic_stats',
+        'has_advanced_stats',
+        'has_price_lists',
+        'has_customization',
+        'has_manual_search',
+        'has_branches',
+        'has_api',
     ];
 
     protected function casts(): array
     {
         return [
-            'price_usd'    => 'decimal:2',
-            'price_ars'    => 'decimal:2',
-            'featured'     => 'boolean',
-            'active'       => 'boolean',
+            'price_usd' => 'decimal:2',
+            'price_ars' => 'decimal:2',
+            'featured' => 'boolean',
+            'active' => 'boolean',
+            'has_import_history' => 'boolean',
+            'has_basic_stats' => 'boolean',
+            'has_advanced_stats' => 'boolean',
+            'has_price_lists' => 'boolean',
+            'has_customization' => 'boolean',
+            'has_manual_search' => 'boolean',
+            'has_branches' => 'boolean',
+            'has_api' => 'boolean',
         ];
     }
 
@@ -90,6 +106,13 @@ class Plan extends Model
             return '—';
         }
 
-        return '$ ' . number_format((float) $this->price_ars, 0, ',', '.');
+        return '$ '.number_format((float) $this->price_ars, 0, ',', '.');
+    }
+
+    public function hasFeature(string $feature): bool
+    {
+        $featureKey = str_starts_with($feature, 'has_') ? $feature : 'has_'.$feature;
+
+        return (bool) $this->getAttribute($featureKey);
     }
 }

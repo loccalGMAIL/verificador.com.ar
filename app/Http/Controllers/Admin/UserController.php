@@ -25,9 +25,9 @@ class UserController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         $data = $request->validate([
-            'name'  => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'role'  => ['required', 'in:admin,owner,employee'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'role' => ['required', 'in:admin,owner,employee'],
         ]);
 
         $user->update($data);
@@ -39,17 +39,19 @@ class UserController extends Controller
     {
         $data = $request->validate([
             'store_id' => ['nullable', 'exists:stores,id'],
-            'role'     => ['required', 'in:owner,employee'],
+            'role' => ['required', 'in:owner,employee'],
         ]);
 
         $user->update([
             'store_id' => $data['store_id'] ?: null,
-            'role'     => $data['store_id'] ? $data['role'] : 'employee',
+            'role' => $data['store_id'] ? $data['role'] : 'employee',
         ]);
 
         $storeName = $data['store_id']
             ? Store::find($data['store_id'])->name
             : 'ninguno';
+
+        activity()->log('user.reassigned', $user, ['to_store_id' => $data['store_id'], 'to_store' => $storeName]);
 
         return back()->with('success', "Usuario \"{$user->name}\" reasignado a {$storeName}.");
     }
@@ -62,12 +64,16 @@ class UserController extends Controller
 
         $user->update(['status' => 'suspended']);
 
+        activity()->log('user.suspended', $user);
+
         return back()->with('success', "Usuario \"{$user->name}\" suspendido.");
     }
 
     public function reactivate(User $user): RedirectResponse
     {
         $user->update(['status' => 'active']);
+
+        activity()->log('user.reactivated', $user);
 
         return back()->with('success', "Usuario \"{$user->name}\" reactivado.");
     }
@@ -98,6 +104,8 @@ class UserController extends Controller
         ]);
 
         $user->update(['password' => $request->new_password]);
+
+        activity()->log('user.password_reset', $user);
 
         return back()->with('success', "Contraseña de \"{$user->name}\" restablecida.");
     }

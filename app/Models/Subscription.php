@@ -27,8 +27,8 @@ class Subscription extends Model
     {
         return [
             'trial_ends_at' => 'datetime',
-            'starts_at'     => 'datetime',
-            'ends_at'       => 'datetime',
+            'starts_at' => 'datetime',
+            'ends_at' => 'datetime',
         ];
     }
 
@@ -116,11 +116,24 @@ class Subscription extends Model
     public function statusLabel(): string
     {
         return match ($this->status) {
-            'trial'     => 'Trial',
-            'active'    => 'Activa',
+            'trial' => 'Trial',
+            'active' => 'Activa',
             'suspended' => 'Suspendida',
             'cancelled' => 'Cancelada',
-            default     => ucfirst($this->status),
+            default => ucfirst($this->status),
         };
+    }
+
+    public function hasFeature(string $feature): bool
+    {
+        if ($this->hasFullAccess()) {
+            return true;
+        }
+
+        if (! $this->isActive() && ! $this->isOnTrial()) {
+            return false;
+        }
+
+        return $this->plan->hasFeature($feature);
     }
 }

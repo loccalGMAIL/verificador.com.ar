@@ -128,6 +128,55 @@
 </div>
 @endif
 
+{{-- ══ CAPABILITIES ══ --}}
+@if($sub)
+@php
+$business = $plans->where('name', 'Business')->first();
+$currentPlan = $sub->plan;
+$features = [
+    'has_import_history' => 'Historial de importaciones',
+    'has_basic_stats' => 'Estadísticas básicas',
+    'has_advanced_stats' => 'Estadísticas avanzadas',
+    'has_price_lists' => 'Listas de precios',
+    'has_customization' => 'Personalización (apariencia y QR)',
+    'has_manual_search' => 'Búsqueda manual en escáner',
+    'has_branches' => 'Múltiples sucursales',
+    'has_api' => 'API de integración',
+];
+@endphp
+<div class="bg-white rounded-xl border border-slate-200 p-5 mb-6">
+    <h3 class="text-sm font-semibold text-slate-700 mb-4">Features disponibles</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        @foreach($features as $key => $label)
+        @php
+            $has = $currentPlan->hasFeature($key);
+            $icon = $has ? 'fa-circle-check text-emerald-500' : 'fa-circle-xmark text-slate-300';
+            $textColor = $has ? 'text-slate-800' : 'text-slate-400';
+        @endphp
+        <div class="flex items-center gap-2">
+            <i class="fa-solid {{ $icon }} flex-shrink-0"></i>
+            <span class="text-sm {{ $textColor }}">{{ $label }}</span>
+        </div>
+        @endforeach
+    </div>
+    @if(!$currentPlan->hasFeature('has_api'))
+    <div class="mt-4 pt-4 border-t border-slate-100">
+        <p class="text-xs text-slate-500">
+            <i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i>
+            Mejorá a <strong>{{ $business?->name ?? 'Business' }}</strong> para acceder a todas las features.
+        </p>
+    </div>
+    @else
+    <div class="mt-4 pt-4 border-t border-slate-100">
+        <p class="text-xs text-emerald-600">
+            <i class="fa-solid fa-star text-emerald-500 mr-1"></i>
+            ¡Tenés acceso a todas las features disponibles!
+        </p>
+    </div>
+    @endif
+</div>
+@endif
+
 {{-- ══ TABLA DE PLANES ══ --}}
 <div class="mb-4">
     <h3 class="font-semibold text-slate-800">
