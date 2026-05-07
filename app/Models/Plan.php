@@ -111,7 +111,7 @@ class Plan extends Model
 
     public function hasFeature(string $feature): bool
     {
-        $featureKey = 'has_'.ltrim($feature, 'has_');
+        $featureKey = str_starts_with($feature, 'has_') ? $feature : 'has_'.$feature;
 
         return (bool) $this->getAttribute($featureKey);
     }

@@ -75,6 +75,8 @@ class ProductController extends Controller
 
         $product = Product::create($data);
 
+        activity()->log('product.created', $product);
+
         return redirect()->route('dashboard.products.index')
             ->with('success', 'Producto creado correctamente.');
     }
@@ -136,6 +138,8 @@ class ProductController extends Controller
         if ($product->image_path) {
             Storage::disk('public')->delete($product->image_path);
         }
+
+        activity()->log('product.deleted', null, ['product_id' => $product->id, 'name' => $product->name]);
 
         $product->delete();
 
