@@ -73,10 +73,7 @@ class EnsurePlanFeatureTest extends TestCase
         $user = $this->createUserWithPlan(['has_price_lists' => false]);
 
         $this->actingAs($user)
-            ->withSession([
-                'impersonating' => true,
-                'impersonating_admin_id' => 1,
-            ])
+            ->withSession(['impersonating_admin_id' => 1])
             ->get(route('dashboard.price-lists.index'))
             ->assertOk();
     }

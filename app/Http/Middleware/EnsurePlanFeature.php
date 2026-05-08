@@ -31,7 +31,7 @@ class EnsurePlanFeature
     {
         $user = $request->user();
 
-        return $user && ($user->role === 'admin' || session()->has('impersonating'));
+        return $user && ($user->role === 'admin' || session()->has('impersonating_admin_id'));
     }
 
     private function hasFeature(Request $request, string $feature): bool
