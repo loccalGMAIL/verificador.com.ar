@@ -7,11 +7,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE product_imports MODIFY status ENUM('pending','processing','completed','failed','cancelled') DEFAULT 'pending'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE product_imports MODIFY status ENUM('pending','processing','completed','failed','cancelled') DEFAULT 'pending'");
+        }
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE product_imports MODIFY status ENUM('pending','processing','completed','failed') DEFAULT 'pending'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE product_imports MODIFY status ENUM('pending','processing','completed','failed') DEFAULT 'pending'");
+        }
     }
 };
