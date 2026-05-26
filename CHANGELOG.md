@@ -11,6 +11,19 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.15.1] - 2026-05-26
+
+### Agregado
+
+- **Tests de cobertura para `CheckSubscription` middleware** — 9 casos que verifican el bloqueo de acceso al dashboard cuando el trial vence: trial activo, trial vencido (redirect a suscripción + flash `subscription_expired`), suscripción activa, suspendida, cancelada, sin suscripción, rutas exentas (`subscription`, `billing`) y bypass por impersonación de admin.
+
+### Corregido
+
+- **Migración `add_cancelled_status_to_product_imports`** — la sentencia `ALTER TABLE MODIFY ENUM` era MySQL-específica y rompía SQLite; ahora se ejecuta solo cuando el driver es MySQL.
+- **Configuración de tests** — `phpunit.xml` ahora usa SQLite en memoria como driver de testing, eliminando la dependencia de un servidor MySQL local para correr la suite.
+
+---
+
 ## [1.15.0] - 2026-05-07
 
 ### Mejorado
