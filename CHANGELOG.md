@@ -11,6 +11,14 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.16.0] - 2026-05-27
+
+### Mejorado
+
+- **Integración MercadoPago — seguimiento de próximo cobro** — el sistema ahora persiste la fecha del próximo pago recurrente (`next_payment_date`) directamente en la tabla `subscriptions` al recibir cada webhook de pago autorizado (`subscription_authorized_payment`), eliminando el cálculo on-the-fly que era frágil ante pagos desordenados o ausentes. Se agregan también los campos `debit_date` (fecha programada por MP para ese cobro) y `status_detail` (motivo del resultado: `accredited`, `cc_rejected_insufficient_amount`, etc.) en cada registro de `subscription_payments`. Los pagos en estado `recycling` (rechazados con reintentos pendientes) se registran correctamente sin alterar el estado de la suscripción, conforme al comportamiento automático de MP (hasta 4 reintentos en 10 días). Cuando una suscripción pasa a `active` por primera vez, se establece un `next_payment_date` inicial estimado que el primer webhook de pago sobreescribirá con la fecha exacta.
+
+---
+
 ## [1.15.2] - 2026-05-27
 
 ### Corregido
@@ -302,7 +310,8 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
-[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.15.2...HEAD
+[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.16.0...HEAD
+[1.16.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.15.2...v1.16.0
 [1.15.2]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.15.1...v1.15.2
 [1.15.1]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.15.0...v1.15.1
 [1.15.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.14.0...v1.15.0
