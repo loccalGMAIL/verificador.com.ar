@@ -18,10 +18,10 @@ class MercadoPagoController extends Controller
         // 0. Log diagnóstico (solo en modo debug local)
         if (config('app.debug')) {
             Log::debug('MP webhook recibido', [
-                'type'    => $request->input('type') ?? $request->query('type') ?? $request->input('topic'),
+                'type' => $request->input('type') ?? $request->query('type') ?? $request->input('topic'),
                 'data_id' => $request->input('data.id') ?? $request->query('data.id'),
-                'query'   => $request->query(),
-                'body'    => $request->all(),
+                'query' => $request->query(),
+                'body' => $request->all(),
             ]);
         }
 
@@ -77,14 +77,14 @@ class MercadoPagoController extends Controller
             return response('Error', 500);
         }
 
-        $mpStatus  = $mpData['status'] ?? null;
+        $mpStatus = $mpData['status'] ?? null;
         $mpPayerId = $mpData['payer_id'] ?? null;
 
         $localStatus = match ($mpStatus) {
             'authorized' => 'active',
-            'paused'     => 'suspended',
-            'cancelled'  => 'cancelled',
-            default      => null,
+            'paused' => 'suspended',
+            'cancelled' => 'cancelled',
+            default => null,
         };
 
         $updates = [];
@@ -94,6 +94,10 @@ class MercadoPagoController extends Controller
 
             if ($localStatus === 'active' && ! $subscription->starts_at) {
                 $updates['starts_at'] = now();
+            }
+
+            if ($localStatus === 'active' && is_null($subscription->next_payment_date)) {
+                $updates['next_payment_date'] = now()->addMonth();
             }
         }
 
@@ -110,7 +114,7 @@ class MercadoPagoController extends Controller
 
             Log::info('MP webhook: suscripción actualizada', [
                 'subscription_id' => $subscription->id,
-                'updates'         => array_keys($updates),
+                'updates' => array_keys($updates),
             ]);
         }
 
@@ -125,7 +129,7 @@ class MercadoPagoController extends Controller
         } catch (\Exception $e) {
             Log::error('MP webhook: falló al obtener authorized_payment', [
                 'mp_payment_id' => $mpPaymentId,
-                'error'         => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             return response('Error', 500);
@@ -133,7 +137,7 @@ class MercadoPagoController extends Controller
 
         // Encontrar la suscripción local via preapproval_id
         $preapprovalId = $paymentData['preapproval_id'] ?? null;
-        $subscription  = Subscription::where('mp_subscription_id', $preapprovalId)->first();
+        $subscription = Subscription::where('mp_subscription_id', $preapprovalId)->first();
 
         if (! $subscription) {
             Log::info('MP webhook: authorized_payment sin suscripción conocida', [
@@ -144,23 +148,42 @@ class MercadoPagoController extends Controller
             return response('OK', 200);
         }
 
+        $paymentStatus = $paymentData['status'] ?? 'processed';
+
         // Crear o actualizar (idempotencia por mp_payment_id único)
         SubscriptionPayment::updateOrCreate(
             ['mp_payment_id' => $mpPaymentId],
             [
                 'subscription_id' => $subscription->id,
-                'amount'          => $paymentData['transaction_amount'] ?? 0,
-                'currency'        => $paymentData['currency_id'] ?? 'ARS',
-                'status'          => $paymentData['status'] ?? 'processed',
-                'paid_at'         => isset($paymentData['date_approved'])
+                'amount' => $paymentData['transaction_amount'] ?? 0,
+                'currency' => $paymentData['currency_id'] ?? 'ARS',
+                'status' => $paymentStatus,
+                'paid_at' => isset($paymentData['date_approved'])
                                         ? Carbon::parse($paymentData['date_approved'])
                                         : null,
+                'debit_date' => isset($paymentData['debit_date'])
+                                        ? Carbon::parse($paymentData['debit_date'])
+                                        : null,
+                'status_detail' => $paymentData['status_detail'] ?? null,
             ]
         );
 
+        if ($paymentStatus === 'processed' && isset($paymentData['debit_date'])) {
+            $subscription->update([
+                'next_payment_date' => Carbon::parse($paymentData['debit_date'])->addMonth(),
+            ]);
+        } elseif ($paymentStatus === 'recycling') {
+            Log::warning('MP webhook: pago en recycling, MP reintentará automáticamente', [
+                'subscription_id' => $subscription->id,
+                'mp_payment_id' => $mpPaymentId,
+                'status_detail' => $paymentData['status_detail'] ?? null,
+            ]);
+        }
+
         Log::info('MP webhook: pago registrado', [
             'subscription_id' => $subscription->id,
-            'mp_payment_id'   => $mpPaymentId,
+            'mp_payment_id' => $mpPaymentId,
+            'status' => $paymentStatus,
         ]);
 
         return response('OK', 200);

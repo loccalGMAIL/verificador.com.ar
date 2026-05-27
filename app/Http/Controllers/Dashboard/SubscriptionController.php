@@ -16,9 +16,9 @@ class SubscriptionController extends Controller
 
     public function index(): View
     {
-        $store  = auth()->user()->store;
-        $sub    = $store->subscription;
-        $plans  = Plan::where('active', true)->orderBy('sort_order')->get();
+        $store = auth()->user()->store;
+        $sub = $store->subscription;
+        $plans = Plan::where('active', true)->orderBy('sort_order')->get();
 
         if ($sub) {
             $sub->load(['payments' => fn ($q) => $q->latest('paid_at')]);
@@ -31,9 +31,9 @@ class SubscriptionController extends Controller
     {
         abort_if(! $plan->active, 403, 'Plan no disponible.');
 
-        $user  = auth()->user();
+        $user = auth()->user();
         $store = $user->store;
-        $sub   = $store->subscription;
+        $sub = $store->subscription;
 
         // Plan gratuito: suscribir directamente sin MP
         if (! $plan->isPaid()) {
@@ -55,7 +55,7 @@ class SubscriptionController extends Controller
             } catch (\Exception $e) {
                 Log::warning('No se pudo cancelar preapproval anterior al suscribir', [
                     'mp_subscription_id' => $sub->mp_subscription_id,
-                    'error'              => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -63,10 +63,10 @@ class SubscriptionController extends Controller
         // Crear nueva preaprobación en MP
         try {
             // En sandbox, MP_TEST_PAYER_EMAIL permite usar un email de usuario de prueba.
-        // En producción esta variable no existe y se usa el email real del merchant.
-        $payerEmail = config('mercadopago.test_payer_email') ?: $user->email;
+            // En producción esta variable no existe y se usa el email real del merchant.
+            $payerEmail = config('mercadopago.test_payer_email') ?: $user->email;
 
-        $result = $this->mp->createPreapproval($plan, $store, $payerEmail);
+            $result = $this->mp->createPreapproval($plan, $store, $payerEmail);
         } catch (\Exception $e) {
             Log::error('MP createPreapproval falló', ['store' => $store->id, 'error' => $e->getMessage()]);
 
@@ -76,7 +76,7 @@ class SubscriptionController extends Controller
 
         // Guardar el ID de MP en la suscripción local (status no cambia hasta el webhook)
         $sub->update([
-            'plan_id'            => $plan->id,
+            'plan_id' => $plan->id,
             'mp_subscription_id' => $result['id'],
         ]);
 
@@ -86,7 +86,7 @@ class SubscriptionController extends Controller
     public function billing(): View
     {
         $store = auth()->user()->store;
-        $sub   = $store->subscription;
+        $sub = $store->subscription;
 
         if ($sub) {
             $sub->load(['plan', 'payments' => fn ($q) => $q->latest('paid_at')]);
@@ -98,12 +98,7 @@ class SubscriptionController extends Controller
             if ($sub->isOnTrial()) {
                 $nextDue = $sub->trial_ends_at;
             } elseif ($sub->isActive()) {
-                $lastPayment = $sub->payments->where('status', 'processed')->first();
-                if ($lastPayment?->paid_at) {
-                    $nextDue = $lastPayment->paid_at->addMonth();
-                } elseif ($sub->starts_at) {
-                    $nextDue = $sub->starts_at->addMonth();
-                }
+                $nextDue = $sub->next_payment_date;
             }
         }
 
@@ -113,11 +108,11 @@ class SubscriptionController extends Controller
     public function returnFromMp(Request $request): RedirectResponse
     {
         $preapprovalId = $request->query('preapproval_id');
-        $mpStatus      = null;
+        $mpStatus = null;
 
         if ($preapprovalId) {
             try {
-                $mpData   = $this->mp->getPreapproval($preapprovalId);
+                $mpData = $this->mp->getPreapproval($preapprovalId);
                 $mpStatus = $mpData['status'] ?? null;
 
                 $sub = auth()->user()->store->subscription;
@@ -125,9 +120,9 @@ class SubscriptionController extends Controller
                 if ($sub && $sub->mp_subscription_id === $preapprovalId) {
                     $localStatus = match ($mpStatus) {
                         'authorized' => 'active',
-                        'paused'     => 'suspended',
-                        'cancelled'  => 'cancelled',
-                        default      => null,
+                        'paused' => 'suspended',
+                        'cancelled' => 'cancelled',
+                        default => null,
                     };
 
                     if ($localStatus && $sub->status !== $localStatus) {
@@ -144,7 +139,7 @@ class SubscriptionController extends Controller
             } catch (\Exception $e) {
                 Log::warning('No se pudo verificar preapproval en el retorno de MP', [
                     'preapproval_id' => $preapprovalId,
-                    'error'          => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -152,8 +147,8 @@ class SubscriptionController extends Controller
         // Determinar el flash según el status de MP
         $flashStatus = match ($mpStatus) {
             'authorized' => 'success',
-            'pending'    => 'pending',
-            default      => ($request->query('status') === 'approved' ? 'success' : 'pending'),
+            'pending' => 'pending',
+            default => ($request->query('status') === 'approved' ? 'success' : 'pending'),
         };
 
         return redirect()->route('dashboard.subscription')

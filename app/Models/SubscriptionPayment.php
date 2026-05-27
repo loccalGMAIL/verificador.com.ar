@@ -15,6 +15,8 @@ class SubscriptionPayment extends Model
         'status',
         'paid_at',
         'notes',
+        'debit_date',
+        'status_detail',
     ];
 
     public function isManual(): bool
@@ -24,7 +26,8 @@ class SubscriptionPayment extends Model
 
     protected $casts = [
         'paid_at' => 'datetime',
-        'amount'  => 'decimal:2',
+        'debit_date' => 'datetime',
+        'amount' => 'decimal:2',
     ];
 
     public function subscription(): BelongsTo
