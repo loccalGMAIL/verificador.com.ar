@@ -38,6 +38,20 @@
     <div class="flex-1">
         <div class="bg-white rounded-xl border border-slate-200 p-4 h-full flex flex-col">
             <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Acciones rápidas</h3>
+
+            @if($sub?->isExpired())
+            <div class="flex-1 flex flex-col items-center justify-center text-center gap-3 py-2">
+                <i class="fa-solid fa-lock text-2xl text-slate-300"></i>
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Suscripción inactiva</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Elegí un plan para acceder a todas las funciones.</p>
+                </div>
+                <a href="{{ route('dashboard.subscription') }}"
+                   class="inline-flex items-center gap-1.5 bg-violet-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-violet-700 transition">
+                    <i class="fa-solid fa-arrow-right"></i> Ver planes
+                </a>
+            </div>
+            @else
             <div class="grid grid-cols-3 gap-2 flex-1">
 
                 {{-- Col 1+2, Fila 1 --}}
@@ -93,6 +107,7 @@
                 </a>
 
             </div>
+            @endif
         </div>
     </div>
 
@@ -295,6 +310,7 @@
                         @endif
                     </div>
                 </div>
+                @if(!$sub?->isExpired())
                 <div class="flex items-center gap-2 flex-shrink-0 ml-3">
                     <a href="{{ route('dashboard.branches.qr.configure', $branch) }}"
                        class="inline-flex items-center gap-1.5 bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-lg font-medium hover:bg-emerald-700 transition">
@@ -303,6 +319,7 @@
                         <span class="sm:hidden">QR</span>
                     </a>
                 </div>
+                @endif
             </div>
             @endforeach
         </div>

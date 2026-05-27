@@ -107,13 +107,15 @@ class CheckSubscriptionTest extends TestCase
             ->assertOk();
     }
 
-    public function test_impersonating_session_bypasses_subscription_check(): void
+    public function test_impersonating_session_does_not_bypass_subscription_check(): void
     {
         $user = $this->createOwner('trial', now()->subDay());
 
         $this->actingAs($user)
             ->withSession(['impersonating_admin_id' => 1])
             ->get(route('dashboard.home'))
-            ->assertOk();
+            ->assertRedirect(route('dashboard.subscription'))
+            ->assertSessionHas('subscription_expired', true);
     }
+
 }
