@@ -11,6 +11,26 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.15.2] - 2026-05-27
+
+### Corregido
+
+- **Acceso al dashboard con suscripción suspendida/expirada** — el bypass de impersonación en `CheckSubscription` y `EnsurePlanFeature` permitía que un admin impersonando a un usuario suspendido accediera al dashboard completo (productos, importación, configuración, QR, etc.). Ahora la impersonación no bypasea la verificación de suscripción: el admin ve exactamente la misma experiencia restringida que el usuario real.
+
+- **`Store::hasActiveSubscription()` no detectaba trial vencido** — el método solo comparaba el campo `status` con `['trial', 'active']` sin verificar `trial_ends_at`. Un comercio con trial expirado pasaba el chequeo del API de escaneo y seguía sirviendo precios. Ahora usa `!$sub->isExpired()`, que valida ambas condiciones.
+
+- **Vista pública del escáner (`/v/{token}`) con suscripción inactiva** — la página siempre cargaba la interfaz completa (cámara + buscador); el cliente solo veía el error al intentar escanear. Ahora muestra "Servicio no disponible" directamente cuando el comercio tiene la suscripción inactiva o el token no existe, sin cargar la librería de escaneo.
+
+- **Crash en vista del escáner con token inválido** — las propiedades `$store->scan_*` causaban un error fatal si `$store` era null. Corregido con null-safe operator (`$store?->`).
+
+### Mejorado
+
+- **Sidebar del dashboard** — cuando la suscripción está expirada, los ítems básicos (Productos, Etiquetas, Configuración) también se muestran como bloqueados con ícono de candado, consistente con los ítems de features de plan.
+
+- **Home del dashboard** — las "Acciones rápidas" se reemplazan por un mensaje de suscripción inactiva con link a planes cuando la cuenta está suspendida/expirada. El botón "Imprimir QR" en la lista de sucursales también se oculta.
+
+---
+
 ## [1.15.1] - 2026-05-26
 
 ### Agregado
@@ -282,7 +302,10 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
-[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.14.0...HEAD
+[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.15.2...HEAD
+[1.15.2]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.15.1...v1.15.2
+[1.15.1]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.15.0...v1.15.1
+[1.15.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.13.1...v1.14.0
 [1.13.1]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.13.0...v1.13.1
 [1.13.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.12.0...v1.13.0
