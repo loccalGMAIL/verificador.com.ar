@@ -72,12 +72,20 @@
                     <span>Inicio</span>
                 </a>
 
+                @if(!$sidebarSub?->isExpired())
                 <a href="{{ route('dashboard.products.index') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
                           {{ $seg === 'products' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
                     <i class="fa-solid fa-box w-4 text-center"></i>
                     <span>Productos</span>
                 </a>
+                @else
+                <span title="Suscripción inactiva"
+                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-blue-200/40 cursor-not-allowed">
+                    <i class="fa-solid fa-lock w-4 text-center text-amber-500/50"></i>
+                    <span>Productos</span>
+                </span>
+                @endif
 
                 @if($canFeature('has_price_lists'))
                 <a href="{{ route('dashboard.price-lists.index') }}"
@@ -94,12 +102,20 @@
                 </span>
                 @endif
 
+                @if(!$sidebarSub?->isExpired())
                 <a href="{{ route('dashboard.labels.index') }}"
                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition
                           {{ $seg === 'etiquetas' ? 'bg-blue-800 text-white' : 'text-blue-200 hover:bg-blue-900 hover:text-white' }}">
                     <i class="fa-solid fa-barcode w-4 text-center"></i>
                     <span>Etiquetas</span>
                 </a>
+                @else
+                <span title="Suscripción inactiva"
+                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-blue-200/40 cursor-not-allowed">
+                    <i class="fa-solid fa-lock w-4 text-center text-amber-500/50"></i>
+                    <span>Etiquetas</span>
+                </span>
+                @endif
 
                 @if($canFeature('has_branches'))
                 <a href="{{ route('dashboard.branches.index') }}"
@@ -146,6 +162,7 @@
                 </a>
 
                 {{-- Configuración expandible --}}
+                @if(!$sidebarSub?->isExpired())
                 <div x-data="{ open: {{ in_array($seg, ['settings', 'users']) ? 'true' : 'false' }} }">
                     <button @click="open = !open"
                             class="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium transition
@@ -201,6 +218,13 @@
                         </a>
                     </div>
                 </div>
+                @else
+                <span title="Suscripción inactiva"
+                      class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-blue-200/40 cursor-not-allowed">
+                    <i class="fa-solid fa-lock w-4 text-center text-amber-500/50"></i>
+                    <span>Configuración</span>
+                </span>
+                @endif
             </nav>
 
             {{-- Footer del sidebar --}}

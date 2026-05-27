@@ -28,8 +28,9 @@ class CheckSubscription
             return redirect()->route('login');
         }
 
-        // Admins (o admin impersonando) no tienen restricción de suscripción
-        if ($user->role === 'admin' || $request->session()->has('impersonating_admin_id')) {
+        // Admins propios no tienen restricción de suscripción.
+        // La impersonación NO bypasea la verificación: el admin ve la misma experiencia que el usuario real.
+        if ($user->role === 'admin') {
             return $next($request);
         }
 
@@ -39,7 +40,7 @@ class CheckSubscription
         }
 
         $store = $user->store;
-        $sub   = $store?->subscription;
+        $sub = $store?->subscription;
 
         // Sin suscripción (no debería ocurrir, pero por las dudas)
         if (! $sub) {
