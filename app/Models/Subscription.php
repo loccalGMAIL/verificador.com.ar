@@ -21,6 +21,7 @@ class Subscription extends Model
         'mp_subscription_id',
         'mp_payer_id',
         'mp_payer_email',
+        'next_payment_date',
     ];
 
     protected function casts(): array
@@ -29,6 +30,7 @@ class Subscription extends Model
             'trial_ends_at' => 'datetime',
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'next_payment_date' => 'datetime',
         ];
     }
 
