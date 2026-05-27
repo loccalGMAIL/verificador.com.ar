@@ -67,15 +67,16 @@ class EnsurePlanFeatureTest extends TestCase
             ->assertSessionHas('feature_blocked', 'has_price_lists');
     }
 
-    public function test_impersonating_session_bypasses_feature_check(): void
+    public function test_impersonating_session_does_not_bypass_feature_check(): void
     {
-        // When an admin impersonates an owner without the feature, access must still be granted.
+        // La impersonación ya no bypasea el chequeo de features: el admin ve la misma restricción que el usuario real.
         $user = $this->createUserWithPlan(['has_price_lists' => false]);
 
         $this->actingAs($user)
             ->withSession(['impersonating_admin_id' => 1])
             ->get(route('dashboard.price-lists.index'))
-            ->assertOk();
+            ->assertRedirect(route('dashboard.subscription'))
+            ->assertSessionHas('feature_blocked', 'has_price_lists');
     }
 
     public function test_blocked_feature_access_is_logged_in_activity_log(): void
