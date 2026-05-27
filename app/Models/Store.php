@@ -122,6 +122,6 @@ class Store extends Model
             return false;
         }
 
-        return in_array($sub->status, ['trial', 'active']);
+        return ! $sub->isExpired();
     }
 }

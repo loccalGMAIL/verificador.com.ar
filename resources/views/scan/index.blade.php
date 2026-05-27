@@ -18,8 +18,8 @@
     </style>
 </head>
 @php
-    $bgColor              = $store->scan_bg_color              ?? '#0f172a';
-    $accentColor          = $store->scan_accent_color          ?? '#34d399';
+    $bgColor              = $store?->scan_bg_color              ?? '#0f172a';
+    $accentColor          = $store?->scan_accent_color          ?? '#34d399';
     $secondaryColor       = $store->scan_secondary_color       ?? '#93c5fd';
     $wholesaleCardColor   = $store->scan_wholesale_card_color  ?? '#172033';
     $cardStyle            = $store->scan_card_style            ?? 'dark';
@@ -89,6 +89,21 @@
     </header>
 
     <main class="flex-1 flex flex-col items-center justify-start px-4 pb-8 pt-4 max-w-md mx-auto w-full">
+
+        @if(!$serviceAvailable)
+        <div class="flex-1 flex flex-col items-center justify-center text-center py-12 gap-4">
+            <div class="w-16 h-16 rounded-full flex items-center justify-center mb-2"
+                 style="background-color: rgba(255,255,255,0.06);">
+                <i class="fa-solid fa-ban text-2xl" style="color: #64748b;"></i>
+            </div>
+            <div>
+                <p class="text-base font-semibold text-slate-300 mb-1">Servicio no disponible</p>
+                <p class="text-sm text-slate-500 leading-relaxed">
+                    Este comercio no tiene el servicio activo<br>en este momento.
+                </p>
+            </div>
+        </div>
+        @else
 
         <h1 class="text-xl font-bold mb-1 text-center">{{ $headerText }}</h1>
 
@@ -190,8 +205,10 @@
                        px-5 py-2.5 rounded-xl hover:bg-blue-700 transition">
             <i class="fa-solid fa-barcode mr-2"></i>Escanear otro producto
         </button>
+        @endif
     </main>
 
+    @if($serviceAvailable)
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
         const TOKEN = "{{ $token }}";
@@ -395,6 +412,7 @@
         document.getElementById('manual-input')
             .addEventListener('keydown', e => { if (e.key === 'Enter') searchManual(); });
     </script>
+    @endif
 
     {{-- Publicidad fija en la parte inferior --}}
     <div style="position:fixed;bottom:0;left:0;right:0;z-index:50;text-align:center;padding:6px 12px;background:rgba(15,23,42,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);">
