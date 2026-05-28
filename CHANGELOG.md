@@ -11,6 +11,20 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.16.1] - 2026-05-28
+
+### Corregido
+
+- **Edición de producto — código de barras no visible** — al abrir el formulario de edición, el campo de código de barras aparecía vacío aunque el producto ya tenía uno asignado. El problema era que Alpine.js inicializaba `barcode: ''` y sobreescribía el atributo `value` del HTML. Ahora el dato Alpine se inicializa directamente con el valor del producto.
+
+- **Edición de producto — propio barcode marcado como "en uso"** — al editar, la verificación en tiempo real reportaba el código del producto como "en uso" (por sí mismo). Se corrigió pasando el `product_id` actual al endpoint de verificación, que ya soportaba esta exclusión.
+
+### Mejorado
+
+- **Formulario de edición de producto — layout compactado** — se reorganizaron los campos para reducir el scroll: código de barras y precio quedan en la misma fila, imagen y campo activo más compactos, y el checkbox de activo se alinea horizontalmente con los botones de acción.
+
+---
+
 ## [1.16.0] - 2026-05-27
 
 ### Mejorado
