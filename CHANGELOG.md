@@ -11,6 +11,18 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.16.2] - 2026-05-30
+
+### Corregido
+
+- **Desincronización de preapproval de MercadoPago** — el `mp_subscription_id` almacenado en la BD apuntaba a una preapproval en estado `pending` (`53b2df7...`) que nunca fue autorizada por el pagador. La suscripción activa real (`2e97d3b...`) había sido creada directamente desde el panel de MP con un plan asociado, por lo que no pasó por el flujo de la app y no tenía `notification_url` configurada. Se corrigió el ID en la BD y se actualizó la preapproval en MP vía API (`PUT /preapproval/{id}`) para agregar la `notification_url`, habilitando la recepción de webhooks futuros.
+
+- **Pagos sin registrar en la BD** — los 3 cobros recurrentes procesados por MP (marzo, abril y mayo 2026, $49.000 ARS c/u) no estaban en `subscription_payments` porque los webhooks nunca llegaron al no tener `notification_url`. Se sincronizaron manualmente con sus `mp_payment_id`, `debit_date` y `status_detail` reales. Se eliminaron los 2 registros de pago cargados manualmente que quedaron como duplicados.
+
+- **`next_payment_date` desactualizado** — se actualizó a `2026-06-30` según el campo `next_payment_date` devuelto por la API de MP en la preapproval activa.
+
+---
+
 ## [1.16.1] - 2026-05-28
 
 ### Corregido
@@ -324,7 +336,9 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
-[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.16.0...HEAD
+[Unreleased]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.16.2...HEAD
+[1.16.2]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.16.1...v1.16.2
+[1.16.1]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.16.0...v1.16.1
 [1.16.0]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.15.2...v1.16.0
 [1.15.2]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.15.1...v1.15.2
 [1.15.1]: https://github.com/loccalGMAIL/verificador.com.ar/compare/v1.15.0...v1.15.1
