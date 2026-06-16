@@ -211,8 +211,10 @@
     @if($serviceAvailable)
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
-        const TOKEN = "{{ $token }}";
-        const API   = `/api/scan/${TOKEN}/`;
+        const TOKEN           = "{{ $token }}";
+        const API             = `/api/scan/${TOKEN}/`;
+        const PROMO_SHOW_WHEN = @json($promoShowWhen);
+        const PROMO_COOKIE    = 'promo_seen_{{ $branch->qr_token }}';
         let scanning = true;
         let cameraOpen = true;
         let manualOpen = false;
@@ -376,6 +378,8 @@
 
                 document.getElementById('scan-again').classList.remove('hidden');
 
+                if (PROMO_SHOW_WHEN === 'after_first_scan') showPromoModal();
+
             } catch {
                 showError('Error de conexión. Intentá de nuevo.');
                 document.getElementById('scan-again').classList.remove('hidden');
@@ -411,7 +415,52 @@
         // ── Enter en input manual ─────────────────────────────────────
         document.getElementById('manual-input')
             .addEventListener('keydown', e => { if (e.key === 'Enter') searchManual(); });
+
+        // ── Promo modal ───────────────────────────────────────────────
+        function getPromoSeen() {
+            return document.cookie.split(';').some(c => c.trim().startsWith(PROMO_COOKIE + '='));
+        }
+        function setPromoSeen() {
+            const exp = new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString();
+            document.cookie = PROMO_COOKIE + '=1; expires=' + exp + '; path=/; SameSite=Lax';
+        }
+        function showPromoModal() {
+            if (!PROMO_SHOW_WHEN || getPromoSeen()) return;
+            document.getElementById('promo-modal').style.display = 'flex';
+        }
+        function closePromoModal() {
+            document.getElementById('promo-modal').style.display = 'none';
+            setPromoSeen();
+        }
+        if (PROMO_SHOW_WHEN === 'on_load') {
+            showPromoModal();
+        }
     </script>
+    @endif
+
+    {{-- Modal de imagen promocional --}}
+    @if($promoDataUri && $promoShowWhen)
+    <div id="promo-modal"
+         style="display:none; position:fixed; inset:0; z-index:60;
+                background:rgba(0,0,0,0.78);
+                align-items:center; justify-content:center; padding:1rem;"
+         onclick="closePromoModal()">
+        <div style="position:relative; width:100%; max-width:420px;
+                    max-height:90vh; overflow:hidden; border-radius:1rem;"
+             onclick="event.stopPropagation()">
+            <button onclick="closePromoModal()"
+                    style="position:absolute; top:.625rem; right:.625rem; z-index:10;
+                           background:rgba(0,0,0,0.55); border:none; border-radius:9999px;
+                           width:2.25rem; height:2.25rem; cursor:pointer;
+                           display:flex; align-items:center; justify-content:center;"
+                    aria-label="Cerrar">
+                <i class="fa-solid fa-xmark" style="color:#fff; font-size:1rem;"></i>
+            </button>
+            <img src="{{ $promoDataUri }}" alt="Promoción"
+                 style="width:100%; height:auto; display:block;
+                        border-radius:1rem; max-height:88vh; object-fit:contain;">
+        </div>
+    </div>
     @endif
 
     {{-- Publicidad fija en la parte inferior --}}

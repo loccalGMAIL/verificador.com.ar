@@ -124,6 +124,7 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
                 Route::delete('/branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
                 Route::get('/branches/{branch}/qr/configure', [BranchController::class, 'qrConfigure'])->name('branches.qr.configure');
                 Route::post('/branches/{branch}/qr/save', [BranchController::class, 'qrSave'])->name('branches.qr.save');
+                Route::delete('/branches/{branch}/promo-image', [BranchController::class, 'destroyPromoImage'])->name('branches.promo-image.destroy');
             });
 
         // --- Etiquetas y códigos de barras ---

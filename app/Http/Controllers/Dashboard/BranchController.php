@@ -61,18 +61,44 @@ class BranchController extends Controller
     {
         $this->authorizeBranch($branch);
 
-        $data = $request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:500'],
             'active' => ['sometimes', 'boolean'],
+            'promo_image' => ['nullable', 'image', 'max:3072'],
+            'promo_show_when' => ['nullable', 'in:on_load,after_first_scan'],
         ]);
 
-        $data['active'] = $request->boolean('active', $branch->active);
+        $validated['active'] = $request->boolean('active', $branch->active);
+        $validated['promo_show_when'] = ($validated['promo_show_when'] ?? null) ?: null;
 
-        $branch->update($data);
+        if ($request->hasFile('promo_image')) {
+            if ($branch->promo_image_path) {
+                Storage::disk('public')->delete($branch->promo_image_path);
+            }
+            $validated['promo_image_path'] = $request->file('promo_image')
+                ->store("promos/{$branch->id}", 'public');
+        }
+
+        unset($validated['promo_image']);
+
+        $branch->update($validated);
 
         return redirect()->route('dashboard.branches.index')
             ->with('success', 'Sucursal actualizada.');
+    }
+
+    public function destroyPromoImage(Branch $branch): RedirectResponse
+    {
+        $this->authorizeBranch($branch);
+
+        if ($branch->promo_image_path) {
+            Storage::disk('public')->delete($branch->promo_image_path);
+            $branch->update(['promo_image_path' => null, 'promo_show_when' => null]);
+        }
+
+        return redirect()->route('dashboard.branches.edit', $branch)
+            ->with('success', 'Imagen promocional eliminada.');
     }
 
     public function destroy(Branch $branch): RedirectResponse

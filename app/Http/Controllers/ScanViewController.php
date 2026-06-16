@@ -29,6 +29,30 @@ class ScanViewController extends Controller
             );
         }
 
-        return view('scan.index', compact('token', 'store', 'branch', 'logoDataUri', 'serviceAvailable'));
+        $promoDataUri = null;
+        $promoShowWhen = null;
+
+        if ($serviceAvailable
+            && $branch?->promo_image_path
+            && $branch->promo_show_when
+            && Storage::disk('public')->exists($branch->promo_image_path)) {
+
+            $ext = strtolower(pathinfo($branch->promo_image_path, PATHINFO_EXTENSION));
+            $mime = match ($ext) {
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp',
+                default => 'image/jpeg',
+            };
+            $promoDataUri = 'data:'.$mime.';base64,'.base64_encode(
+                Storage::disk('public')->get($branch->promo_image_path)
+            );
+            $promoShowWhen = $branch->promo_show_when;
+        }
+
+        return view('scan.index', compact(
+            'token', 'store', 'branch', 'logoDataUri', 'serviceAvailable',
+            'promoDataUri', 'promoShowWhen'
+        ));
     }
 }

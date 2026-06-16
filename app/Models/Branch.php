@@ -29,13 +29,15 @@ class Branch extends Model
         'qr_instr_size',
         'qr_logo_size',
         'qr_header_color',
+        'promo_image_path',
+        'promo_show_when',
     ];
 
     protected function casts(): array
     {
         return [
-            'active'         => 'boolean',
-            'qr_show_logo'   => 'boolean',
+            'active' => 'boolean',
+            'qr_show_logo' => 'boolean',
             'qr_show_branch' => 'boolean',
         ];
     }
