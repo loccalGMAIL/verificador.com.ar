@@ -15,7 +15,7 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Agregado
 
-- **Anuncios post-escaneo** — los comerciantes pueden configurar una imagen de anuncio u oferta que se muestra al cliente luego de escanear su primer producto en la app móvil. El popup incluye un botón de cierre y un countdown configurable (entre 3 y 60 segundos, default 6). Solo se dispara una vez por sesión de página.
+- **Anuncios post-escaneo** — los comerciantes pueden configurar una imagen de anuncio u oferta que se muestra al cliente luego de escanear su primer producto en la app móvil. El popup incluye un botón de cierre y un countdown configurable (entre 3 y 60 segundos, default 6). Solo se dispara una vez por sesión de página y queda suprimido durante 24 horas mediante una cookie por sucursal (`anuncio_{token}`), evitando molestar al cliente en visitas repetidas.
 - **Configuración de Anuncios** — nueva pestaña "Anuncios" en Configuración (entre Apariencia y Usuarios) con toggle de activación, selector de duración y upload de imagen (JPG/PNG/WebP, máx. 2 MB). Incluye vista previa en tiempo real con mockup de celular que refleja el estado del toggle, la imagen seleccionada y el countdown.
 - **Acceso rápido a Anuncios** — nuevo botón "Anuncios" en las acciones rápidas del dashboard y en el menú lateral dentro de Configuración.
 ## [1.16.2] - 2026-05-30
