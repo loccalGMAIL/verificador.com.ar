@@ -198,6 +198,7 @@
                         @foreach([
                             'print'      => 'Impresión QR',
                             'appearance' => 'Apariencia',
+                            'anuncios'   => 'Anuncios',
                         ] as $tabKey => $tabLabel)
                         <a href="{{ route('dashboard.settings', ['tab' => $tabKey]) }}"
                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition

@@ -37,7 +37,21 @@ class SettingsController extends Controller
             );
         }
 
-        return view('dashboard.settings', compact('store', 'importProfiles', 'branches', 'logoDataUri', 'visibleCustomFields', 'allCustomFieldDefinitions'));
+        $popupImageDataUri = null;
+        if ($store->scan_popup_image_path && Storage::disk('public')->exists($store->scan_popup_image_path)) {
+            $ext = strtolower(pathinfo($store->scan_popup_image_path, PATHINFO_EXTENSION));
+            $mime = match ($ext) {
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp',
+                default => 'image/jpeg',
+            };
+            $popupImageDataUri = 'data:'.$mime.';base64,'.base64_encode(
+                Storage::disk('public')->get($store->scan_popup_image_path)
+            );
+        }
+
+        return view('dashboard.settings', compact('store', 'importProfiles', 'branches', 'logoDataUri', 'popupImageDataUri', 'visibleCustomFields', 'allCustomFieldDefinitions'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -95,6 +109,30 @@ class SettingsController extends Controller
 
             return redirect()->route('dashboard.settings', ['tab' => 'appearance'])
                 ->with('success', 'Apariencia guardada.');
+        }
+
+        if ($tab === 'anuncios') {
+            $data = $request->validate([
+                'scan_popup_enabled' => ['boolean'],
+                'scan_popup_duration' => ['required', 'integer', 'min:3', 'max:60'],
+                'scan_popup_image' => ['nullable', 'image', 'max:2048'],
+            ]);
+
+            $data['scan_popup_enabled'] = $request->boolean('scan_popup_enabled');
+
+            if ($request->hasFile('scan_popup_image')) {
+                if ($store->scan_popup_image_path) {
+                    Storage::disk('public')->delete($store->scan_popup_image_path);
+                }
+                $data['scan_popup_image_path'] = $request->file('scan_popup_image')
+                    ->store("scan-popup/{$store->id}", 'public');
+            }
+
+            unset($data['scan_popup_image']);
+            $store->update($data);
+
+            return redirect()->route('dashboard.settings', ['tab' => 'anuncios'])
+                ->with('success', 'Anuncio guardado.');
         }
 
         // Tab: general (default)

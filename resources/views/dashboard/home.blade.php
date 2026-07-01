@@ -74,14 +74,14 @@
                     </div>
                 </a>
 
-                {{-- Col 3, Fila 1+2 (alto doble) --}}
+                {{-- Col 3, Fila 1 --}}
                 <a href="{{ route('dashboard.settings', ['tab' => 'appearance']) }}"
-                   class="row-span-2 flex flex-col items-center justify-center gap-2 p-3 rounded-lg border border-slate-200
-                          hover:border-pink-300 hover:bg-pink-50 transition group text-center">
-                    <i class="fa-solid fa-palette text-pink-500 text-xl flex-shrink-0"></i>
-                    <div>
+                   class="flex items-center gap-2.5 p-3 rounded-lg border border-slate-200
+                          hover:border-pink-300 hover:bg-pink-50 transition group">
+                    <i class="fa-solid fa-palette text-pink-500 text-sm w-4 text-center flex-shrink-0"></i>
+                    <div class="min-w-0">
                         <p class="text-sm font-medium text-slate-800 group-hover:text-pink-700 leading-tight">Apariencia</p>
-                        <p class="text-xs text-slate-400 leading-tight mt-0.5">App celular</p>
+                        <p class="text-xs text-slate-400 truncate">App celular</p>
                     </div>
                 </a>
 
@@ -103,6 +103,17 @@
                     <div class="min-w-0">
                         <p class="text-sm font-medium text-slate-800 group-hover:text-orange-700 leading-tight">Configurar QR</p>
                         <p class="text-xs text-slate-400 truncate">Colores, texto y diseño</p>
+                    </div>
+                </a>
+
+                {{-- Col 3, Fila 2 --}}
+                <a href="{{ route('dashboard.settings', ['tab' => 'anuncios']) }}"
+                   class="flex items-center gap-2.5 p-3 rounded-lg border border-slate-200
+                          hover:border-amber-300 hover:bg-amber-50 transition group">
+                    <i class="fa-solid fa-bullhorn text-amber-500 text-sm w-4 text-center flex-shrink-0"></i>
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium text-slate-800 group-hover:text-amber-700 leading-tight">Anuncios</p>
+                        <p class="text-xs text-slate-400 truncate">Ofertas post-escaneo</p>
                     </div>
                 </a>
 

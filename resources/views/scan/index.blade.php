@@ -18,6 +18,7 @@
     </style>
 </head>
 @php
+    $popupEnabled = $popupImageDataUri !== null;
     $bgColor              = $store?->scan_bg_color              ?? '#0f172a';
     $accentColor          = $store?->scan_accent_color          ?? '#34d399';
     $secondaryColor       = $store->scan_secondary_color       ?? '#93c5fd';
@@ -217,6 +218,31 @@
         let cameraOpen = true;
         let manualOpen = false;
 
+        // ── Popup de Anuncios ─────────────────────────────────────
+        const popupEnabled = {{ $popupEnabled ? 'true' : 'false' }};
+        const popupDuration = {{ $popupDuration }};
+        let firstScanDone = false;
+        let popupCountdownInterval = null;
+
+        function showPopup() {
+            const overlay = document.getElementById('popup-overlay');
+            if (!overlay) { return; }
+            overlay.style.display = 'flex';
+            let remaining = popupDuration;
+            document.getElementById('popup-timer').textContent = remaining;
+            popupCountdownInterval = setInterval(function () {
+                remaining--;
+                document.getElementById('popup-timer').textContent = remaining;
+                if (remaining <= 0) { closePopup(); }
+            }, 1000);
+        }
+
+        function closePopup() {
+            clearInterval(popupCountdownInterval);
+            const overlay = document.getElementById('popup-overlay');
+            if (overlay) { overlay.style.display = 'none'; }
+        }
+
         // Detectar iOS para mostrar aviso de distancia de enfoque
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         if (isIOS) {
@@ -376,6 +402,11 @@
 
                 document.getElementById('scan-again').classList.remove('hidden');
 
+                if (!firstScanDone && popupEnabled) {
+                    firstScanDone = true;
+                    showPopup();
+                }
+
             } catch {
                 showError('Error de conexión. Intentá de nuevo.');
                 document.getElementById('scan-again').classList.remove('hidden');
@@ -412,6 +443,28 @@
         document.getElementById('manual-input')
             .addEventListener('keydown', e => { if (e.key === 'Enter') searchManual(); });
     </script>
+    @endif
+
+    {{-- Popup de Anuncios --}}
+    @if($popupEnabled)
+    <div id="popup-overlay"
+         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:100;
+                align-items:center; justify-content:center; padding:16px;">
+        <div style="position:relative; max-width:92%; max-height:82vh;">
+            <button onclick="closePopup()"
+                    style="position:absolute; top:-14px; right:-14px; background:#ffffff; border:none;
+                           border-radius:50%; width:32px; height:32px; font-size:20px; line-height:32px;
+                           text-align:center; cursor:pointer; color:#1e293b; box-shadow:0 2px 8px rgba(0,0,0,0.3);"
+                    aria-label="Cerrar">×</button>
+            <img src="{{ $popupImageDataUri }}" alt="Anuncio"
+                 style="max-width:100%; max-height:78vh; border-radius:12px; display:block;
+                        box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+            <div style="position:absolute; bottom:10px; right:12px; background:rgba(0,0,0,0.55);
+                        color:#fff; font-size:12px; padding:3px 10px; border-radius:99px;">
+                Cierra en <span id="popup-timer">{{ $popupDuration }}</span>s
+            </div>
+        </div>
+    </div>
     @endif
 
     {{-- Publicidad fija en la parte inferior --}}

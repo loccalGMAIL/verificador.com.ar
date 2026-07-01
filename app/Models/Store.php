@@ -42,7 +42,18 @@ class Store extends Model
         'wholesale_source',
         'wholesale_custom_field_id',
         'invite_token',
+        'scan_popup_enabled',
+        'scan_popup_image_path',
+        'scan_popup_duration',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'scan_popup_enabled' => 'boolean',
+            'scan_popup_duration' => 'integer',
+        ];
+    }
 
     // --- Relaciones ---
 

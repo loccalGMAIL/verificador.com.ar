@@ -10,6 +10,7 @@
         'custom-fields'=> ['icon' => 'fa-table-columns', 'label' => 'Campos extra',        'href' => route('dashboard.settings.custom-fields.index')],
         'print'        => ['icon' => 'fa-print',         'label' => 'Impresión QR',        'href' => route('dashboard.settings', ['tab' => 'print'])],
         'appearance'   => ['icon' => 'fa-palette',       'label' => 'Apariencia',          'href' => route('dashboard.settings', ['tab' => 'appearance'])],
+        'anuncios'     => ['icon' => 'fa-bullhorn',      'label' => 'Anuncios',            'href' => route('dashboard.settings', ['tab' => 'anuncios'])],
         'users'        => ['icon' => 'fa-users',         'label' => 'Usuarios',            'href' => route('dashboard.users.index')],
     ] as $key => $tab)
     <a href="{{ $tab['href'] }}"

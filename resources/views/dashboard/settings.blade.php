@@ -688,6 +688,179 @@
 
 @endif
 
+{{-- ════════════════════════════════════════════════════════ --}}
+{{-- TAB: Anuncios                                           --}}
+{{-- ════════════════════════════════════════════════════════ --}}
+@if($activeTab === 'anuncios')
+
+@if($popupImageDataUri ?? null)
+<input type="hidden" id="popup-image-uri" value="{{ $popupImageDataUri }}">
+@endif
+
+<div x-data="{
+        popupEnabled: {{ old('scan_popup_enabled', $store->scan_popup_enabled ?? false) ? 'true' : 'false' }},
+        duration: {{ old('scan_popup_duration', $store->scan_popup_duration ?? 6) }},
+        previewUrl: null,
+        init() {
+            const el = document.getElementById('popup-image-uri');
+            if (el) { this.previewUrl = el.value; }
+        },
+        handleFileChange(event) {
+            const file = event.target.files[0];
+            if (!file) { return; }
+            const reader = new FileReader();
+            reader.onload = (e) => { this.previewUrl = e.target.result; };
+            reader.readAsDataURL(file);
+        },
+     }">
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+
+        {{-- ── Formulario ──────────────────────────────────────── --}}
+        <form method="POST" action="{{ route('dashboard.settings.update') }}"
+              enctype="multipart/form-data" class="space-y-5">
+            @csrf @method('PUT')
+            <input type="hidden" name="_tab" value="anuncios">
+
+            <div class="bg-white rounded-xl border border-slate-200 p-6 space-y-5">
+
+                <div>
+                    <h3 class="font-semibold text-slate-800 mb-1">Anuncio post-escaneo</h3>
+                    <p class="text-xs text-slate-400">
+                        Mostrá una imagen con una oferta o promoción al cliente luego de escanear su primer producto.
+                    </p>
+                </div>
+
+                {{-- Toggle activo --}}
+                <label class="flex items-center justify-between cursor-pointer">
+                    <span class="text-sm text-slate-700">Activar anuncio</span>
+                    <div class="relative">
+                        <input type="checkbox" name="scan_popup_enabled" value="1"
+                               x-model="popupEnabled" class="sr-only">
+                        <div class="toggle-track w-11 h-6 bg-slate-200 rounded-full transition"></div>
+                        <div class="toggle-dot absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition"></div>
+                    </div>
+                </label>
+
+                {{-- Duración --}}
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">
+                        Duración <span class="text-slate-400 font-normal">(segundos)</span>
+                    </label>
+                    <div class="flex items-center gap-3">
+                        <input type="number" name="scan_popup_duration" min="3" max="60"
+                               x-model.number="duration"
+                               class="w-24 border border-slate-300 rounded-lg px-3 py-2.5 text-sm
+                                      focus:outline-none focus:ring-2 focus:ring-blue-500
+                                      @error('scan_popup_duration') border-red-400 @enderror">
+                        <span class="text-xs text-slate-400">Entre 3 y 60 segundos</span>
+                    </div>
+                    @error('scan_popup_duration')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Imagen --}}
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">
+                        Imagen del anuncio
+                    </label>
+                    @if($popupImageDataUri ?? null)
+                    <div class="mb-3 flex items-start gap-3">
+                        <img src="{{ $popupImageDataUri }}" alt="Anuncio actual"
+                             class="w-20 h-20 rounded-lg object-cover border border-slate-200 bg-slate-50">
+                        <p class="text-xs text-slate-500 mt-1">Imagen actual.<br>Subí una nueva para reemplazarla.</p>
+                    </div>
+                    @endif
+                    <input type="file" name="scan_popup_image" accept="image/*"
+                           @change="handleFileChange($event)"
+                           class="w-full text-sm text-slate-600 border border-slate-300 rounded-lg px-3 py-2
+                                  file:mr-3 file:border-0 file:bg-blue-50 file:text-blue-700
+                                  file:text-xs file:font-medium file:py-1 file:px-3 file:rounded-md
+                                  @error('scan_popup_image') border-red-400 @enderror">
+                    <p class="text-xs text-slate-400 mt-1">JPG, PNG o WebP. Máximo 2 MB.</p>
+                    @error('scan_popup_image')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                </div>
+
+            </div>
+
+            <button type="submit"
+                    class="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-semibold
+                           py-3 rounded-xl hover:bg-blue-700 active:scale-95 transition text-sm">
+                <i class="fa-solid fa-floppy-disk"></i>
+                Guardar cambios
+            </button>
+        </form>
+
+        {{-- ── Vista previa ────────────────────────────────────── --}}
+        <div class="flex flex-col items-center xl:sticky xl:top-4">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Vista previa</p>
+
+            <div class="relative mx-auto" style="width: 240px;">
+                <div class="rounded-[2rem] overflow-hidden shadow-2xl ring-[6px] ring-slate-800"
+                     style="height: 480px;">
+                    <div class="h-full flex flex-col relative overflow-hidden"
+                         style="background-color: #0f172a;">
+
+                        {{-- Pantalla de escaneo simulada (fondo) --}}
+                        <div class="px-3 pt-3 pb-2 flex items-center gap-2 opacity-50">
+                            <svg viewBox="0 0 36 36" class="w-4 h-4 flex-none">
+                                <circle cx="18" cy="18" r="14" fill="white" stroke="#2563eb" stroke-width="2.5"/>
+                                <path d="M11 19 L16 24 L33 8" fill="none" stroke="#10b981" stroke-width="4"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <p class="text-[9px] font-bold text-white leading-tight truncate">{{ $store->name }}</p>
+                        </div>
+                        <div class="px-3 pb-2 text-center opacity-50">
+                            <p class="text-[10px] font-bold text-white">Consultá el precio</p>
+                        </div>
+                        <div class="mx-3 rounded-lg bg-black/60 h-20 flex items-center justify-center opacity-50 mb-2">
+                            <i class="fa-solid fa-barcode text-slate-500 text-xl"></i>
+                        </div>
+
+                        {{-- Popup activo --}}
+                        <template x-if="popupEnabled && previewUrl">
+                            <div class="absolute inset-0 flex items-center justify-center p-4"
+                                 style="background: rgba(0,0,0,0.78);">
+                                <div class="relative w-full">
+                                    <div class="absolute -top-2.5 -right-2.5 bg-white rounded-full w-6 h-6
+                                                flex items-center justify-center text-sm font-bold text-slate-700
+                                                shadow-md leading-none select-none">×</div>
+                                    <img :src="previewUrl" alt="Anuncio"
+                                         class="w-full rounded-xl block shadow-lg"
+                                         style="max-height: 260px; object-fit: contain;">
+                                    <div class="absolute bottom-2 right-2 text-white text-[10px] px-2 py-0.5 rounded-full"
+                                         style="background: rgba(0,0,0,0.6);">
+                                        Cierra en <span x-text="duration"></span>s
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        {{-- Estado vacío --}}
+                        <template x-if="!popupEnabled || !previewUrl">
+                            <div class="absolute inset-0 flex items-end justify-center pb-10">
+                                <p class="text-slate-600 text-[10px] text-center px-6 leading-relaxed">
+                                    <template x-if="!popupEnabled">
+                                        <span>Anuncio desactivado</span>
+                                    </template>
+                                    <template x-if="popupEnabled && !previewUrl">
+                                        <span>Subí una imagen<br>para ver la vista previa</span>
+                                    </template>
+                                </p>
+                            </div>
+                        </template>
+
+                    </div>
+                </div>
+                {{-- Notch decorativo --}}
+                <div class="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-1.5 bg-slate-800 rounded-full"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@endif
+
 @endsection
 
 @push('styles')
