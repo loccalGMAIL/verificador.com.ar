@@ -221,10 +221,23 @@
         // ── Popup de Anuncios ─────────────────────────────────────
         const popupEnabled = {{ $popupEnabled ? 'true' : 'false' }};
         const popupDuration = {{ $popupDuration }};
-        let firstScanDone = false;
         let popupCountdownInterval = null;
 
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+            return match ? match[1] : null;
+        }
+
+        function setCookie(name, value, hours) {
+            const expires = new Date(Date.now() + hours * 3600000).toUTCString();
+            document.cookie = name + '=' + value + '; expires=' + expires + '; path=/; SameSite=Lax';
+        }
+
+        const popupCookieName = 'anuncio_' + TOKEN;
+        let firstScanDone = getCookie(popupCookieName) !== null;
+
         function showPopup() {
+            setCookie(popupCookieName, '1', 24);
             const overlay = document.getElementById('popup-overlay');
             if (!overlay) { return; }
             overlay.style.display = 'flex';
