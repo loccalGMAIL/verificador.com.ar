@@ -7,6 +7,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\SubscriptionPayment;
 use App\Services\MercadoPagoService;
+use App\Services\SubscriptionPaymentSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -95,6 +96,30 @@ class SubscriptionController extends Controller
         $subscription->load(['store', 'plan', 'payments' => fn ($q) => $q->latest('paid_at')]);
 
         return view('admin.subscriptions.show', compact('subscription'));
+    }
+
+    public function syncFromMp(Subscription $subscription, SubscriptionPaymentSyncService $sync): RedirectResponse
+    {
+        if (! $subscription->mp_subscription_id) {
+            return back()->with('error', 'La suscripción no tiene un ID de MercadoPago asociado.');
+        }
+
+        try {
+            $count = $sync->syncSubscription($subscription);
+        } catch (\Exception $e) {
+            Log::error('MP syncFromMp falló', [
+                'subscription' => $subscription->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'No se pudo sincronizar con MercadoPago: '.$e->getMessage());
+        }
+
+        activity()->log('subscription.mp_synced', $subscription, [
+            'payments_synced' => $count,
+        ]);
+
+        return back()->with('success', "Sincronizado con MercadoPago: {$count} pago(s) actualizados.");
     }
 
     public function storePayment(Request $request, Subscription $subscription): RedirectResponse

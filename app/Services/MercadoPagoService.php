@@ -30,31 +30,31 @@ class MercadoPagoService
     public function createPreapproval(Plan $plan, Store $store, string $payerEmail): array
     {
         $response = Http::withToken($this->token)
-            ->post(self::BASE_URL . '/preapproval', [
-                'reason'             => 'Suscripción verificador.com.ar — ' . $plan->name,
-                'payer_email'        => $payerEmail,
-                'external_reference' => 'store_' . $store->id . '_plan_' . $plan->id,
-                'back_url'           => config('mercadopago.back_url'),
-                'notification_url'   => config('mercadopago.notification_url'),
-                'auto_recurring'     => [
-                    'frequency'          => 1,
-                    'frequency_type'     => 'months',
+            ->post(self::BASE_URL.'/preapproval', [
+                'reason' => 'Suscripción verificador.com.ar — '.$plan->name,
+                'payer_email' => $payerEmail,
+                'external_reference' => 'store_'.$store->id.'_plan_'.$plan->id,
+                'back_url' => config('mercadopago.back_url'),
+                'notification_url' => config('mercadopago.notification_url'),
+                'auto_recurring' => [
+                    'frequency' => 1,
+                    'frequency_type' => 'months',
                     'transaction_amount' => (float) $plan->price_ars,
-                    'currency_id'        => 'ARS',
+                    'currency_id' => 'ARS',
                 ],
                 'status' => 'pending',
             ]);
 
         if (! $response->successful()) {
             throw new \RuntimeException(
-                'MercadoPago createPreapproval falló: ' . $response->body()
+                'MercadoPago createPreapproval falló: '.$response->body()
             );
         }
 
         $data = $response->json();
 
         return [
-            'id'         => $data['id'],
+            'id' => $data['id'],
             'init_point' => $data['init_point'],
         ];
     }
@@ -65,11 +65,13 @@ class MercadoPagoService
     public function getPreapproval(string $mpSubscriptionId): array
     {
         $response = Http::withToken($this->token)
-            ->get(self::BASE_URL . "/preapproval/{$mpSubscriptionId}");
+            ->connectTimeout(3)
+            ->timeout(10)
+            ->get(self::BASE_URL."/preapproval/{$mpSubscriptionId}");
 
         if (! $response->successful()) {
             throw new \RuntimeException(
-                'MercadoPago getPreapproval falló: ' . $response->body()
+                'MercadoPago getPreapproval falló: '.$response->body()
             );
         }
 
@@ -83,13 +85,13 @@ class MercadoPagoService
     public function cancelPreapproval(string $mpSubscriptionId): void
     {
         $response = Http::withToken($this->token)
-            ->put(self::BASE_URL . "/preapproval/{$mpSubscriptionId}", [
+            ->put(self::BASE_URL."/preapproval/{$mpSubscriptionId}", [
                 'status' => 'cancelled',
             ]);
 
         if (! $response->successful()) {
             throw new \RuntimeException(
-                'MercadoPago cancelPreapproval falló: ' . $response->body()
+                'MercadoPago cancelPreapproval falló: '.$response->body()
             );
         }
     }
@@ -100,15 +102,40 @@ class MercadoPagoService
     public function getAuthorizedPayment(string $mpPaymentId): array
     {
         $response = Http::withToken($this->token)
-            ->get(self::BASE_URL . "/authorized_payments/{$mpPaymentId}");
+            ->get(self::BASE_URL."/authorized_payments/{$mpPaymentId}");
 
         if (! $response->successful()) {
             throw new \RuntimeException(
-                'MercadoPago getAuthorizedPayment falló: ' . $response->body()
+                'MercadoPago getAuthorizedPayment falló: '.$response->body()
             );
         }
 
         return $response->json();
+    }
+
+    /**
+     * Busca todos los pagos recurrentes (aprobados, rechazados, en recycling)
+     * asociados a una preaprobación. Fuente de verdad para la sincronización
+     * cuando los webhooks no llegan.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function searchAuthorizedPayments(string $preapprovalId): array
+    {
+        $response = Http::withToken($this->token)
+            ->connectTimeout(3)
+            ->timeout(10)
+            ->get(self::BASE_URL.'/authorized_payments/search', [
+                'preapproval_id' => $preapprovalId,
+            ]);
+
+        if (! $response->successful()) {
+            throw new \RuntimeException(
+                'MercadoPago searchAuthorizedPayments falló: '.$response->body()
+            );
+        }
+
+        return $response->json('results', []);
     }
 
     // ── Seguridad de Webhooks ─────────────────────────────────────────────────
@@ -162,14 +189,14 @@ class MercadoPagoService
         // Construir template omitiendo valores vacíos (según nota de la documentación)
         $parts = [];
         if ($dataId !== '') {
-            $parts[] = 'id:' . strtolower($dataId);
+            $parts[] = 'id:'.strtolower($dataId);
         }
         if ($xRequestId !== '') {
-            $parts[] = 'request-id:' . $xRequestId;
+            $parts[] = 'request-id:'.$xRequestId;
         }
-        $parts[] = 'ts:' . $ts;
+        $parts[] = 'ts:'.$ts;
 
-        $signedTemplate = implode(';', $parts) . ';';
+        $signedTemplate = implode(';', $parts).';';
 
         $expected = hash_hmac('sha256', $signedTemplate, $secret);
 

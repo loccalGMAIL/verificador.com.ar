@@ -66,7 +66,16 @@
 
     @if($subscription->mp_subscription_id)
     <div class="border-t border-slate-100 pt-4 mt-2">
-        <div class="text-xs text-slate-400 uppercase tracking-wide mb-3">MercadoPago</div>
+        <div class="flex items-center justify-between mb-3">
+            <div class="text-xs text-slate-400 uppercase tracking-wide">MercadoPago</div>
+            <form method="POST" action="{{ route('admin.subscriptions.sync-mp', $subscription) }}">
+                @csrf
+                <button type="submit"
+                        class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 border border-blue-200 hover:border-blue-300 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition">
+                    <i class="fa-solid fa-rotate"></i> Sincronizar con MP
+                </button>
+            </form>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <div class="text-xs text-slate-400 mb-1">Subscription ID</div>
@@ -94,6 +103,13 @@
 <div class="mb-5 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 flex items-center gap-2 text-sm text-emerald-800">
     <i class="fa-solid fa-circle-check text-emerald-500"></i>
     {{ session('success') }}
+</div>
+@endif
+
+@if(session('error'))
+<div class="mb-5 bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-2 text-sm text-red-800">
+    <i class="fa-solid fa-circle-exclamation text-red-500"></i>
+    {{ session('error') }}
 </div>
 @endif
 

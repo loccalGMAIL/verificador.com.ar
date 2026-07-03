@@ -91,7 +91,12 @@ php artisan tinker
 ### Integración MercadoPago (suscripciones recurrentes)
 
 - **Flujo:** "Preaprobaciones sin plan asociado — pago pendiente". Se crea la preapproval con `status: pending` y `auto_recurring` inline → el usuario es redirigido a `init_point` en MP para ingresar su medio de pago → MP notifica vía webhook cuando el pago es autorizado.
-- **Servicio:** `app/Services/MercadoPagoService.php` — métodos: `createPreapproval()`, `getPreapproval()`, `cancelPreapproval()` (usa PUT, no PATCH), `getAuthorizedPayment()`, `verifyWebhookSignature()`.
+- **Servicio:** `app/Services/MercadoPagoService.php` — métodos: `createPreapproval()`, `getPreapproval()`, `cancelPreapproval()` (usa PUT, no PATCH), `getAuthorizedPayment()`, `searchAuthorizedPayments()`, `verifyWebhookSignature()`.
+- **Sincronización de pagos (red de seguridad si el webhook falla):** `app/Services/SubscriptionPaymentSyncService.php` centraliza el upsert de pagos y estado de preapproval (usado por webhook, comando, admin y retorno de MP). Vías de sincronización:
+  - **Oportunista (no requiere cron):** `syncIfDue()` corre al visitar `/dashboard/subscription` y `/dashboard/billing`, limitada a 1 vez por hora por suscripción vía `Cache::add`; si MP falla la página carga igual y el lock evita reintentos en cada visita.
+  - Comando `php artisan mp:sync-payments` (opción `--subscription=` para una sola), programado cada 6 hs en `routes/console.php` — solo corre si el servidor tiene cron llamando a `schedule:run`.
+  - Botón "Sincronizar con MP" en el detalle admin (`POST /admin/subscriptions/{subscription}/sync-mp`).
+  - `returnFromMp` también sincroniza los pagos al volver del checkout.
 - **Config:** `config/mercadopago.php` — lee `MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET`, construye `back_url` y `notification_url` desde `APP_URL`.
 - **Variables de entorno requeridas:**
   - `MP_ACCESS_TOKEN` — token del vendedor (en sandbox: token del usuario de prueba vendedor `APP_USR-...`)
