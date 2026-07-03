@@ -174,6 +174,94 @@ class MercadoPagoPaymentSyncTest extends TestCase
         $this->assertDatabaseCount('subscription_payments', 0);
     }
 
+    public function test_subscription_page_syncs_payments_from_mp_once_per_hour(): void
+    {
+        $subscription = $this->makeSubscription('sub_123');
+        $owner = User::factory()->create(['role' => 'owner', 'store_id' => $subscription->store_id]);
+
+        $this->mock(MercadoPagoService::class, function ($mock) {
+            $mock->shouldReceive('getPreapproval')->once()->andReturn(['status' => 'authorized', 'payer_id' => null]);
+            $mock->shouldReceive('searchAuthorizedPayments')->once()->andReturn([
+                [
+                    'id' => 'pay_lazy',
+                    'transaction_amount' => 5000.0,
+                    'currency_id' => 'ARS',
+                    'status' => 'processed',
+                    'date_approved' => '2026-06-01T12:00:00.000-03:00',
+                    'debit_date' => '2026-06-01T00:00:00.000-03:00',
+                ],
+            ]);
+        });
+
+        // Primera visita sincroniza; la segunda queda limitada por el throttle
+        $this->actingAs($owner)->get(route('dashboard.subscription'))->assertOk();
+        $this->actingAs($owner)->get(route('dashboard.subscription'))->assertOk();
+
+        $this->assertDatabaseHas('subscription_payments', [
+            'subscription_id' => $subscription->id,
+            'mp_payment_id' => 'pay_lazy',
+            'status' => 'processed',
+        ]);
+    }
+
+    public function test_billing_page_triggers_opportunistic_sync(): void
+    {
+        $subscription = $this->makeSubscription('sub_123');
+        $owner = User::factory()->create(['role' => 'owner', 'store_id' => $subscription->store_id]);
+
+        $this->mockMercadoPago([
+            [
+                'id' => 'pay_lazy',
+                'transaction_amount' => 5000.0,
+                'currency_id' => 'ARS',
+                'status' => 'processed',
+                'date_approved' => '2026-06-01T12:00:00.000-03:00',
+                'debit_date' => '2026-06-01T00:00:00.000-03:00',
+            ],
+        ]);
+
+        $this->actingAs($owner)->get(route('dashboard.billing'))->assertOk();
+
+        $this->assertDatabaseHas('subscription_payments', [
+            'subscription_id' => $subscription->id,
+            'mp_payment_id' => 'pay_lazy',
+        ]);
+    }
+
+    public function test_subscription_page_loads_even_if_mp_fails(): void
+    {
+        $subscription = $this->makeSubscription('sub_123');
+        $owner = User::factory()->create(['role' => 'owner', 'store_id' => $subscription->store_id]);
+
+        $this->mock(MercadoPagoService::class, function ($mock) {
+            $mock->shouldReceive('getPreapproval')->andThrow(new \RuntimeException('MP caído'));
+            $mock->shouldReceive('searchAuthorizedPayments')->andThrow(new \RuntimeException('MP caído'));
+        });
+
+        $this->actingAs($owner)->get(route('dashboard.subscription'))->assertOk();
+
+        $this->assertDatabaseCount('subscription_payments', 0);
+    }
+
+    public function test_subscription_page_does_not_sync_without_mp_subscription_id(): void
+    {
+        $plan = Plan::create(['name' => 'Free', 'price_usd' => 0, 'price_ars' => 0]);
+        $store = Store::create(['name' => 'Free Store', 'slug' => 'free-'.uniqid()]);
+        Subscription::create([
+            'store_id' => $store->id,
+            'plan_id' => $plan->id,
+            'status' => 'active',
+        ]);
+        $owner = User::factory()->create(['role' => 'owner', 'store_id' => $store->id]);
+
+        $this->mock(MercadoPagoService::class, function ($mock) {
+            $mock->shouldNotReceive('getPreapproval');
+            $mock->shouldNotReceive('searchAuthorizedPayments');
+        });
+
+        $this->actingAs($owner)->get(route('dashboard.subscription'))->assertOk();
+    }
+
     public function test_admin_can_sync_subscription_from_mp(): void
     {
         $subscription = $this->makeSubscription('sub_123');

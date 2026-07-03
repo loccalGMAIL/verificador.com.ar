@@ -5,11 +5,49 @@ namespace App\Services;
 use App\Models\Subscription;
 use App\Models\SubscriptionPayment;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class SubscriptionPaymentSyncService
 {
+    /**
+     * Intervalo mínimo entre sincronizaciones oportunistas por suscripción.
+     */
+    private const SYNC_THROTTLE_MINUTES = 60;
+
     public function __construct(private MercadoPagoService $mp) {}
+
+    /**
+     * Sincronización oportunista: se dispara desde las páginas que muestran
+     * pagos (suscripción/facturación) como alternativa al scheduler cuando
+     * no hay cron configurado. Se limita a una vez por hora por suscripción
+     * y nunca interrumpe la carga de la página si MP falla.
+     */
+    public function syncIfDue(?Subscription $subscription): void
+    {
+        if (! $subscription?->mp_subscription_id || empty(config('mercadopago.access_token'))) {
+            return;
+        }
+
+        // Cache::add es atómico: solo el primer request del intervalo sincroniza.
+        // Si MP falla, el lock se mantiene para no reintentar en cada visita.
+        if (! Cache::add(
+            "mp-payment-sync:{$subscription->id}",
+            true,
+            now()->addMinutes(self::SYNC_THROTTLE_MINUTES)
+        )) {
+            return;
+        }
+
+        try {
+            $this->syncSubscription($subscription);
+        } catch (\Exception $e) {
+            Log::warning('MP sync oportunista falló', [
+                'subscription_id' => $subscription->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
 
     /**
      * Sincroniza una suscripción completa contra MercadoPago:

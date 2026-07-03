@@ -65,6 +65,8 @@ class MercadoPagoService
     public function getPreapproval(string $mpSubscriptionId): array
     {
         $response = Http::withToken($this->token)
+            ->connectTimeout(3)
+            ->timeout(10)
             ->get(self::BASE_URL."/preapproval/{$mpSubscriptionId}");
 
         if (! $response->successful()) {
@@ -121,6 +123,8 @@ class MercadoPagoService
     public function searchAuthorizedPayments(string $preapprovalId): array
     {
         $response = Http::withToken($this->token)
+            ->connectTimeout(3)
+            ->timeout(10)
             ->get(self::BASE_URL.'/authorized_payments/search', [
                 'preapproval_id' => $preapprovalId,
             ]);
