@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Plan;
 use App\Services\MercadoPagoService;
+use App\Services\SubscriptionPaymentSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -105,7 +106,7 @@ class SubscriptionController extends Controller
         return view('dashboard.billing.index', compact('sub', 'nextDue'));
     }
 
-    public function returnFromMp(Request $request): RedirectResponse
+    public function returnFromMp(Request $request, SubscriptionPaymentSyncService $sync): RedirectResponse
     {
         $preapprovalId = $request->query('preapproval_id');
         $mpStatus = null;
@@ -118,23 +119,10 @@ class SubscriptionController extends Controller
                 $sub = auth()->user()->store->subscription;
 
                 if ($sub && $sub->mp_subscription_id === $preapprovalId) {
-                    $localStatus = match ($mpStatus) {
-                        'authorized' => 'active',
-                        'paused' => 'suspended',
-                        'cancelled' => 'cancelled',
-                        default => null,
-                    };
+                    $sync->syncPreapprovalStatus($sub, $mpData);
 
-                    if ($localStatus && $sub->status !== $localStatus) {
-                        $updates = ['status' => $localStatus];
-                        if ($localStatus === 'active' && ! $sub->starts_at) {
-                            $updates['starts_at'] = now();
-                        }
-                        if (! empty($mpData['payer_id']) && ! $sub->mp_payer_id) {
-                            $updates['mp_payer_id'] = $mpData['payer_id'];
-                        }
-                        $sub->update($updates);
-                    }
+                    // Registrar el primer cobro sin depender del webhook
+                    $sync->syncPayments($sub);
                 }
             } catch (\Exception $e) {
                 Log::warning('No se pudo verificar preapproval en el retorno de MP', [

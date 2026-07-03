@@ -204,6 +204,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/subscriptions/{subscription}/reset-trial', [AdminSubscriptionController::class, 'resetTrial'])->name('subscriptions.reset-trial');
         Route::get('/subscriptions/{subscription}', [AdminSubscriptionController::class, 'show'])->name('subscriptions.show');
         Route::post('/subscriptions/{subscription}/payments', [AdminSubscriptionController::class, 'storePayment'])->name('subscriptions.payments.store');
+        Route::post('/subscriptions/{subscription}/sync-mp', [AdminSubscriptionController::class, 'syncFromMp'])->name('subscriptions.sync-mp');
 
         // --- Planes ---
         Route::resource('plans', AdminPlanController::class)
