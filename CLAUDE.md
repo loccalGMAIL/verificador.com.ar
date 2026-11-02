@@ -113,6 +113,17 @@ php artisan tinker
 - **Verificación de firma HMAC:** `data.id` viene del query string (no del body). Template: `id:{dataId};request-id:{xRequestId};ts:{ts};`. Si `MP_WEBHOOK_SECRET` está vacío, se omite la verificación (solo en local/dev).
 - **Sandbox:** `APP_URL` debe ser una URL pública (ngrok). MP rechaza localhost en `back_url`/`notification_url`. El `notification_url` se pasa en el payload de creación del preapproval (no se puede configurar a nivel de app para suscripciones).
 
+### Integración Odoo (sincronización de productos)
+
+- **API:** JSON-2 de Odoo 19+ (`POST {url}/json/2/{modelo}/{método}`, headers `Authorization: bearer <api_key>` y `X-Odoo-Database`). No se soporta XML-RPC/JSON-RPC (obsoletos desde Odoo 19). Dirección única: Odoo → verificador.
+- **Modelo:** `OdooConnection` (uno por Store, `Store::odooConnection()`): `url`, `database`, `api_key` (cast `encrypted`, `$hidden`), `enabled`, `sync_cursor` (mayor `write_date` UTC sincronizado), `last_synced_at`, `last_sync_status` (success/failed), `last_sync_stats`, `last_error`. `guessDatabase()` deriva la base del subdominio en `*.odoo.com`.
+- **Servicios:** `app/Services/Odoo/OdooClient.php` (`call()`, `searchRead()`, `testConnection()`; errores como `OdooException` con mensaje en español) y `OdooProductSyncService::sync()`: incremental por `write_date >= sync_cursor`, `context.active_test = false`, paginado (`services.odoo.page_size`), upsert por `odoo_product_id` y luego `barcode`, desactiva archivados, respeta `max_products`, omite códigos duplicados. Usa `Cache::lock` por conexión para no correr en paralelo; devuelve `null` si ya hay una en curso.
+- **Productos:** columnas `source` (`null` = manual/Excel, `'odoo'`) y `odoo_product_id`. El precio va a `products.price` (igual que el import Excel). Si `Product::isManagedByOdoo()`, `ProductController@update` ignora `name`, `barcode`, `price` y `active`. Al desconectar, `source` vuelve a `null`.
+- **Ejecución:** job `SyncOdooProducts` (propiedad `$odooConnection`, no `$connection` porque choca con `Queueable`) vía `dispatchAfterResponse` al conectar y con "Sincronizar ahora"; comando `php artisan odoo:sync {--store=}` cada 30 min en `routes/console.php` (requiere cron con `schedule:run`; solo comercios con feature `has_api`).
+- **Rutas** (feature `has_api`): `GET/PUT/DELETE /dashboard/settings/odoo` y `POST /dashboard/settings/odoo/sync` → `Dashboard\OdooConnectionController`. Vista `resources/views/dashboard/settings/odoo.blade.php`, pestaña "Odoo" en `_tabs`.
+- **Seguridad:** la URL se valida con `App\Rules\PublicHttpsUrl` (solo https a hosts públicos, anti-SSRF). La conexión se prueba (`search_count` de `product.product`) antes de guardarse.
+- **Tests:** `tests/Feature/OdooIntegrationTest.php` con `Http::fake()`.
+
 ### Branding en vistas públicas
 - `resources/views/scan/index.blade.php` — vista móvil del QR; tiene barra fija en el fondo que publicita verificador.com.ar.
 - `resources/views/layouts/public.blade.php` — footer de la landing incluye crédito "Diseñado por pez.com.ar".
