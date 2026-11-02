@@ -5,6 +5,16 @@
 
 @section('content')
 <div class="max-w-2xl">
+    @php $managedByOdoo = $product->isManagedByOdoo(); @endphp
+
+    @if($managedByOdoo)
+    <div class="mb-4 bg-violet-50 border border-violet-200 rounded-xl px-4 py-3 text-sm text-violet-700">
+        <i class="fa-solid fa-plug mr-2"></i>
+        Este producto se sincroniza desde <strong>Odoo</strong>: el nombre, el código de barras, el precio y el estado
+        se modifican en Odoo. Acá podés editar la descripción y la imagen.
+    </div>
+    @endif
+
     <div class="bg-white rounded-xl border border-slate-200 p-5">
 
         <form method="POST" action="{{ route('dashboard.products.update', $product) }}"
@@ -17,7 +27,8 @@
                     Nombre <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="name" value="{{ old('name', $product->name) }}" required
-                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
+                       @if($managedByOdoo) readonly @endif
+                       class="read-only:bg-slate-50 read-only:text-slate-500 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm
                               focus:outline-none focus:ring-2 focus:ring-blue-500
                               @error('name') border-red-400 @enderror">
                 @error('name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
@@ -32,6 +43,7 @@
                     <div class="flex gap-2">
                         <div class="flex-1 relative min-w-0">
                             <input type="text" name="barcode" id="barcode" x-model="barcode"
+                                   @if($managedByOdoo) readonly @endif
                                    @input.debounce.450ms="check()"
                                    class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono
                                           focus:outline-none focus:ring-2 focus:ring-blue-500
@@ -46,6 +58,7 @@
                                 <i class="fa-solid fa-circle-xmark absolute right-3 top-2.5 text-red-500 text-sm" :title="statusMessage"></i>
                             </template>
                         </div>
+                        @unless($managedByOdoo)
                         <button type="button" @click="generate()"
                                 :disabled="loading"
                                 class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-sm font-medium transition
@@ -53,6 +66,7 @@
                             <i class="fa-solid fa-wand-magic-sparkles"></i>
                             <span class="hidden sm:inline">Generar</span>
                         </button>
+                        @endunless
                     </div>
                     <template x-if="statusMessage && status === 'taken'">
                         <p class="text-red-500 text-xs mt-1" x-text="statusMessage"></p>
@@ -66,6 +80,7 @@
                         <span class="absolute left-3 top-2 text-slate-400 text-sm">$</span>
                         <input type="number" step="0.01" min="0" name="price"
                                value="{{ old('price', $product->price) }}" placeholder="0.00"
+                               @if($managedByOdoo) readonly @endif
                                class="w-full border border-slate-300 rounded-lg pl-7 pr-3 py-2 text-sm
                                       focus:outline-none focus:ring-2 focus:ring-blue-500
                                       @error('price') border-red-400 @enderror">
@@ -109,6 +124,7 @@
                     <input type="hidden" name="active" value="0">
                     <input type="checkbox" name="active" id="active" value="1"
                            class="rounded border-slate-300 text-blue-600"
+                           @if($managedByOdoo) disabled @endif
                            {{ old('active', $product->active) ? 'checked' : '' }}>
                     <label for="active" class="text-sm text-slate-700 cursor-pointer">
                         Producto activo

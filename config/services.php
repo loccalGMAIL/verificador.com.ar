@@ -46,4 +46,9 @@ return [
         'secret'   => env('HCAPTCHA_SECRET'),
     ],
 
+    'odoo' => [
+        'timeout' => env('ODOO_TIMEOUT', 30),
+        'page_size' => env('ODOO_PAGE_SIZE', 200),
+    ],
+
 ];

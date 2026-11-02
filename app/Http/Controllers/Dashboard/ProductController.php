@@ -121,7 +121,7 @@ class ProductController extends Controller
         ]);
 
         // Verificar barcode único (excluyendo este producto, solo si se proporcionó)
-        if (! empty($data['barcode'])) {
+        if (! $product->isManagedByOdoo() && ! empty($data['barcode'])) {
             $exists = Product::where('store_id', $storeId)
                 ->where('barcode', $data['barcode'])
                 ->where('id', '!=', $product->id)
@@ -132,6 +132,11 @@ class ProductController extends Controller
         }
 
         $data['active'] = $request->boolean('active', true);
+
+        // Productos sincronizados desde Odoo: nombre, código, precio y estado los define Odoo
+        if ($product->isManagedByOdoo()) {
+            $data = array_diff_key($data, array_flip(['name', 'barcode', 'price', 'active']));
+        }
 
         if ($request->hasFile('image')) {
             // Eliminar imagen anterior

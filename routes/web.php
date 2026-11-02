@@ -15,6 +15,7 @@ use App\Http\Controllers\Dashboard\BranchController;
 use App\Http\Controllers\Dashboard\CustomFieldController;
 use App\Http\Controllers\Dashboard\HomeController as DashboardHome;
 use App\Http\Controllers\Dashboard\ImportProfileController;
+use App\Http\Controllers\Dashboard\OdooConnectionController;
 use App\Http\Controllers\Dashboard\LabelController;
 use App\Http\Controllers\Dashboard\PriceListController;
 use App\Http\Controllers\Dashboard\ProductController;
@@ -157,6 +158,15 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         Route::post('/settings/import-profiles', [ImportProfileController::class, 'store'])->name('settings.import-profiles.store');
         Route::put('/settings/import-profiles/{importProfile}', [ImportProfileController::class, 'update'])->name('settings.import-profiles.update');
         Route::delete('/settings/import-profiles/{importProfile}', [ImportProfileController::class, 'destroy'])->name('settings.import-profiles.destroy');
+
+        // --- Integración Odoo ---
+        Route::middleware('feature:has_api')
+            ->group(function () {
+                Route::get('/settings/odoo', [OdooConnectionController::class, 'index'])->name('settings.odoo');
+                Route::put('/settings/odoo', [OdooConnectionController::class, 'update'])->name('settings.odoo.update');
+                Route::post('/settings/odoo/sync', [OdooConnectionController::class, 'sync'])->name('settings.odoo.sync');
+                Route::delete('/settings/odoo', [OdooConnectionController::class, 'destroy'])->name('settings.odoo.destroy');
+            });
 
         // --- Campos personalizados de producto ---
         Route::get('/settings/custom-fields', [CustomFieldController::class, 'index'])->name('settings.custom-fields.index');

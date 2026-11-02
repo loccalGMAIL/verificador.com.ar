@@ -111,6 +111,12 @@ class Store extends Model
         return $this->belongsTo(ProductCustomFieldDefinition::class, 'wholesale_custom_field_id');
     }
 
+    /** Conexión con Odoo (integración por API) */
+    public function odooConnection(): HasOne
+    {
+        return $this->hasOne(OdooConnection::class);
+    }
+
     // --- Helpers ---
 
     public function generateInviteToken(): string

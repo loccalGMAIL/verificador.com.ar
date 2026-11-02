@@ -11,6 +11,21 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.18.0] - 2026-11-02
+
+### Agregado
+
+- **Integración con Odoo (API JSON-2)** — los comercios con Odoo 19 o superior (Online o propio) pueden conectar su instancia desde la nueva pestaña **Configuración → Odoo** (requiere el feature de plan `has_api`). Se ingresa la URL y una API key generada en Odoo; la base de datos se completa automáticamente para `*.odoo.com`. La conexión se prueba antes de guardarse y la API key se almacena encriptada (`odoo_connections`).
+- **Sincronización de productos desde Odoo** — `OdooProductSyncService` trae los `product.product` con código de barras (nombre, código, precio de venta y estado). Es incremental por `write_date`, hace upsert por `odoo_product_id` o código de barras, desactiva los productos archivados en Odoo, respeta el límite de productos del plan y omite códigos que ya usa otro producto del comercio. Se ejecuta al conectar, con el botón "Sincronizar ahora" (`dispatchAfterResponse`, sin necesidad de worker de cola) y con el comando `php artisan odoo:sync` programado cada 30 minutos. El resultado o el error de la última sincronización se muestra en la pestaña.
+- **Productos gestionados por Odoo** — nuevas columnas `source` y `odoo_product_id` en `products`. Los productos sincronizados muestran la etiqueta "Odoo" en el listado y su nombre, código, precio y estado no se pueden editar localmente (solo descripción e imagen). Al desconectar Odoo, los productos se conservan y vuelven a ser editables.
+- **Sincronización de pagos con MercadoPago** — `SubscriptionPaymentSyncService` centraliza el registro de pagos y el estado de la preapproval como red de seguridad si un webhook no llega. Se ejecuta de forma oportunista al visitar Suscripción/Facturación (máximo una vez por hora por suscripción), con el comando `php artisan mp:sync-payments` (cada 6 horas), con el botón "Sincronizar con MP" en el detalle admin y al volver del checkout de MP.
+
+### Seguridad
+
+- **Validación de URL de Odoo** — la regla `PublicHttpsUrl` solo acepta URLs `https` hacia hosts públicos, evitando que el servidor haga requests a direcciones internas (localhost, redes privadas, metadata de la nube).
+
+---
+
 ## [1.17.0] - 2026-07-01
 
 ### Agregado

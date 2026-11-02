@@ -85,7 +85,15 @@
                         @endif
                     </td>
                     <td class="px-4 py-3">
-                        <p class="font-medium text-slate-800">{{ $product->name }}</p>
+                        <p class="font-medium text-slate-800">
+                            {{ $product->name }}
+                            @if($product->isManagedByOdoo())
+                                <span class="ml-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-violet-100 text-violet-700 align-middle"
+                                      title="Sincronizado desde Odoo">
+                                    <i class="fa-solid fa-plug text-[9px]"></i>Odoo
+                                </span>
+                            @endif
+                        </p>
                         @if($product->description)
                             <p class="text-xs text-slate-400 truncate max-w-xs">{{ $product->description }}</p>
                         @endif

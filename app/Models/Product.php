@@ -20,6 +20,8 @@ class Product extends Model
         'image_path',
         'custom_fields',
         'active',
+        'source',
+        'odoo_product_id',
     ];
 
     protected function casts(): array
@@ -49,6 +51,12 @@ class Product extends Model
     public function priceForList(PriceList $list): ?ProductPrice
     {
         return $this->prices->firstWhere('price_list_id', $list->id);
+    }
+
+    /** Indica si el producto se sincroniza desde Odoo (nombre, código, precio y estado no se editan acá) */
+    public function isManagedByOdoo(): bool
+    {
+        return $this->source === 'odoo';
     }
 
     public function formattedPrice(): string
