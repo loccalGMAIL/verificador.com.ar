@@ -17,19 +17,19 @@ class SyncOdooProducts implements ShouldQueue
     public int $timeout = 600;
 
     public function __construct(
-        public readonly OdooConnection $connection
+        public readonly OdooConnection $odooConnection
     ) {}
 
     public function handle(OdooProductSyncService $service): void
     {
         set_time_limit($this->timeout);
 
-        if (! $this->connection->enabled) {
+        if (! $this->odooConnection->enabled) {
             return;
         }
 
         try {
-            $service->sync($this->connection);
+            $service->sync($this->odooConnection);
         } catch (OdooException) {
             // El error queda registrado en la conexión (last_error) y se muestra en Configuración
         }
