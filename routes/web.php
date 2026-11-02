@@ -11,12 +11,13 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\InviteController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Dashboard\ApiSettingsController;
 use App\Http\Controllers\Dashboard\BranchController;
 use App\Http\Controllers\Dashboard\CustomFieldController;
 use App\Http\Controllers\Dashboard\HomeController as DashboardHome;
 use App\Http\Controllers\Dashboard\ImportProfileController;
-use App\Http\Controllers\Dashboard\OdooConnectionController;
 use App\Http\Controllers\Dashboard\LabelController;
+use App\Http\Controllers\Dashboard\OdooConnectionController;
 use App\Http\Controllers\Dashboard\PriceListController;
 use App\Http\Controllers\Dashboard\ProductController;
 use App\Http\Controllers\Dashboard\ProductImportController;
@@ -159,13 +160,16 @@ Route::middleware(['auth', 'role:owner,employee', 'subscription'])
         Route::put('/settings/import-profiles/{importProfile}', [ImportProfileController::class, 'update'])->name('settings.import-profiles.update');
         Route::delete('/settings/import-profiles/{importProfile}', [ImportProfileController::class, 'destroy'])->name('settings.import-profiles.destroy');
 
-        // --- Integración Odoo ---
+        // --- API e integraciones ---
+        Route::get('/settings/api', [ApiSettingsController::class, 'index'])->name('settings.api');
         Route::middleware('feature:has_api')
+            ->prefix('settings/api/odoo')
             ->group(function () {
-                Route::get('/settings/odoo', [OdooConnectionController::class, 'index'])->name('settings.odoo');
-                Route::put('/settings/odoo', [OdooConnectionController::class, 'update'])->name('settings.odoo.update');
-                Route::post('/settings/odoo/sync', [OdooConnectionController::class, 'sync'])->name('settings.odoo.sync');
-                Route::delete('/settings/odoo', [OdooConnectionController::class, 'destroy'])->name('settings.odoo.destroy');
+                Route::get('/', [OdooConnectionController::class, 'index'])->name('settings.odoo');
+                Route::put('/', [OdooConnectionController::class, 'update'])->name('settings.odoo.update');
+                Route::post('/sync', [OdooConnectionController::class, 'sync'])->name('settings.odoo.sync');
+                Route::put('/auto-sync', [OdooConnectionController::class, 'toggleAutoSync'])->name('settings.odoo.auto-sync');
+                Route::delete('/', [OdooConnectionController::class, 'destroy'])->name('settings.odoo.destroy');
             });
 
         // --- Campos personalizados de producto ---

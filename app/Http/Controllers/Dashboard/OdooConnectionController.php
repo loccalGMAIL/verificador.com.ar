@@ -20,7 +20,7 @@ class OdooConnectionController extends Controller
         $connection = $store->odooConnection;
         $odooProductCount = $store->products()->where('source', 'odoo')->count();
 
-        return view('dashboard.settings.odoo', compact('store', 'connection', 'odooProductCount'));
+        return view('dashboard.settings.api.odoo', compact('store', 'connection', 'odooProductCount'));
     }
 
     /** Guarda (o actualiza) la conexión, probándola antes contra Odoo */
@@ -61,7 +61,6 @@ class OdooConnectionController extends Controller
             'url' => $url,
             'database' => $database,
             'api_key' => $apiKey,
-            'enabled' => true,
             // Si cambió la instancia, la próxima sincronización trae todo el catálogo
             'sync_cursor' => $credentialsChanged ? null : $connection->sync_cursor,
             'last_sync_status' => null,
@@ -86,6 +85,23 @@ class OdooConnectionController extends Controller
 
         return redirect()->route('dashboard.settings.odoo')
             ->with('success', 'Sincronización iniciada. Actualizá la página en unos instantes para ver el resultado.');
+    }
+
+    /** Pausa o reanuda la sincronización automática (comando odoo:sync) */
+    public function toggleAutoSync(): RedirectResponse
+    {
+        $connection = auth()->user()->store->odooConnection;
+
+        abort_unless($connection, 404);
+
+        $connection->update(['enabled' => ! $connection->enabled]);
+
+        activity()->log('odoo.auto_sync_toggled', $connection, ['enabled' => $connection->enabled]);
+
+        return redirect()->route('dashboard.settings.api')
+            ->with('success', $connection->enabled
+                ? 'Sincronización automática con Odoo reanudada.'
+                : 'Sincronización automática con Odoo pausada. Podés seguir sincronizando manualmente.');
     }
 
     /** Desconecta Odoo: los productos quedan y vuelven a ser editables */
