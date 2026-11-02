@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Red de seguridad: si algún webhook de MP no llega, los pagos se recuperan igual
 Schedule::command('mp:sync-payments')->everySixHours()->withoutOverlapping();
+
+// Integración Odoo: trae los cambios de catálogo de los comercios conectados
+Schedule::command('odoo:sync')->everyThirtyMinutes()->withoutOverlapping();

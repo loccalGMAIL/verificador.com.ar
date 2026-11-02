@@ -1,7 +1,7 @@
 {{--
     Barra de pestañas compartida entre todas las vistas de Configuración.
     Variable esperada: $settingsActiveTab (string) — identifica la pestaña activa.
-    Valores: 'general' | 'excel-import' | 'print' | 'appearance' | 'custom-fields' | 'users'
+    Valores: 'general' | 'excel-import' | 'print' | 'appearance' | 'custom-fields' | 'odoo' | 'users'
 --}}
 <div class="flex gap-1 mb-6 border-b border-slate-200 overflow-x-auto">
     @foreach([
@@ -11,6 +11,7 @@
         'print'        => ['icon' => 'fa-print',         'label' => 'Impresión QR',        'href' => route('dashboard.settings', ['tab' => 'print'])],
         'appearance'   => ['icon' => 'fa-palette',       'label' => 'Apariencia',          'href' => route('dashboard.settings', ['tab' => 'appearance'])],
         'anuncios'     => ['icon' => 'fa-bullhorn',      'label' => 'Anuncios',            'href' => route('dashboard.settings', ['tab' => 'anuncios'])],
+        'odoo'         => ['icon' => 'fa-plug',          'label' => 'Odoo',                'href' => route('dashboard.settings.odoo')],
         'users'        => ['icon' => 'fa-users',         'label' => 'Usuarios',            'href' => route('dashboard.users.index')],
     ] as $key => $tab)
     <a href="{{ $tab['href'] }}"
