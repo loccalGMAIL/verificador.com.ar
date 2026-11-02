@@ -210,6 +210,97 @@ class OdooIntegrationTest extends TestCase
         $this->assertNull($product->fresh()->source);
     }
 
+    // ── Sección API (configuración básica) ──────────────────────────
+
+    public function test_api_overview_shows_upgrade_notice_without_api_feature(): void
+    {
+        $user = $this->createOwner(['has_api' => false]);
+
+        $this->actingAs($user)
+            ->get(route('dashboard.settings.api'))
+            ->assertOk()
+            ->assertSee('Tu plan no incluye integraciones por API')
+            ->assertSee(route('dashboard.subscription'));
+    }
+
+    public function test_api_overview_shows_odoo_status(): void
+    {
+        $user = $this->createOwner();
+        $this->createConnection($user->store, ['last_synced_at' => now(), 'last_sync_status' => 'success']);
+        Product::create(['store_id' => $user->store_id, 'name' => 'A', 'barcode' => '1', 'source' => 'odoo', 'odoo_product_id' => 1]);
+
+        $this->actingAs($user)
+            ->get(route('dashboard.settings.api'))
+            ->assertOk()
+            ->assertDontSee('Tu plan no incluye integraciones por API')
+            ->assertSee('https://miempresa.odoo.com')
+            ->assertSee('1 productos desde Odoo')
+            ->assertSee(route('dashboard.settings.odoo.auto-sync'));
+    }
+
+    public function test_api_overview_without_connection_offers_to_connect(): void
+    {
+        $user = $this->createOwner();
+
+        $this->actingAs($user)
+            ->get(route('dashboard.settings.api'))
+            ->assertOk()
+            ->assertSee('No conectado')
+            ->assertSee(route('dashboard.settings.odoo'));
+    }
+
+    public function test_owner_can_pause_and_resume_auto_sync(): void
+    {
+        $user = $this->createOwner();
+        $connection = $this->createConnection($user->store);
+
+        $this->actingAs($user)
+            ->put(route('dashboard.settings.odoo.auto-sync'))
+            ->assertRedirect(route('dashboard.settings.api'));
+        $this->assertFalse($connection->fresh()->enabled);
+
+        $this->actingAs($user)->put(route('dashboard.settings.odoo.auto-sync'));
+        $this->assertTrue($connection->fresh()->enabled);
+    }
+
+    public function test_command_skips_paused_connections(): void
+    {
+        $user = $this->createOwner();
+        $this->createConnection($user->store, ['enabled' => false]);
+        $this->fakeOdoo([$this->odooProduct(1, '100')]);
+
+        $this->artisan('odoo:sync')->assertSuccessful();
+
+        Http::assertNothingSent();
+        $this->assertSame(0, Product::where('store_id', $user->store_id)->count());
+    }
+
+    public function test_manual_sync_runs_even_when_auto_sync_is_paused(): void
+    {
+        $user = $this->createOwner();
+        $this->createConnection($user->store, ['enabled' => false]);
+        $this->fakeOdoo([$this->odooProduct(1, '100')]);
+
+        $this->actingAs($user)
+            ->post(route('dashboard.settings.odoo.sync'))
+            ->assertRedirect(route('dashboard.settings.odoo'));
+
+        $this->assertSame(1, Product::where('store_id', $user->store_id)->count());
+    }
+
+    public function test_saving_credentials_does_not_resume_paused_auto_sync(): void
+    {
+        $user = $this->createOwner();
+        $connection = $this->createConnection($user->store, ['enabled' => false]);
+        $this->fakeOdoo([]);
+
+        $this->actingAs($user)
+            ->put(route('dashboard.settings.odoo.update'), ['url' => 'https://miempresa.odoo.com', 'api_key' => 'nueva'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertFalse($connection->fresh()->enabled);
+    }
+
     // ── Sincronización ───────────────────────────────────────────────
 
     public function test_sync_creates_updates_and_deactivates_products(): void

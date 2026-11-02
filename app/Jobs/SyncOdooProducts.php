@@ -24,10 +24,6 @@ class SyncOdooProducts implements ShouldQueue
     {
         set_time_limit($this->timeout);
 
-        if (! $this->odooConnection->enabled) {
-            return;
-        }
-
         try {
             $service->sync($this->odooConnection);
         } catch (OdooException) {

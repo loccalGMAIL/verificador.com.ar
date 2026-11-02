@@ -5,8 +5,9 @@
 
 @section('content')
 
-@php $settingsActiveTab = 'odoo'; @endphp
+@php $settingsActiveTab = 'api'; $apiActiveTab = 'odoo'; @endphp
 @include('dashboard.settings._tabs')
+@include('dashboard.settings.api._tabs')
 
 @if(session('success'))
 <div class="mb-5 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700">
@@ -80,9 +81,16 @@
             </p>
             @endif
 
+            @if($connection->enabled)
             <p class="text-xs text-slate-400">
                 Los cambios de Odoo se traen automáticamente cada 30 minutos.
             </p>
+            @else
+            <p class="text-xs text-amber-600">
+                <i class="fa-solid fa-pause mr-1"></i>Sincronización automática pausada. Podés reanudarla desde
+                <a href="{{ route('dashboard.settings.api') }}" class="underline hover:text-amber-800">Configuración básica</a>.
+            </p>
+            @endif
         </div>
         @endif
 

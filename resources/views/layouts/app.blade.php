@@ -209,6 +209,14 @@
                             {{ $tabLabel }}
                         </a>
                         @endforeach
+                        <a href="{{ route('dashboard.settings.api') }}"
+                           class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition
+                                  {{ request()->routeIs('dashboard.settings.api', 'dashboard.settings.odoo*')
+                                      ? 'bg-blue-700 text-white'
+                                      : 'text-blue-300 hover:bg-blue-900 hover:text-white' }}">
+                            <i class="fa-solid fa-minus w-3 text-center text-blue-500"></i>
+                            API
+                        </a>
                         <a href="{{ route('dashboard.users.index') }}"
                            class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition
                                   {{ $seg === 'users'

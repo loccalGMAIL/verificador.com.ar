@@ -11,6 +11,19 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.19.0] - 2026-11-02
+
+### Agregado
+
+- **Sección API en Configuración** — nueva pestaña **API** (también en el submenú del sidebar) que agrupa las integraciones, con sub-pestañas *Configuración básica* y *Odoo*. La configuración básica muestra si el plan incluye integraciones por API (con acceso a ver planes si no) y una tarjeta por integración con su estado, URL, última sincronización y cantidad de productos sincronizados.
+- **Pausar sincronización automática con Odoo** — toggle en Configuración básica para pausar o reanudar la sincronización cada 30 minutos (`odoo_connections.enabled`). Con la automática pausada se puede seguir usando "Sincronizar ahora", y guardar las credenciales ya no la reactiva.
+
+### Mejorado
+
+- **Integración Odoo** — la pantalla de conexión pasa de la pestaña "Odoo" a Configuración → API → Odoo (URLs bajo `/dashboard/settings/api/odoo`; los nombres de ruta no cambian) e indica cuando la sincronización automática está pausada.
+
+---
+
 ## [1.18.0] - 2026-11-02
 
 ### Agregado
