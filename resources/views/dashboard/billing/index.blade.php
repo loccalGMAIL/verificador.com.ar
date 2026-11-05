@@ -7,12 +7,10 @@
 
 @php
     $payments  = $sub?->payments?->sortByDesc('paid_at') ?? collect();
-    $totalPaid = $payments->where('status', 'processed')->sum('amount');
-    $lastPayment = $payments->where('status', 'processed')->first();
 @endphp
 
 {{-- ══ RESUMEN ══ --}}
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
 
     {{-- Plan actual --}}
     <div class="bg-white rounded-xl border border-slate-200 px-4 py-4 flex items-center gap-3">
@@ -67,20 +65,6 @@
                 @endif
             @else
                 <p class="font-bold text-slate-400 text-sm">—</p>
-            @endif
-        </div>
-    </div>
-
-    {{-- Total abonado --}}
-    <div class="bg-white rounded-xl border border-slate-200 px-4 py-4 flex items-center gap-3">
-        <span class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
-            <i class="fa-solid fa-money-bill-wave text-emerald-600"></i>
-        </span>
-        <div>
-            <p class="text-xs text-slate-400 mb-0.5">Total abonado</p>
-            <p class="font-bold text-slate-800 text-sm">ARS {{ number_format($totalPaid, 2, ',', '.') }}</p>
-            @if($lastPayment)
-                <p class="text-xs text-slate-400">Último: {{ $lastPayment->paid_at?->format('d/m/Y') }}</p>
             @endif
         </div>
     </div>
