@@ -20,6 +20,7 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ### Cambiado
 
 - **Estado de cuenta** — se quitó la tarjeta "Total abonado" del resumen; las tres restantes (Plan actual, Estado y Próximo vencimiento) ocupan el ancho completo.
+- **Orden del historial de pagos** — el estado de cuenta y el detalle admin de la suscripción listan los pagos del más reciente al más antiguo según su fecha efectiva (`paid_at`, luego `debit_date`, luego `created_at`), por lo que los cobros sin `paid_at` ya no quedan al final. El orden se centraliza en el scope `SubscriptionPayment::latestFirst()`.
 
 ---
 

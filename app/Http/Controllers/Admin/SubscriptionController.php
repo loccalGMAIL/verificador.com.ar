@@ -93,7 +93,7 @@ class SubscriptionController extends Controller
 
     public function show(Subscription $subscription): View
     {
-        $subscription->load(['store', 'plan', 'payments' => fn ($q) => $q->latest('paid_at')]);
+        $subscription->load(['store', 'plan', 'payments' => fn ($q) => $q->latestFirst()]);
 
         return view('admin.subscriptions.show', compact('subscription'));
     }
