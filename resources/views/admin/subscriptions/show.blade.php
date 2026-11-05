@@ -125,17 +125,30 @@
 
 {{-- Registrar pago manual --}}
 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-5">
-    <h2 class="text-sm font-semibold text-slate-700 mb-4">
+    <h2 class="text-sm font-semibold text-slate-700 mb-1">
         <i class="fa-solid fa-plus-circle text-indigo-500 mr-1.5"></i>
         Registrar pago manual
     </h2>
+    <p class="text-xs text-slate-400 mb-4">
+        Para cuotas abonadas fuera de MercadoPago (transferencia, efectivo, etc.). El pago se registra como acreditado,
+        activa la suscripción y extiende el próximo vencimiento un mes.
+    </p>
     <form method="POST" action="{{ route('admin.subscriptions.payments.store', $subscription) }}">
         @csrf
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Medio de pago</label>
+                <select name="payment_method"
+                        class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 @error('payment_method') border-red-400 @enderror" required>
+                    @foreach(\App\Models\SubscriptionPayment::MANUAL_METHODS as $methodValue => $methodLabel)
+                        <option value="{{ $methodValue }}" @selected(old('payment_method', 'transfer') === $methodValue)>{{ $methodLabel }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
                 <label class="block text-xs font-medium text-slate-600 mb-1">Monto</label>
                 <input type="number" name="amount" step="0.01" min="0.01"
-                       value="{{ old('amount') }}"
+                       value="{{ old('amount', $subscription->plan?->price_ars > 0 ? $subscription->plan->price_ars : null) }}"
                        placeholder="Ej: 5000.00"
                        class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 @error('amount') border-red-400 @enderror"
                        required>
@@ -152,8 +165,25 @@
                 <label class="block text-xs font-medium text-slate-600 mb-1">Fecha de pago</label>
                 <input type="date" name="paid_at"
                        value="{{ old('paid_at', now()->format('Y-m-d')) }}"
+                       max="{{ now()->format('Y-m-d') }}"
                        class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 @error('paid_at') border-red-400 @enderror"
                        required>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-3">
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">N° de operación <span class="text-slate-400 font-normal">(opcional)</span></label>
+                <input type="text" name="reference" maxlength="100"
+                       value="{{ old('reference') }}"
+                       placeholder="Ej: 000123456789"
+                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 @error('reference') border-red-400 @enderror">
+            </div>
+            <div class="lg:col-span-2">
+                <label class="block text-xs font-medium text-slate-600 mb-1">Notas <span class="text-slate-400 font-normal">(opcional)</span></label>
+                <input type="text" name="notes" maxlength="500"
+                       value="{{ old('notes') }}"
+                       placeholder="Ej: Transferencia desde cuenta del titular"
+                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 @error('notes') border-red-400 @enderror">
             </div>
             <div class="flex items-end">
                 <button type="submit"
@@ -161,13 +191,6 @@
                     <i class="fa-solid fa-check mr-1"></i> Registrar pago
                 </button>
             </div>
-        </div>
-        <div class="mt-3">
-            <label class="block text-xs font-medium text-slate-600 mb-1">Notas <span class="text-slate-400 font-normal">(opcional)</span></label>
-            <input type="text" name="notes" maxlength="500"
-                   value="{{ old('notes') }}"
-                   placeholder="Ej: Transferencia bancaria CBU 000..."
-                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
         </div>
     </form>
 </div>
@@ -194,7 +217,7 @@
                     <th class="text-left px-4 py-3 font-semibold text-slate-600">Monto</th>
                     <th class="text-left px-4 py-3 font-semibold text-slate-600">Estado</th>
                     <th class="text-left px-4 py-3 font-semibold text-slate-600">Origen</th>
-                    <th class="text-left px-4 py-3 font-semibold text-slate-600 hidden lg:table-cell">Notas / ID MP</th>
+                    <th class="text-left px-4 py-3 font-semibold text-slate-600 hidden lg:table-cell">Referencia / Notas</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -220,24 +243,27 @@
                         </span>
                     </td>
                     <td class="px-4 py-3">
-                        @if($payment->isManual())
-                            <span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
-                                <i class="fa-solid fa-user-shield mr-1 text-[10px]"></i> Manual
-                            </span>
-                        @else
-                            <span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                                <i class="fa-solid fa-credit-card mr-1 text-[10px]"></i> MercadoPago
-                            </span>
-                        @endif
+                        @php
+                            $methodIcon = match($payment->isManual() ? $payment->payment_method : 'mercadopago') {
+                                'mercadopago' => ['bg-blue-100 text-blue-700', 'fa-credit-card'],
+                                'transfer'    => ['bg-indigo-100 text-indigo-700', 'fa-building-columns'],
+                                'cash'        => ['bg-emerald-100 text-emerald-700', 'fa-money-bill-wave'],
+                                default       => ['bg-slate-100 text-slate-600', 'fa-user-shield'],
+                            };
+                        @endphp
+                        <span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full {{ $methodIcon[0] }}">
+                            <i class="fa-solid {{ $methodIcon[1] }} mr-1 text-[10px]"></i> {{ $payment->paymentMethodLabel() }}
+                        </span>
                     </td>
                     <td class="px-4 py-3 hidden lg:table-cell text-xs text-slate-400 max-w-xs truncate">
-                        @if($payment->notes)
-                            <span class="text-slate-600">{{ $payment->notes }}</span>
-                        @elseif($payment->mp_payment_id)
-                            <span class="font-mono">{{ $payment->mp_payment_id }}</span>
-                        @else
-                            —
-                        @endif
+                        @php
+                            $paymentDetail = array_filter([
+                                $payment->reference ? 'Op. '.$payment->reference : null,
+                                $payment->notes,
+                                ! $payment->reference && ! $payment->notes ? $payment->mp_payment_id : null,
+                            ]);
+                        @endphp
+                        <span class="text-slate-600">{{ $paymentDetail ? implode(' · ', $paymentDetail) : '—' }}</span>
                     </td>
                 </tr>
                 @empty

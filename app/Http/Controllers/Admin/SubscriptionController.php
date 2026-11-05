@@ -10,7 +10,9 @@ use App\Services\MercadoPagoService;
 use App\Services\SubscriptionPaymentSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class SubscriptionController extends Controller
@@ -124,27 +126,59 @@ class SubscriptionController extends Controller
 
     public function storePayment(Request $request, Subscription $subscription): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'amount' => ['required', 'numeric', 'min:0.01'],
-            'currency' => ['required', 'string', 'size:3'],
-            'paid_at' => ['required', 'date'],
+            'currency' => ['required', 'string', 'in:ARS,USD'],
+            'paid_at' => ['required', 'date', 'before_or_equal:today'],
+            'payment_method' => ['required', Rule::in(array_keys(SubscriptionPayment::MANUAL_METHODS))],
+            'reference' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        SubscriptionPayment::create([
+        $paidAt = Carbon::parse($validated['paid_at']);
+
+        $payment = SubscriptionPayment::create([
             'subscription_id' => $subscription->id,
             'mp_payment_id' => null,
-            'amount' => $request->amount,
-            'currency' => strtoupper($request->currency),
+            'amount' => $validated['amount'],
+            'currency' => $validated['currency'],
             'status' => 'processed',
-            'paid_at' => $request->paid_at,
-            'notes' => $request->notes,
+            'payment_method' => $validated['payment_method'],
+            'reference' => $validated['reference'] ?? null,
+            'paid_at' => $paidAt,
+            'notes' => $validated['notes'] ?? null,
         ]);
 
+        $updates = ['next_payment_date' => $this->nextPaymentDateAfterManualPayment($subscription, $paidAt)];
+
         if ($subscription->status !== 'active') {
-            $subscription->update(['status' => 'active']);
+            $updates['status'] = 'active';
         }
 
-        return back()->with('success', 'Pago registrado correctamente.');
+        $subscription->update($updates);
+
+        activity()->log('subscription.payment_registered', $subscription, [
+            'payment_id' => $payment->id,
+            'amount' => $payment->amount,
+            'currency' => $payment->currency,
+            'payment_method' => $payment->payment_method,
+        ]);
+
+        return back()->with('success', 'Pago registrado correctamente. Próximo vencimiento: '.$updates['next_payment_date']->format('d/m/Y').'.');
+    }
+
+    /**
+     * Un pago manual cubre un mes: si la suscripción está al día se extiende desde
+     * el vencimiento actual; si está vencida o no tiene vencimiento, desde la fecha de pago.
+     */
+    private function nextPaymentDateAfterManualPayment(Subscription $subscription, Carbon $paidAt): Carbon
+    {
+        $currentDue = $subscription->next_payment_date;
+
+        $base = $currentDue && $currentDue->greaterThanOrEqualTo($paidAt->copy()->startOfDay())
+            ? $currentDue->copy()
+            : $paidAt->copy();
+
+        return $base->addMonthNoOverflow();
     }
 }

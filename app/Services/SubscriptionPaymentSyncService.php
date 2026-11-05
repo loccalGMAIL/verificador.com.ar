@@ -155,6 +155,7 @@ class SubscriptionPaymentSyncService
                                         ? Carbon::parse($paymentData['debit_date'])
                                         : null,
                 'status_detail' => $paymentData['status_detail'] ?? null,
+                'payment_method' => SubscriptionPayment::METHOD_MERCADOPAGO,
             ]
         );
 

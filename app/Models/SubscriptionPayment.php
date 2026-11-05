@@ -9,6 +9,25 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SubscriptionPayment extends Model
 {
+    public const METHOD_MERCADOPAGO = 'mercadopago';
+
+    public const METHOD_TRANSFER = 'transfer';
+
+    public const METHOD_CASH = 'cash';
+
+    public const METHOD_OTHER = 'other';
+
+    /**
+     * Medios de pago que el admin puede registrar manualmente.
+     *
+     * @var array<string, string>
+     */
+    public const MANUAL_METHODS = [
+        self::METHOD_TRANSFER => 'Transferencia',
+        self::METHOD_CASH => 'Efectivo',
+        self::METHOD_OTHER => 'Otro',
+    ];
+
     protected $fillable = [
         'subscription_id',
         'mp_payment_id',
@@ -19,11 +38,26 @@ class SubscriptionPayment extends Model
         'notes',
         'debit_date',
         'status_detail',
+        'payment_method',
+        'reference',
     ];
 
     public function isManual(): bool
     {
         return $this->mp_payment_id === null;
+    }
+
+    /**
+     * Etiqueta legible del medio de pago. Los pagos manuales anteriores a
+     * `payment_method` se muestran como "Manual".
+     */
+    public function paymentMethodLabel(): string
+    {
+        if (! $this->isManual()) {
+            return 'MercadoPago';
+        }
+
+        return self::MANUAL_METHODS[$this->payment_method] ?? 'Manual';
     }
 
     protected $casts = [

@@ -13,6 +13,11 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [1.19.1] - 2026-11-05
 
+### Agregado
+
+- **Pagos por transferencia, efectivo u otro medio** — el formulario "Registrar pago manual" del detalle admin de la suscripción permite elegir el medio de pago (Transferencia, Efectivo, Otro) y cargar un N° de operación opcional (nuevas columnas `payment_method` y `reference` en `subscription_payments`; los cobros de MercadoPago se marcan como `mercadopago`). El pago se registra como acreditado, activa la suscripción y extiende el próximo vencimiento un mes: desde el vencimiento actual si estaba al día, o desde la fecha de pago si estaba vencida o no tenía vencimiento. La fecha de pago no puede ser futura. El historial (admin y estado de cuenta del comercio) muestra el medio de pago y la referencia.
+- **Acceso al estado de cuenta desde Comercios** — en `admin/stores`, cada comercio con suscripción tiene el botón "Estado de cuenta" que lleva a `admin/subscriptions/{id}`.
+
 ### Corregido
 
 - **Fecha de pago en el estado de cuenta** — los cobros recurrentes de MercadoPago se mostraban sin fecha ("—") porque la API de `/authorized_payments` no devuelve `date_approved`. Ahora, para los cobros acreditados, `paid_at` se toma de `debit_date` (o, en su defecto, `last_modified` / `date_created`). Mientras se resincronizan, los pagos ya registrados muestran la fecha de débito en el estado de cuenta y en el detalle admin de la suscripción.

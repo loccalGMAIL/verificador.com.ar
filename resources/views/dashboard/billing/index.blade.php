@@ -107,7 +107,7 @@
                     <th class="px-4 py-3 font-semibold text-slate-500">Fecha</th>
                     <th class="px-4 py-3 font-semibold text-slate-500">Monto</th>
                     <th class="px-4 py-3 font-semibold text-slate-500">Estado</th>
-                    <th class="px-4 py-3 font-semibold text-slate-500 hidden sm:table-cell">Detalle</th>
+                    <th class="px-4 py-3 font-semibold text-slate-500 hidden sm:table-cell">Medio de pago</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -133,12 +133,9 @@
                         </span>
                     </td>
                     <td class="px-4 py-3 hidden sm:table-cell text-xs text-slate-400">
-                        @if($payment->notes)
-                            {{ $payment->notes }}
-                        @elseif($payment->mp_payment_id)
-                            MercadoPago
-                        @else
-                            —
+                        {{ $payment->paymentMethodLabel() }}
+                        @if($payment->reference)
+                            · Op. {{ $payment->reference }}
                         @endif
                     </td>
                 </tr>

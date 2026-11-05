@@ -110,6 +110,8 @@ php artisan tinker
   - `POST /dashboard/subscription/subscribe/{plan}` → inicia flujo MP o activa plan gratuito directamente
   - `GET /dashboard/subscription/return` → retorno desde MP, sincroniza estado
   - `GET /admin/subscriptions/{subscription}` → detalle admin con historial de pagos
+- **Pagos manuales (transferencia/efectivo):** `POST /admin/subscriptions/{subscription}/payments` → `Admin\SubscriptionController@storePayment`. Guarda `payment_method` (`transfer`/`cash`/`other`, ver `SubscriptionPayment::MANUAL_METHODS`; los de MP usan `mercadopago`, los manuales legacy quedan en `null` → "Manual") y `reference` (N° de operación). Activa la suscripción y extiende `next_payment_date` un mes (desde el vencimiento actual si está al día, si no desde `paid_at`). El listado `admin/stores` enlaza al detalle con el botón "Estado de cuenta".
+- **Orden y fecha de pagos:** usar `SubscriptionPayment::latestFirst()` (orden por `COALESCE(paid_at, debit_date, created_at)`) y `displayDate()` para mostrar la fecha.
 - **Verificación de firma HMAC:** `data.id` viene del query string (no del body). Template: `id:{dataId};request-id:{xRequestId};ts:{ts};`. Si `MP_WEBHOOK_SECRET` está vacío, se omite la verificación (solo en local/dev).
 - **Sandbox:** `APP_URL` debe ser una URL pública (ngrok). MP rechaza localhost en `back_url`/`notification_url`. El `notification_url` se pasa en el payload de creación del preapproval (no se puede configurar a nivel de app para suscripciones).
 

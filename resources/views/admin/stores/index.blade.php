@@ -149,6 +149,14 @@
                                 <a href="{{ route('admin.stores.show', $store) }}"
                                    class="text-xs text-blue-600 hover:underline font-medium">Ver</a>
 
+                                @if($store->subscription)
+                                    <a href="{{ route('admin.subscriptions.show', $store->subscription) }}"
+                                       title="Estado de cuenta"
+                                       class="text-xs text-indigo-600 hover:underline font-medium whitespace-nowrap">
+                                        <i class="fa-solid fa-file-invoice-dollar mr-0.5"></i> Estado de cuenta
+                                    </a>
+                                @endif
+
                                 @if($store->status === 'active')
                                     <form method="POST" action="{{ route('admin.stores.suspend', $store) }}"
                                           onsubmit="return confirm('¿Suspender este comercio?')">
