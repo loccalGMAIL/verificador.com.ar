@@ -11,6 +11,18 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [1.19.1] - 2026-11-05
+
+### Corregido
+
+- **Fecha de pago en el estado de cuenta** — los cobros recurrentes de MercadoPago se mostraban sin fecha ("—") porque la API de `/authorized_payments` no devuelve `date_approved`. Ahora, para los cobros acreditados, `paid_at` se toma de `debit_date` (o, en su defecto, `last_modified` / `date_created`). Mientras se resincronizan, los pagos ya registrados muestran la fecha de débito en el estado de cuenta y en el detalle admin de la suscripción.
+
+### Cambiado
+
+- **Estado de cuenta** — se quitó la tarjeta "Total abonado" del resumen; las tres restantes (Plan actual, Estado y Próximo vencimiento) ocupan el ancho completo.
+
+---
+
 ## [1.19.0] - 2026-11-02
 
 ### Agregado
