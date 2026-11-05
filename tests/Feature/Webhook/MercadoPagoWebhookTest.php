@@ -71,6 +71,51 @@ class MercadoPagoWebhookTest extends TestCase
         $this->assertTrue(Carbon::parse($debitDate)->isSameDay($payment->debit_date));
     }
 
+    public function test_processed_payment_without_date_approved_uses_debit_date_as_paid_at(): void
+    {
+        $this->makeSubscription('sub_123');
+        $debitDate = '2026-05-01T00:00:00.000-03:00';
+
+        $this->mock(MercadoPagoService::class, function ($mock) use ($debitDate) {
+            $mock->shouldReceive('verifyWebhookSignature')->andReturn(true);
+            $mock->shouldReceive('getAuthorizedPayment')->andReturn([
+                'preapproval_id' => 'sub_123',
+                'transaction_amount' => 1500.0,
+                'currency_id' => 'ARS',
+                'status' => 'processed',
+                'debit_date' => $debitDate,
+                'date_created' => '2026-04-28T10:00:00.000-03:00',
+                'last_modified' => '2026-05-01T08:00:00.000-03:00',
+            ]);
+        });
+
+        $this->postWebhook('subscription_authorized_payment', 'pay_999')->assertOk();
+
+        $payment = SubscriptionPayment::where('mp_payment_id', 'pay_999')->first();
+        $this->assertNotNull($payment->paid_at);
+        $this->assertTrue(Carbon::parse($debitDate)->isSameDay($payment->paid_at));
+    }
+
+    public function test_recycling_payment_without_date_approved_has_no_paid_at(): void
+    {
+        $this->makeSubscription('sub_123');
+
+        $this->mock(MercadoPagoService::class, function ($mock) {
+            $mock->shouldReceive('verifyWebhookSignature')->andReturn(true);
+            $mock->shouldReceive('getAuthorizedPayment')->andReturn([
+                'preapproval_id' => 'sub_123',
+                'transaction_amount' => 1500.0,
+                'currency_id' => 'ARS',
+                'status' => 'recycling',
+                'debit_date' => '2026-05-01T00:00:00.000-03:00',
+            ]);
+        });
+
+        $this->postWebhook('subscription_authorized_payment', 'pay_998')->assertOk();
+
+        $this->assertNull(SubscriptionPayment::where('mp_payment_id', 'pay_998')->first()->paid_at);
+    }
+
     public function test_authorized_payment_updates_next_payment_date_on_subscription(): void
     {
         $subscription = $this->makeSubscription('sub_123');

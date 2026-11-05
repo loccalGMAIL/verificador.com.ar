@@ -114,7 +114,7 @@
                 @forelse($payments as $payment)
                 <tr class="hover:bg-slate-50 transition">
                     <td class="px-4 py-3 text-slate-600 whitespace-nowrap">
-                        {{ $payment->paid_at?->format('d/m/Y') ?? '—' }}
+                        {{ ($payment->paid_at ?? ($payment->status === 'processed' ? $payment->debit_date : null))?->format('d/m/Y') ?? '—' }}
                     </td>
                     <td class="px-4 py-3 font-semibold text-slate-800 whitespace-nowrap">
                         {{ $payment->currency }} {{ number_format($payment->amount, 2, ',', '.') }}

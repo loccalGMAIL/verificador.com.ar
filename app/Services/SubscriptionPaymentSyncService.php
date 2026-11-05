@@ -150,9 +150,7 @@ class SubscriptionPaymentSyncService
                 'amount' => $paymentData['transaction_amount'] ?? 0,
                 'currency' => $paymentData['currency_id'] ?? 'ARS',
                 'status' => $paymentStatus,
-                'paid_at' => isset($paymentData['date_approved'])
-                                        ? Carbon::parse($paymentData['date_approved'])
-                                        : null,
+                'paid_at' => $this->resolvePaidAt($paymentData, $paymentStatus),
                 'debit_date' => isset($paymentData['debit_date'])
                                         ? Carbon::parse($paymentData['debit_date'])
                                         : null,
@@ -181,5 +179,32 @@ class SubscriptionPaymentSyncService
         ]);
 
         return $payment;
+    }
+
+    /**
+     * Determina la fecha de cobro de un authorized_payment.
+     *
+     * La API de /authorized_payments no devuelve `date_approved`: para los cobros
+     * acreditados se usa `debit_date` y, en su defecto, `last_modified` o `date_created`.
+     *
+     * @param  array<string, mixed>  $paymentData
+     */
+    private function resolvePaidAt(array $paymentData, string $paymentStatus): ?Carbon
+    {
+        if (! empty($paymentData['date_approved'])) {
+            return Carbon::parse($paymentData['date_approved']);
+        }
+
+        if ($paymentStatus !== 'processed') {
+            return null;
+        }
+
+        foreach (['debit_date', 'last_modified', 'date_created'] as $field) {
+            if (! empty($paymentData[$field])) {
+                return Carbon::parse($paymentData[$field]);
+            }
+        }
+
+        return null;
     }
 }
