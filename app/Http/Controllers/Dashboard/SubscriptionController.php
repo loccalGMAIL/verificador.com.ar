@@ -28,7 +28,7 @@ class SubscriptionController extends Controller
         $this->sync->syncIfDue($sub);
 
         if ($sub) {
-            $sub->load(['payments' => fn ($q) => $q->latest('paid_at')]);
+            $sub->load(['payments' => fn ($q) => $q->latestFirst()]);
         }
 
         return view('dashboard.subscription.index', compact('store', 'sub', 'plans'));
@@ -99,7 +99,7 @@ class SubscriptionController extends Controller
         $this->sync->syncIfDue($sub);
 
         if ($sub) {
-            $sub->load(['plan', 'payments' => fn ($q) => $q->latest('paid_at')]);
+            $sub->load(['plan', 'payments' => fn ($q) => $q->latestFirst()]);
         }
 
         // Calcular próximo vencimiento

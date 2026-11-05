@@ -228,6 +228,28 @@ class MercadoPagoPaymentSyncTest extends TestCase
         ]);
     }
 
+    public function test_billing_page_lists_payments_latest_first(): void
+    {
+        $subscription = $this->makeSubscription('sub_123');
+        $owner = User::factory()->create(['role' => 'owner', 'store_id' => $subscription->store_id]);
+
+        $subscription->payments()->createMany([
+            ['amount' => 100, 'currency' => 'ARS', 'status' => 'processed', 'paid_at' => '2026-03-01 10:00:00'],
+            ['amount' => 300, 'currency' => 'ARS', 'status' => 'processed', 'paid_at' => null, 'debit_date' => '2026-05-01 00:00:00'],
+            ['amount' => 200, 'currency' => 'ARS', 'status' => 'processed', 'paid_at' => '2026-04-01 10:00:00'],
+        ]);
+
+        $this->mock(MercadoPagoService::class, function ($mock) {
+            $mock->shouldReceive('getPreapproval')->andThrow(new \RuntimeException('MP caído'));
+            $mock->shouldReceive('searchAuthorizedPayments')->andThrow(new \RuntimeException('MP caído'));
+        });
+
+        $this->actingAs($owner)
+            ->get(route('dashboard.billing'))
+            ->assertOk()
+            ->assertSeeInOrder(['01/05/2026', '01/04/2026', '01/03/2026']);
+    }
+
     public function test_subscription_page_loads_even_if_mp_fails(): void
     {
         $subscription = $this->makeSubscription('sub_123');

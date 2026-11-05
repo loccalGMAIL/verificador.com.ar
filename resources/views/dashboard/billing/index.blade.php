@@ -6,7 +6,7 @@
 @section('content')
 
 @php
-    $payments  = $sub?->payments?->sortByDesc('paid_at') ?? collect();
+    $payments  = $sub?->payments ?? collect();
 @endphp
 
 {{-- ══ RESUMEN ══ --}}
@@ -107,14 +107,14 @@
                     <th class="px-4 py-3 font-semibold text-slate-500">Fecha</th>
                     <th class="px-4 py-3 font-semibold text-slate-500">Monto</th>
                     <th class="px-4 py-3 font-semibold text-slate-500">Estado</th>
-                    <th class="px-4 py-3 font-semibold text-slate-500 hidden sm:table-cell">Detalle</th>
+                    <th class="px-4 py-3 font-semibold text-slate-500 hidden sm:table-cell">Medio de pago</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
                 @forelse($payments as $payment)
                 <tr class="hover:bg-slate-50 transition">
                     <td class="px-4 py-3 text-slate-600 whitespace-nowrap">
-                        {{ ($payment->paid_at ?? ($payment->status === 'processed' ? $payment->debit_date : null))?->format('d/m/Y') ?? '—' }}
+                        {{ $payment->displayDate()?->format('d/m/Y') ?? '—' }}
                     </td>
                     <td class="px-4 py-3 font-semibold text-slate-800 whitespace-nowrap">
                         {{ $payment->currency }} {{ number_format($payment->amount, 2, ',', '.') }}
@@ -133,12 +133,9 @@
                         </span>
                     </td>
                     <td class="px-4 py-3 hidden sm:table-cell text-xs text-slate-400">
-                        @if($payment->notes)
-                            {{ $payment->notes }}
-                        @elseif($payment->mp_payment_id)
-                            MercadoPago
-                        @else
-                            —
+                        {{ $payment->paymentMethodLabel() }}
+                        @if($payment->reference)
+                            · Op. {{ $payment->reference }}
                         @endif
                     </td>
                 </tr>

@@ -13,6 +13,11 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [1.19.1] - 2026-11-05
 
+### Agregado
+
+- **Pagos por transferencia, efectivo u otro medio** — el formulario "Registrar pago manual" del detalle admin de la suscripción permite elegir el medio de pago (Transferencia, Efectivo, Otro) y cargar un N° de operación opcional (nuevas columnas `payment_method` y `reference` en `subscription_payments`; los cobros de MercadoPago se marcan como `mercadopago`). El pago se registra como acreditado, activa la suscripción y extiende el próximo vencimiento un mes: desde el vencimiento actual si estaba al día, o desde la fecha de pago si estaba vencida o no tenía vencimiento. La fecha de pago no puede ser futura. El historial (admin y estado de cuenta del comercio) muestra el medio de pago y la referencia.
+- **Acceso al estado de cuenta desde Comercios** — en `admin/stores`, cada comercio con suscripción tiene el botón "Estado de cuenta" que lleva a `admin/subscriptions/{id}`.
+
 ### Corregido
 
 - **Fecha de pago en el estado de cuenta** — los cobros recurrentes de MercadoPago se mostraban sin fecha ("—") porque la API de `/authorized_payments` no devuelve `date_approved`. Ahora, para los cobros acreditados, `paid_at` se toma de `debit_date` (o, en su defecto, `last_modified` / `date_created`). Mientras se resincronizan, los pagos ya registrados muestran la fecha de débito en el estado de cuenta y en el detalle admin de la suscripción.
@@ -20,6 +25,7 @@ y el proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ### Cambiado
 
 - **Estado de cuenta** — se quitó la tarjeta "Total abonado" del resumen; las tres restantes (Plan actual, Estado y Próximo vencimiento) ocupan el ancho completo.
+- **Orden del historial de pagos** — el estado de cuenta y el detalle admin de la suscripción listan los pagos del más reciente al más antiguo según su fecha efectiva (`paid_at`, luego `debit_date`, luego `created_at`), por lo que los cobros sin `paid_at` ya no quedan al final. El orden se centraliza en el scope `SubscriptionPayment::latestFirst()`.
 
 ---
 
